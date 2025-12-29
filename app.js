@@ -104,6 +104,12 @@ const attendanceSchema = new mongoose.Schema({
 const Attendance = mongoose.model('Attendance', attendanceSchema);
 
 
+const subjectSchema = new mongoose.Schema({
+    name: String,
+    code: String
+});
+const Subject = mongoose.model('Subject', subjectSchema);
+
 
 // --- Middleware ---
 app.set('view engine', 'ejs');
@@ -150,17 +156,18 @@ app.get('/auth/google/callback',
     res.redirect('/student');
   });
 
-// --- UPDATE YOUR MASTER ROUTE STARTING AT LINE 54 ---
-app.get('/master', async (req, res) => {
+app.get('/master-dashboard', async (req, res) => {
+    // Check if user is Master
+    if (!req.session.user || req.session.user.role !== 'Master') {
+        return res.redirect('/login');
+    }
+    
     try {
-        // 1. Fetch the user data from MongoDB
-        const users = await User.find({}); 
-        
-        // 2. Pass that data to your master.ejs file.jpg]
-        res.render('master', { users: users }); 
+        const users = await User.find();
+        const subjects = await Subject.find(); // Fetch subjects from DB
+        res.render('master', { user: req.session.user, users, subjects });
     } catch (err) {
-        console.error("❌ Error loading master dashboard:", err);
-        res.status(500).send("Internal Server Error");
+        res.status(500).send("Error loading dashboard");
     }
 });
 
@@ -532,6 +539,26 @@ app.post('/edit-attendance', async (req, res) => {
 });
 
 
+// Route to add a new subject from the Master Dashboard
+app.post('/add-subject', async (req, res) => {
+    try {
+        const { name, code } = req.body;
+        await new Subject({ name, code }).save();
+        res.redirect('/master-dashboard');
+    } catch (err) {
+        res.status(500).send("Error adding subject");
+    }
+});
+
+// Route to delete a subject
+app.post('/delete-subject/:id', async (req, res) => {
+    try {
+        await Subject.findByIdAndDelete(req.params.id);
+        res.redirect('/master-dashboard');
+    } catch (err) {
+        res.status(500).send("Error deleting subject");
+    }
+});
 
 
 // --- Server Startup ---

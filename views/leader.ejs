@@ -32,8 +32,13 @@
     </select>
     <br><br>
 
-    <label><b>Subject Name:</b></label><br>
-    <input type="text" name="subject" placeholder="e.g. Data Structures" required style="padding: 8px; width: 300px;">
+    <label><b>Select Subject:</b></label><br>
+<select name="subject" required style="padding: 8px; width: 300px; margin-bottom: 20px;">
+    <option value="">-- Choose Subject --</option>
+    <% subjects.forEach(function(sub) { %>
+        <option value="<%= sub.name %>"><%= sub.name %> (<%= sub.code %>)</option>
+    <% }); %>
+</select>
     <br><br>
 
     <label><b>Assign This Attendance to:</b></label><br>
