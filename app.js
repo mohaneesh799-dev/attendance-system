@@ -273,10 +273,16 @@ res.redirect(`/${user.role.toLowerCase()}`);
 });
 
 
-// --- LOGOUT ROUTE ---
-app.get('/logout', (req, res) => {
-    // If you are using sessions, use: req.session.destroy();
-    res.redirect('/login'); // Redirects back to login page
+app.get('/logout', (req, res, next) => {
+    req.logout((err) => {
+        if (err) { 
+            return next(err); 
+        }
+        req.session.destroy(() => {
+            res.clearCookie('connect.sid'); // Clears the login cookie
+            res.redirect('/'); // Sends you back to the login page
+        });
+    });
 });
 
 // --- UPDATE YOUR SETTINGS ROUTE IN app.js ---
