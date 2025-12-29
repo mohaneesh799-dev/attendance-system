@@ -80,5 +80,30 @@
         </button>
     </form>
 </div>
+
+
+<script>
+function prepareAttendanceData() {
+    const students = [];
+    // This looks at every row in your attendance table
+    const rows = document.querySelectorAll("table tr:not(:first-child)"); 
+    
+    rows.forEach(row => {
+        const rollNo = row.cells[0].innerText;
+        const name = row.cells[1].innerText;
+        // Assuming you have a select or checkbox for status in cell index 2
+        const status = row.querySelector("select").value; 
+
+        students.push({ rollNo, name, status });
+    });
+
+    // Put the array into the hidden input as a JSON string
+    document.getElementById('hiddenStudentsInput').value = JSON.stringify(students);
+    return true; // Allows the form to submit
+}
+</script>
+
+
+
 </body>
 </html>
