@@ -200,10 +200,11 @@ app.get('/lecturer', async (req, res) => {
             return res.redirect('/login'); // Redirect to login if not authenticated
         }
 
-        const loggedInEmail = req.session.user.email; 
-
-        // 2. Query records matching the logged-in lecturer
-        const records = await Attendance.find({ lecturerEmail: loggedInEmail });
+       // Inside app.get('/lecturer', ...) in app.js
+            const loggedInEmail = req.session.user.email.toLowerCase(); // Convert to lowercase
+            const records = await Attendance.find({ 
+            lecturerEmail: { $regex: new RegExp("^" + loggedInEmail + "$", "i") } // Case-insensitive search
+        });
 
         // 3. Render using the exact name expected by your EJS
         res.render('lecturer', { 
@@ -419,15 +420,16 @@ console.log("DEBUG: Logged in Leader is:", req.session.user.email);
             status: req.body['status_' + s._id] || 'Present'
         }));
 
-        const newAttendance = new Attendance({
-    date: new Date().toLocaleDateString(),
-    periodNumber: periodNumber,
-    subject: subject,
-    lecturerEmail: lecturerEmail, // ENSURE THIS LINE IS HERE
-    leaderEmail: userEmail,
+       // Inside your route that handles the 'Lock' button
+const newAttendance = new Attendance({
+    date: req.body.date,
+    periodNumber: req.body.periodNumber,
+    subject: req.body.subject,
+    leaderEmail: req.session.user.email, // This is already working
+    lecturerEmail: req.body.lecturerEmail, // YOU MUST ADD THIS LINE
     students: studentData
 });
-        await newAttendance.save();
+await newAttendance.save();
         res.send("<script>alert('Attendance Locked!'); window.location.href='/leader';</script>");
     } catch (err) {
         console.error(err);
