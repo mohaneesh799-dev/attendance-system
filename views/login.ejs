@@ -1,21 +1,26 @@
 <!DOCTYPE html>
 <html>
 <head><title>College Login</title></head>
-<body style="font-family: Arial; text-align: center; padding-top: 50px;">
+<body style="font-family: Arial; text-align: center; padding-top: 100px;">
     <h2>Attendance Portal</h2>
-    <form action="/login" method="POST" style="display: inline-block; text-align: left; padding: 20px; border: 1px solid #ccc;">
-        <label>Email:</label><br>
-        <input type="email" name="email" required><br><br>
-        
-        <label>Login As:</label><br>
-        <select name="role">
-            <option value="Master">Master (Level 1)</option>
-            <option value="Lecturer">Lecturer (Level 2)</option>
-            <option value="Leader">Class Leader (Level 3)</option>
-            <option value="Student">Student (Level 4)</option>
-        </select><br><br>
-        
-        <button type="submit">Login</button>
-    </form>
+    <p>Please log in using your official university account</p>
+    
+    <a href="/auth/google" style="
+        display: inline-block;
+        background-color: #4285F4;
+        color: white;
+        padding: 12px 24px;
+        text-decoration: none;
+        border-radius: 5px;
+        font-weight: bold;
+        font-size: 16px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    ">
+        Login with Google (@rku.ac.in)
+    </a>
+
+    <p style="margin-top: 20px; color: #666; font-size: 0.9em;">
+        Only official RKU emails are permitted to access this system.
+    </p>
 </body>
 </html>

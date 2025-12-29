@@ -1,26 +1,51 @@
 <div style="font-family: Arial; padding: 20px;">
+    <nav style="background: #333; color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center;">
+    <div>
+        <strong>Attendance System</strong>
+    </div>
+    <div>
+        <a href="/settings" style="color: white; margin-right: 15px; text-decoration: none;">⚙️ Settings</a>
+        <a href="/logout" style="color: #ff4d4d; text-decoration: none; font-weight: bold;">Logout</a>
+    </div>
+</nav>
     <h2>Lecturer Dashboard</h2>
     <p>Modify Attendance Mistakes</p>
-    <table border="1" cellpadding="10" style="width:100%; border-collapse: collapse;">
-        <tr style="background-color: #f2f2f2;">
-            <th>Student</th>
-            <th>Current Status</th>
-            <th>Action</th>
-        </tr>
-        <% students.forEach(function(s) { %>
-    <tr>
-        <td><%= s.name %></td>
-        <td><strong><%= s.status || 'Present' %></strong></td>
-        <td>
-            <form action="/edit-attendance" method="POST">
-                <input type="hidden" name="studentId" value="<%= s.id %>">
-                <input type="hidden" name="newStatus" value="<%= s.status === 'Absent' ? 'Present' : 'Absent' %>">
-                <button type="submit">Switch to <%= s.status === 'Absent' ? 'Present' : 'Absent' %></button>
-            </form>
-        </td>
-    </tr>
-<% }); %>
-    </table>
+    <div style="font-family: Arial; padding: 20px;">
+    <h2>Lecturer Dashboard</h2>
+    <p>Logged in as: <b><%= user.email %></b></p>
+    <p>Modify Attendance Mistakes for your assigned periods:</p>
+
+<% if (attendanceRecords.length === 0) { %>
+    <p style="color: gray;">No attendance records have been assigned to you yet.</p>
+<% } else { %>
+    <% attendanceRecords.forEach(function(record) { %>
+        <div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 8px;">
+            <h3>Period <%= record.periodNumber %>: <%= record.subject %></h3>
+            <table border="1" cellpadding="10" style="width:100%; border-collapse: collapse;">
+                <tr style="background-color: #f2f2f2;">
+                    <th>Roll No</th>
+                    <th>Student Name</th>
+                    <th>Current Status</th>
+                    <th>Action</th>
+                </tr>
+                <% record.students.forEach(function(s) { %> <tr>
+                        <td><%= s.rollNo %></td>
+                        <td><%= s.name %></td>
+                        <td><strong><%= s.status || 'Present' %></strong></td>
+                        <td>
+                            <form action="/edit-attendance" method="POST">
+                                <input type="hidden" name="studentId" value="<%= s.studentId %>">
+                                <input type="hidden" name="attendanceId" value="<%= record._id %>">
+                                <input type="hidden" name="newStatus" value="<%= s.status === 'Absent' ? 'Present' : 'Absent' %>">
+                                <button type="submit">Switch to <%= s.status === 'Absent' ? 'Present' : 'Absent' %></button>
+                            </form>
+                        </td>
+                    </tr>
+                <% }); %> </table>
+        </div>
+    <% }); %> 
+<% } %>
+
     <br>
     <a href="/">Logout</a>
 </div>

@@ -1,0 +1,27 @@
+<div style="font-family: Arial; padding: 20px;">
+    <h2>Account Settings</h2>
+    <form action="/update-settings" method="POST">
+        <input type="hidden" name="email" value="<%= user.email %>">
+        <% if (user.role === 'Student') { %>
+            <div style="margin-bottom: 20px; padding: 15px; border: 1px solid #ddd;">
+                <h3>Student Profile Information</h3>
+                <label><b>Full Name:</b></label><br>
+                <input type="text" name="name" value="<%= user.name || '' %>" required style="padding: 8px; width: 300px;"><br><br>
+                
+                <label><b>Roll Number:</b></label><br>
+                <input type="text" name="rollNo" value="<%= user.rollNo || '' %>" required style="padding: 8px; width: 300px;">
+            </div>
+        <% } %>
+
+        <label><b>Interface Theme:</b></label><br>
+        <select name="themeColor" style="padding: 8px; margin-top: 10px;">
+            <option value="white">Light Mode</option>
+            <option value="#f4f4f4">Gray Mode</option>
+        </select>
+        
+        <br><br>
+        <button type="submit" style="padding: 10px 20px; background: #333; color: white; border: none; cursor: pointer;">
+            Save Settings
+        </button>
+    </form>
+</div>

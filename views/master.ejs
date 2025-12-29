@@ -2,36 +2,165 @@
 <html>
 <head><title>Master Dashboard</title></head>
 <body style="font-family: Arial; padding: 30px; background: #f4f4f4;">
+    <nav style="background: #333; color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center;">
+    <div>
+        <strong>Attendance System</strong>
+    </div>
+    <div>
+        <a href="/settings" style="color: white; margin-right: 15px; text-decoration: none;">⚙️ Settings</a>
+        <a href="/logout" style="color: #ff4d4d; text-decoration: none; font-weight: bold;">Logout</a>
+    </div>
+</nav>
     <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
         <h1>Level 1: Master Control</h1>
         <hr>
-       <h3>Pending Approvals:</h3>
-<table border="1" cellpadding="10" style="width: 100%; border-collapse: collapse;">
-    <tr style="background-color: #eee;">
-        <th>Email</th>
-        <th>Role</th>
-        <th>Status</th>
-        <th>Action</th>
-    </tr>
-    <% users.forEach(function(u) { %>
-        <% if (u.role !== 'Master') { %>
-            <tr>
-                <td><%= u.email %></td>
-                <td><%= u.role %></td>
-                <td><%= u.approved ? 'Approved' : 'Pending' %></td>
-                <td>
-                    <% if (!u.approved) { %>
-                        <form action="/approve-user" method="POST">
-                            <input type="hidden" name="userEmail" value="<%= u.email %>">
-                            <button type="submit" style="background-color: green; color: white; cursor: pointer;">
-                                Approve <%= u.role %>
-                            </button>
-                        </form>
-                    <% } else { %>
-                        <span style="color: green;">✔ Active</span>
-                    <% } %>
-                </td>
+    <h3>Lecturer Approval Requests</h3>
+        <table border="1" cellpadding="10" style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+            <tr style="background-color: #eee;">
+                <th>Email</th>
+                <th>Assign Role</th>
+                <th>Status</th>
+                <th>Action</th>
             </tr>
-        <% } %>
-    <% }); %>
-</table>
+            <% users.filter(u => u.role === 'Lecturer' && !u.approved).forEach(function(u) { %>
+                <tr>
+                    <td><%= u.name %></td>
+                    <td><%= u.email %></td>
+                    <td>
+    <select name="assignedRole_<%= u._id %>" form="approve-form-<%= u._id %>" style="padding: 5px; border-radius: 4px;">
+        <option value="Student" <%= u.role === 'Student' ? 'selected' : '' %>>Student</option>
+        <option value="Lecturer" <%= u.role === 'Lecturer' ? 'selected' : '' %>>Lecturer</option>
+        <option value="Leader" <%= u.role === 'Leader' ? 'selected' : '' %>>Leader</option>
+    </select>
+</td>
+<td style="color: red;">Pending</td>
+<td>
+    <form id="approve-form-<%= u._id %>" action="/approve-user/<%= u._id %>" method="POST" style="display: inline;">
+    <button type="submit" style="background: green; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 4px;">
+        Approve
+    </button>
+</form>
+    
+    <form action="/delete-user/<%= u._id %>" method="POST" onsubmit="return confirm('Delete user?')" style="display: inline;">
+        <button type="submit" style="background: red; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 4px;">
+            Delete
+        </button>
+    </form>
+</td>
+    <form action="/delete-user/<%= u._id %>" method="POST" onsubmit="return confirm('Delete this user?')">
+        <button type="submit" style="background: red; color: white; border: none; padding: 5px; cursor: pointer; border-radius: 4px;">
+            Delete
+        </button>
+    </form>
+</td>
+                </tr>
+            <% }); %>
+        </table>
+        <button type="submit" style="padding: 10px; background: green; color: white; border: none; cursor: pointer;">
+            Approve Selected Lecturers
+        </button>
+
+
+    <br><hr><br>
+
+    <h3>Student Approval Requests</h3>
+        <table border="1" cellpadding="10" style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+            <tr style="background-color: #eee;">
+                <th>Email</th>
+                <th>Assign Role</th> 
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+            <% users.filter(u => u.role === 'Student' && !u.approved).forEach(function(u) { %>
+                <tr>
+                    <td><%= u.name %></td>
+                    <td><%= u.email %></td>
+                    <td>
+        <select name="assignedRole_<%= u._id %>" form="approve-form-<%= u._id %>" style="padding: 5px; border-radius: 4px;">
+        <option value="Student" <%= u.role === 'Student' ? 'selected' : '' %>>Student</option>
+        <option value="Lecturer" <%= u.role === 'Lecturer' ? 'selected' : '' %>>Lecturer</option>
+        <option value="Leader" <%= u.role === 'Leader' ? 'selected' : '' %>>Leader</option>
+     </select>
+        </td>
+        <td style="color: red;">Pending</td>
+        <td>
+        <form id="approve-form-<%= u._id %>" action="/approve-user/<%= u._id %>" method="POST" style="display: inline;">
+        <button type="submit" style="background: green; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 4px;">
+            Approve
+        </button>
+         </form>
+    
+         <form action="/delete-user/<%= u._id %>" method="POST" onsubmit="return confirm('Delete this user?')" style="display: inline;">
+        <button type="submit" style="background: red; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 4px;">
+            Delete
+        </button>
+         </form>
+        </td>
+         <form action="/delete-user/<%= u._id %>" method="POST" onsubmit="return confirm('Delete this student?')">
+        <button type="submit" style="background: red; color: white; border: none; cursor: pointer;">Delete</button>
+         </form>
+        </td>
+                </tr>
+            <% }); %>
+        </table>
+        <button type="submit" style="padding: 10px; background: blue; color: white; border: none; cursor: pointer;">
+            Approve Selected Students
+        </button>
+
+
+    <br><hr><br>
+
+<h3>Class Leader Approval Requests</h3>
+        <table border="1" cellpadding="10" style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+            <tr style="background-color: #eee;">
+                <th>Email</th>
+                <th>Assign Role</th> 
+                <th>Status</th>
+                <th>Action</th>
+
+            </tr>
+            <% users.filter(u => u.role === 'Leader' && !u.approved).forEach(function(u) { %>
+                <tr>
+                    <td><%= u.name %></td>
+                    <td><%= u.email %></td>
+                    <td>
+    <select name="assignedRole_<%= u._id %>" form="approve-form-<%= u._id %>" style="padding: 5px; border-radius: 4px;">
+        <option value="Student" <%= u.role === 'Student' ? 'selected' : '' %>>Student</option>
+        <option value="Lecturer" <%= u.role === 'Lecturer' ? 'selected' : '' %>>Lecturer</option>
+        <option value="Leader" <%= u.role === 'Leader' ? 'selected' : '' %>>Leader</option>
+    </select>
+</td>
+<td style="color: red;">Pending</td>
+<td>
+    <form id="approve-form-<%= u._id %>" action="/approve-user/<%= u._id %>" method="POST" style="display: inline;">
+        <button type="submit" style="background: green; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 4px;">
+            Approve
+        </button>
+    </form>
+    
+    <form action="/delete-user/<%= u._id %>" method="POST" onsubmit="return confirm('Delete this user?')" style="display: inline;">
+        <button type="submit" style="background: red; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 4px;">
+            Delete
+        </button>
+    </form>
+</td>
+    <form action="/delete-user/<%= u._id %>" method="POST" onsubmit="return confirm('Delete this leader?')">
+        <button type="submit" style="background: red; color: white; border: none; cursor: pointer;">Delete</button>
+    </form>
+</td>
+                </tr>
+            <% }); %>
+        </table>
+        <button type="submit" style="padding: 10px; background: orange; color: white; border: none; cursor: pointer;">
+            Approve Selected Leaders
+        </button>
+
+
+    <script>
+        function toggle(source, className) {
+            const checkboxes = document.getElementsByClassName(className);
+            for(let i=0; i < checkboxes.length; i++) {
+                checkboxes[i].checked = source.checked;
+            }
+        }
+    </script>
