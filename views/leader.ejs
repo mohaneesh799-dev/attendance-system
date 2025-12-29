@@ -17,7 +17,7 @@
     
     <form action="/lock-period" method="POST" onsubmit="return prepareAttendanceData()">
     <input type="hidden" name="date" value="<%= new Date().toLocaleDateString('en-GB') %>">
-    <input type="hidden" name="students" id="hiddenStudentsInput"> </form>
+    <input type="hidden" name="students" id="hiddenStudentsInput"> 
 
     <label><b>Select Period:</b></label>
     
@@ -83,22 +83,34 @@
 
 <script>
 function prepareAttendanceData() {
-    const students = [];
-    // This looks at every row in your attendance table
-    const rows = document.querySelectorAll("table tr:not(:first-child)"); 
-    
-    rows.forEach(row => {
-        const rollNo = row.cells[0].innerText;
-        const name = row.cells[1].innerText;
-        // Assuming you have a select or checkbox for status in cell index 2
-        const status = row.querySelector("select").value; 
+    try {
+        console.log("Button clicked, gathering data...");
+        const students = [];
+        // Selects all rows except the first header row
+        const rows = document.querySelectorAll("table tr:not(:first-child)"); 
 
-        students.push({ rollNo, name, status });
-    });
+        if (rows.length === 0) {
+            alert("Error: No student rows found in the table.");
+            return false;
+        }
 
-    // Put the array into the hidden input as a JSON string
-    document.getElementById('hiddenStudentsInput').value = JSON.stringify(students);
-    return true; // Allows the form to submit
+        rows.forEach(row => {
+            const rollNo = row.cells[0].innerText;
+            const name = row.cells[1].innerText;
+            // Gets status from the select dropdown in each row
+            const status = row.querySelector('input[type="radio"]:checked').value;          
+          students.push({ rollNo, name, status });
+        });
+
+        // Stringify the array into the hidden input
+        document.getElementById('hiddenStudentsInput').value = JSON.stringify(students);
+        console.log("Data ready for server:", students);
+        return true; 
+    } catch (err) {
+        console.error("JavaScript Error:", err);
+        alert("An error occurred while locking: " + err.message);
+        return false;
+    }
 }
 </script>
 
