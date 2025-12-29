@@ -15,7 +15,8 @@
     <p>Mark attendance for today's periods.</p>
     <hr>
     
-    <form action="/lock-period" method="POST" onsubmit="return prepareAttendanceData()">
+<form
+     action="/lock-period" method="POST" onsubmit="return prepareAttendanceData()">
     <input type="hidden" name="date" value="<%= new Date().toLocaleDateString('en-GB') %>">
     <input type="hidden" name="students" id="hiddenStudentsInput"> 
 
@@ -65,7 +66,7 @@
     <button type="submit" style="padding: 10px 20px; background: orange; color: white; border: none; cursor: pointer;">
         Lock This Period
     </button>
-</form> ```
+</form> 
 
 
 <hr style="margin: 40px 0;">
@@ -84,31 +85,36 @@
 <script>
 function prepareAttendanceData() {
     try {
-        console.log("Button clicked, gathering data...");
+        console.log("Gathering attendance data...");
         const students = [];
-        // Selects all rows except the first header row
+        // Selects all rows in the attendance table
         const rows = document.querySelectorAll("table tr:not(:first-child)"); 
 
-        if (rows.length === 0) {
-            alert("Error: No student rows found in the table.");
+        rows.forEach(row => {
+            // Only process rows that have student data
+            if (row.cells.length >= 2) {
+                const rollNo = row.cells[0].innerText.trim();
+                const name = row.cells[1].innerText.trim();
+                
+                // CORRECTED: Find the checked radio button in this row
+                const checkedRadio = row.querySelector('input[type="radio"]:checked');
+                const status = checkedRadio ? checkedRadio.value : "Present";
+
+                students.push({ rollNo, name, status });
+            }
+        });
+
+        if (students.length === 0) {
+            alert("No student data found!");
             return false;
         }
 
-        rows.forEach(row => {
-            const rollNo = row.cells[0].innerText;
-            const name = row.cells[1].innerText;
-            // Gets status from the select dropdown in each row
-            const status = row.querySelector('input[type="radio"]:checked').value;          
-          students.push({ rollNo, name, status });
-        });
-
-        // Stringify the array into the hidden input
+        // Put the JSON data into the hidden input field
         document.getElementById('hiddenStudentsInput').value = JSON.stringify(students);
-        console.log("Data ready for server:", students);
+        console.log("Data ready for submission!");
         return true; 
     } catch (err) {
-        console.error("JavaScript Error:", err);
-        alert("An error occurred while locking: " + err.message);
+        console.error("Script Error:", err);
         return false;
     }
 }
