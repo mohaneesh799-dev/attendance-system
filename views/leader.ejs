@@ -35,7 +35,7 @@
     <select name="lecturerEmail" required style="padding: 8px; width: 300px; margin-bottom: 20px;">
         <option value="">-- Select Lecturer --</option>
         <% users.filter(u => u.role === 'Lecturer' && u.approved).forEach(function(l) { %>
-            <option value="lecturer1@rku.ac.in">Professor Name</option>
+            <option value="<%= l.email %>"><%= l.name %></option>
         <% }); %>
     </select>
     <br><br>
