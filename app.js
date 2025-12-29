@@ -413,8 +413,8 @@ app.post('/lock-period', async (req, res) => {
             subject: subject,
             leaderEmail: req.session.user.email, // From session
             lecturerEmail: lecturerEmail,        // FROM THE DROPDOWN
-            students: JSON.parse(students)
-        });
+            students: studentData
+               });
 
         await newAttendance.save();
         res.redirect('/leader-dashboard');
