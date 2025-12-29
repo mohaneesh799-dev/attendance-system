@@ -44,7 +44,7 @@ app.use(passport.session());
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID, // DO NOT paste the actual ID here
     clientSecret: process.env.GOOGLE_CLIENT_SECRET, // DO NOT paste the secret here
-    callbackURL: "https://attendance-system-cloud.onrender.com/auth/google/callback" 
+    callbackURL: "https://attendance-system-g6f8.onrender.com/auth/google/callback" 
   },
   async (accessToken, refreshToken, profile, done) => {
     const email = profile.emails[0].value;
