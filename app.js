@@ -156,18 +156,17 @@ app.get('/auth/google/callback',
     res.redirect('/student');
   });
 
-app.get('/master-dashboard', async (req, res) => {
-    // Check if user is Master
+// Ensure the URL matches exactly what the browser is looking for
+app.get('/master', async (req, res) => {
     if (!req.session.user || req.session.user.role !== 'Master') {
         return res.redirect('/login');
     }
-    
     try {
         const users = await User.find();
-        const subjects = await Subject.find(); // Fetch subjects from DB
-        res.render('master', { user: req.session.user, users, subjects });
+        const subjects = await Subject.find(); // This is needed for your new feature
+        res.render('master', { users, subjects }); 
     } catch (err) {
-        res.status(500).send("Error loading dashboard");
+        res.status(500).send("Error loading Master Portal");
     }
 });
 
@@ -182,21 +181,19 @@ app.post('/delete-user/:id', async (req, res) => {
 
 
 app.get('/leader', async (req, res) => {
+    if (!req.session.user || req.session.user.role !== 'Class Leader') {
+        return res.redirect('/login');
+    }
     try {
-        // 1. Fetch all users who are Students for the attendance table
-        const studentList = await User.find({ role: 'Student' });
+        const students = await User.find({ role: 'Student' });
+        const subjects = await Subject.find(); // MUST ADD THIS LINE
+        const users = await User.find({ role: 'Lecturer', approved: true });
 
-        // 2. Fetch ALL users so the EJS can filter for approved Lecturers
-        const allUsers = await User.find({});
-
-        // 3. Pass BOTH variables to the page
-        res.render('leader', { 
-            students: studentList, 
-            users: allUsers 
-        });
+        // Make sure all three variables are passed to the page
+        res.render('leader', { students, subjects, users }); 
     } catch (err) {
         console.error(err);
-        res.status(500).send("Error loading Leader dashboard.");
+        res.status(500).send("Internal Server Error: Missing Data");
     }
 });
 
