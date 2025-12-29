@@ -16,8 +16,12 @@
     <hr>
     
     <form action="/lock-period" method="POST">
-        <input type="hidden" name="date" value="<%= new Date().toLocaleDateString('en-GB') %>">
-    <label><b>Select Period:</b></label><br>
+    <input type="hidden" name="date" value="<%= new Date().toLocaleDateString('en-GB') %>">
+    
+    <input type="hidden" name="students" value='<%= JSON.stringify(students) %>'>
+
+    <label><b>Select Period:</b></label>
+    
     <select name="periodNumber" required style="padding: 8px; width: 300px;">
         <option value="">-- Select Period --</option>
         <option value="1">Period 1</option>
