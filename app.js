@@ -396,33 +396,48 @@ app.post('/approve-user/:id', async (req, res) => {
     }
 });
 
+
+
 app.post('/lock-period', async (req, res) => {
     try {
-        // 1. Check if user is logged in to avoid the 'undefined email' error
-        if (!req.session || !req.session.user) {
-            return res.redirect('/login');
+
+        const { periodNumber, subject, lecturerEmail } = req.body;
+const userEmail = req.session.user.email;
+
+// Add these right after you get the data from req.body
+console.log("DEBUG: Form lecturerEmail is:", lecturerEmail);
+console.log("DEBUG: Logged in Leader is:", req.session.user.email);
+
+        // Troubleshooting: Add this log to see what the server is actually getting
+        console.log("Received Period:", periodNumber); 
+
+        if (!periodNumber || !subject) {
+            return res.status(400).send("Error: Period and Subject are required!");
         }
 
-        // 2. Extract data from the form body (req.body)
-        const { lecturerEmail, subject, periodNumber, date, students } = req.body;
+        const students = await User.find({ role: 'Student' });
+        const studentData = students.map(s => ({
+            studentId: s._id,
+            status: req.body['status_' + s._id] || 'Present'
+        }));
 
-        // 3. Create the new record with ALL required fields
-        const newAttendance = new Attendance({
-            date: date,
-            periodNumber: periodNumber,
-            subject: subject,
-            leaderEmail: req.session.user.email, // From session
-            lecturerEmail: lecturerEmail,        // FROM THE DROPDOWN
-            students: studentData
-               });
-
-        await newAttendance.save();
-        res.redirect('/leader-dashboard');
+       // Inside your route that handles the 'Lock' button
+const newAttendance = new Attendance({
+    date: req.body.date,
+    periodNumber: req.body.periodNumber,
+    subject: req.body.subject,
+    leaderEmail: req.session.user.email, // This is already working
+    lecturerEmail: req.body.lecturerEmail, // YOU MUST ADD THIS LINE
+    students: studentData
+});
+await newAttendance.save();
+        res.send("<script>alert('Attendance Locked!'); window.location.href='/leader';</script>");
     } catch (err) {
-        console.error("Lock Error:", err);
+        console.error(err);
         res.status(500).send("Error: " + err.message);
     }
 });
+
 
 app.post('/approve-user/:id', async (req, res) => {
     try {
