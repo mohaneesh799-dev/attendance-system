@@ -417,7 +417,7 @@ app.post('/lock-period', async (req, res) => {
         });
 
         await newAttendance.save();
-        res.redirect('/leader-dashboard');
+        res.redirect('https://attendance-system-g6f8.onrender.com/leader');
     } catch (err) {
         console.error(err);
         res.status(500).send("Server Error: " + err.message);
