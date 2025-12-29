@@ -180,20 +180,16 @@ app.post('/delete-user/:id', async (req, res) => {
 });
 
 
+// Change the name to /leader to match your portal URL
 app.get('/leader', async (req, res) => {
-    if (!req.session.user || req.session.user.role !== 'Class Leader') {
-        return res.redirect('/login');
-    }
+    if (!req.session.user || req.session.user.role !== 'Class Leader') return res.redirect('/login');
     try {
         const students = await User.find({ role: 'Student' });
-        const subjects = await Subject.find(); // MUST ADD THIS LINE
+        const subjects = await Subject.find(); // Load subjects from DB
         const users = await User.find({ role: 'Lecturer', approved: true });
-
-        // Make sure all three variables are passed to the page
         res.render('leader', { students, subjects, users }); 
     } catch (err) {
-        console.error(err);
-        res.status(500).send("Internal Server Error: Missing Data");
+        res.status(500).send("Error loading Leader page");
     }
 });
 
