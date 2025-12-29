@@ -399,28 +399,30 @@ app.post('/approve-user/:id', async (req, res) => {
 
 
 app.post('/lock-period', async (req, res) => {
+    // If this check fails, it redirects and looks like a refresh
+    if (!req.session || !req.session.user) {
+        console.log("Session missing!"); // Add this to debug
+        return res.redirect('/login'); 
+    }
+
     try {
         const { lecturerEmail, subject, periodNumber, date, students } = req.body;
-
-        // CHECK IF DATA EXISTS BEFORE PARSING
-        if (!students || students === "undefined") {
-            return res.status(400).send("Error: Student list is empty or undefined.");
-        }
-
+        
         const newAttendance = new Attendance({
-            date: date,
-            periodNumber: periodNumber,
-            subject: subject,
+            date,
+            periodNumber,
+            subject,
             leaderEmail: req.session.user.email,
             lecturerEmail: lecturerEmail,
-            students: JSON.parse(students) // Now this won't crash the server
+            students: JSON.parse(students)
         });
 
         await newAttendance.save();
-        res.redirect('https://attendance-system-g6f8.onrender.com/leader');
+        console.log("Record Saved!"); // Add this to debug
+        res.redirect('/leader'); // Ensure this matches your dashboard URL
     } catch (err) {
-        console.error(err);
-        res.status(500).send("Server Error: " + err.message);
+        console.error("Save Error:", err);
+        res.status(500).send(err.message);
     }
 });
 

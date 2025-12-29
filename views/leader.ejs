@@ -15,10 +15,9 @@
     <p>Mark attendance for today's periods.</p>
     <hr>
     
-    <form action="/lock-period" method="POST">
+    <form action="/lock-period" method="POST" onsubmit="return prepareAttendanceData()">
     <input type="hidden" name="date" value="<%= new Date().toLocaleDateString('en-GB') %>">
-    
-    <input type="hidden" name="students" value='<%= JSON.stringify(students) %>'>
+    <input type="hidden" name="students" id="hiddenStudentsInput"> </form>
 
     <label><b>Select Period:</b></label>
     
