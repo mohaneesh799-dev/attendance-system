@@ -266,8 +266,14 @@ if (!isMatch) {
 req.session.user = user; 
 console.log("✅ Login successful for:", email);
 // Redirect based on the user's role (Lecturer, Leader, etc.)
-res.redirect(`/${user.role.toLowerCase()}`); 
-
+// Manual redirect to match your actual routes
+if (user.role === 'Class Leader') {
+    res.redirect('/leader'); 
+} else if (user.role === 'Master') {
+    res.redirect('/master');
+} else if (user.role === 'Lecturer') {
+    res.redirect('/lecturer');
+}
 } catch (err) {
         console.error("🔥 Server Error during login:", err);
         res.status(500).send("Internal Server Error");
