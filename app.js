@@ -425,8 +425,8 @@ app.post('/lock-period', async (req, res) => {
 
     const newAttendance = new Attendance({
         date: date || new Date().toISOString().split('T')[0], // Fallback if date is missing
-        periodNumber: periodNumber, // This is the '1' from your hidden input
-        subject,
+        periodNumber: '1',
+        subject: subject,
         leaderEmail: req.session.user.email,
         lecturerEmail: lecturerEmail,
         students: JSON.parse(students)
