@@ -225,54 +225,46 @@ app.get('/lecturer', async (req, res) => {
 });
 
 app.get('/student', async (req, res) => {
-    if (!req.session.user) return res.redirect('/login');
+    if (!req.session || !req.session.user) return res.redirect('/login');
 
     try {
         const userEmail = req.session.user.email;
-        // Fetch all records
-     const allAttendance = await Attendance.find();
+        const allAttendance = await Attendance.find();
+
         const subjectStats = {};
+        let myFullAttendanceHistory = []; // Initialize this for the table in student.ejs
 
         allAttendance.forEach(record => {
-            // CRITICAL FIX: Ensure students is an array before searching
-            let studentList = [];
-            if (Array.isArray(record.students)) {
-                studentList = record.students;
-            } else if (typeof record.students === 'string') {
-                try { 
-                    studentList = JSON.parse(record.students); 
-                } catch(e) { 
-                    studentList = []; 
-                }
-            }
-
-            // Find current student by email or rollNo
-            const studentEntry = studentList.find(s => 
-                (s.email && s.email === userEmail) || 
-                (s.rollNo && s.rollNo === req.session.user.rollNo)
-            );
+            // Safety check for students array structure
+            const studentList = Array.isArray(record.students) ? record.students : [];
+            const studentEntry = studentList.find(s => s.email === userEmail);
             
             if (!subjectStats[record.subject]) {
                 subjectStats[record.subject] = { total: 0, present: 0 };
             }
 
             subjectStats[record.subject].total++;
-
-            if (studentEntry && (studentEntry.status === 'Present' || studentEntry.status === 'present')) {
+            if (studentEntry && studentEntry.status === 'Present') {
                 subjectStats[record.subject].present++;
+                
+                // Track history for the detailed list
+                myFullAttendanceHistory.push({
+                    subject: record.subject,
+                    date: record.date,
+                    status: studentEntry.status
+                });
             }
         });
 
-
+        // CRITICAL: Pass 'students' (history) and 'subjectStats'
         res.render('student', { 
             user: req.session.user, 
-            subjectStats: subjectStats // Ensure this variable name matches student.ejs
-        });
-
+            subjectStats: subjectStats,
+            students: myFullAttendanceHistory // This fixes the 'students is not defined' error
+      });
     } catch (err) {
-        console.error("CRASH ERROR:", err);
-        // This shows the real error on your screen instead of 'Internal Server Error'
-        res.status(500).send("Student Dashboard failed: " + err.message);
+        console.error("Dashboard Error:", err);
+        res.status(500).send("Error: " + err.message);
     }
 });
 

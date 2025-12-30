@@ -86,17 +86,20 @@
                 </tr>
             </thead>
             <tbody>
-                <% students.forEach(function(s) { %>
-                    <tr style="border-bottom: 1px solid #eee;">
-                        <td><%= s.name %></td>
-                        <td>
-    <span style="padding: 5px 10px; border-radius: 5px; font-weight: bold; color: white; background-color: <%= s.status === 'Absent' ? '#e74c3c' : '#27ae60' %>">
-        <%= s.status %>
-    </span>
-</td>
-                    </tr>
-                <% }); %>
-            </tbody>
+    <% if (typeof students !== 'undefined' && students.length > 0) { %>
+        <% students.forEach(function(s) { %>
+            <tr style="border-bottom: 1px solid #eee;">
+                <td style="padding: 10px;"><%= s.subject %></td>
+                <td style="padding: 10px;"><%= s.date %></td>
+                <td style="padding: 10px; font-weight: bold; color: green;"><%= s.status %></td>
+            </tr>
+        <% }); %>
+    <% } else { %>
+        <tr>
+            <td colspan="3" style="text-align: center; padding: 20px;">No attendance found for your account.</td>
+        </tr>
+    <% } %>
+</tbody>
         </table>
 
         <div style="margin-top: 25px; padding: 15px; background-color: #fff3cd; border-left: 5px solid #ffecb5; border-radius: 4px;">
