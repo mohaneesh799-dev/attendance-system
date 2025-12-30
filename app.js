@@ -421,21 +421,25 @@ app.post('/lock-period', async (req, res) => {
 
    try {
     // We extract 'period' (from the form) and rename it to 'periodNumber' for the database
-    const { lecturerEmail, subject, period, date, students } = req.body;
+const { lecturerEmail, subject, date, students } = req.body; 
 
-    const newAttendance = new Attendance({
-        date: date || new Date().toISOString().split('T')[0], // Fallback if date is missing
-        periodNumber: '1',
-        subject: subject,
-        leaderEmail: req.session.user.email,
-        lecturerEmail: lecturerEmail,
-        students: JSON.parse(students)
-    });
-
+const newAttendance = new Attendance({
+    // 2. Use the date from the form or default to today's date
+    date: date || new Date().toISOString().split('T')[0], 
+    
+    // 3. Keep this hardcoded as '1' so the database is satisfied
+    periodNumber: '1', 
+    
+    subject: subject,
+    leaderEmail: req.session.user.email,
+    lecturerEmail: lecturerEmail,
+    // 4. Add a fallback to '[]' to prevent JSON.parse from crashing if students is empty
+    students: JSON.parse(students || '[]') 
+});
     await newAttendance.save();
     console.log("✅ Record Saved!");
-    res.redirect('/leader'); 
-    } catch (err) {
+    res.send("<script>alert('Attendance Locked Successfully!'); window.location.href='/leader';</script>"); 
+   } catch (err) {
         console.error("Save Error:", err);
         res.status(500).send(err.message);
     }
