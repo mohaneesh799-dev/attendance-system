@@ -1,131 +1,117 @@
 <!DOCTYPE html>
-<html>
-<head><title>Leader - Take Attendance</title></head>
-<body style="font-family: Arial; padding: 20px;">
-    <nav style="background: #333; color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center;">
-    <div>
-        <strong>Attendance System</strong>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Leader Portal - Attendance System</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f4; }
+        .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #eee; }
+        .lock-btn { background-color: #ff9800; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .submit-all-btn { background-color: #2ecc71; color: white; padding: 15px; width: 100%; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Class Leader Dashboard</h2>
+        <hr>
+
+        <form action="/lock-period" method="POST" onsubmit="return prepareAttendanceData()">
+            <input type="hidden" name="students" id="hiddenStudentsInput">
+
+            <div style="margin-bottom: 20px;">
+                <label><b>Select Subject (from Timetable):</b></label><br>
+                <select name="subject" required style="padding: 10px; width: 300px; margin-top: 5px;">
+                    <option value="">-- Choose Subject --</option>
+                    <% subjects.forEach(function(sub) { %>
+                        <option value="<%= sub.name %>"><%= sub.name %> (<%= sub.code %>)</option>
+                    <% }); %>
+                </select>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label><b>Select Period:</b></label><br>
+                <select name="period" required style="padding: 10px; width: 300px; margin-top: 5px;">
+                    <option value="">-- Select Period --</option>
+                    <option value="1">Period 1</option>
+                    <option value="2">Period 2</option>
+                    <option value="3">Period 3</option>
+                    <option value="4">Period 4</option>
+                    <option value="5">Period 5</option>
+                    <option value="6">Period 6</option>
+                </select>
+            </div>
+
+            <table id="studentTable">
+                <thead>
+                    <tr>
+                        <th>Roll No</th>
+                        <th>Student Name</th>
+                        <th>Status (Present / Absent)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% students.forEach(student => { %>
+                    <tr>
+                        <td><%= student.rollNo %></td>
+                        <td><%= student.name %></td>
+                        <td>
+                            <input type="radio" name="status_<%= student.rollNo %>" value="Present" checked> Present
+                            <input type="radio" name="status_<%= student.rollNo %>" value="Absent" style="margin-left: 15px;"> Absent
+                        </td>
+                    </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+
+            <div style="margin-top: 20px; text-align: right;">
+                <button type="submit" class="lock-btn">Lock This Period</button>
+            </div>
+        </form> 
+        <hr style="margin-top: 40px;">
+        <div style="border: 2px solid #2ecc71; padding: 20px; border-radius: 8px; text-align: center;">
+            <h3>Final Daily Submission</h3>
+            <p>Use this after all periods for the day are locked.</p>
+            <form action="/submit-day" method="POST">
+                <button type="submit" class="submit-all-btn">Submit Entire Day & Generate PDF</button>
+            </form>
+        </div>
     </div>
-    <div>
-        <a href="/settings" style="color: white; margin-right: 15px; text-decoration: none;">⚙️ Settings</a>
-        <a href="/logout" style="color: #ff4d4d; text-decoration: none; font-weight: bold;">Logout</a>
-    </div>
-</nav>
-    <h1>Class Leader Portal (Level 3)</h1>
-    <p>Mark attendance for today's periods.</p>
-    <hr>
-    
-<form
-     action="/lock-period" method="POST" onsubmit="return prepareAttendanceData()">
-    <input type="hidden" name="date" value="<%= new Date().toLocaleDateString('en-GB') %>">
-    <input type="hidden" name="students" id="hiddenStudentsInput"> 
 
-    <label><b>Select Period:</b></label>
-    
-    <select name="periodNumber" required style="padding: 8px; width: 300px;">
-        <option value="">-- Select Period --</option>
-        <option value="1">Period 1</option>
-        <option value="2">Period 2</option>
-        <option value="3">Period 3</option>
-        <option value="4">Period 4</option>
-        <option value="5">Period 5</option>
-    </select>
-    <br><br>
+    <script>
+    function prepareAttendanceData() {
+        try {
+            const students = [];
+            // Select all rows in the table body
+            const rows = document.querySelectorAll("#studentTable tbody tr");
 
-    <label><b>Select Subject:</b></label><br>
-<select name="subject" required style="padding: 8px; width: 300px; margin-bottom: 20px;">
-    <option value="">-- Choose Subject --</option>
-    <% subjects.forEach(function(sub) { %>
-        <option value="<%= sub.name %>"><%= sub.name %> (<%= sub.code %>)</option>
-    <% }); %>
-</select>
-    <br><br>
-
-    <label><b>Assign This Attendance to:</b></label><br>
-    <select name="lecturerEmail" required style="padding: 8px; width: 300px; margin-bottom: 20px;">
-        <option value="">-- Select Lecturer --</option>
-        <% users.filter(u => u.role === 'Lecturer' && u.approved).forEach(function(l) { %>
-            <option value="<%= l.email %>"><%= l.name %></option>
-        <% }); %>
-    </select>
-    <br><br>
-
-    <table border="1" cellpadding="10" style="width: 100%; border-collapse: collapse;">
-        <tr style="background: #f2f2f2;">
-            <th>Roll No</th> <th>Student Name</th>
-            <th>Status (Present / Absent)</th>
-        </tr>
-        <% students.forEach(function(s) { %>
-        <tr>
-            <td><%= s.rollNo %></td>
-            <td><%= s.name %></td>
-            <td>
-                <input type="radio" name="status_<%= s._id %>" value="Present" checked> Present
-                <input type="radio" name="status_<%= s._id %>" value="Absent"> Absent
-            </td>
-        </tr>
-        <% }); %>
-    </table>
-    <br>
-
-    <button type="submit" style="padding: 10px 20px; background: orange; color: white; border: none; cursor: pointer;">
-        Lock This Period
-    </button>
-</form> 
-
-
-<hr style="margin: 40px 0;">
-
-<div style="text-align: center; border: 2px solid #2ecc71; padding: 20px; border-radius: 10px;">
-    <h3>Final Daily Submission</h3>
-    <p>Use this after all periods for the day are locked.</p>
-    <form action="/generate-daily-pdf" method="POST">
-        <button type="submit" style="padding: 15px 30px; background: #2ecc71; color: white; border: none; cursor: pointer; font-size: 16px; font-weight: bold;">
-            Submit Entire Day & Generate PDF
-        </button>
-    </form>
-</div>
-
-
-<script>
-function prepareAttendanceData() {
-    try {
-        console.log("Gathering attendance data...");
-        const students = [];
-        // Selects all rows in the attendance table
-        const rows = document.querySelectorAll("table tr:not(:first-child)"); 
-
-        rows.forEach(row => {
-            // Only process rows that have student data
-            if (row.cells.length >= 2) {
+            rows.forEach(row => {
                 const rollNo = row.cells[0].innerText.trim();
                 const name = row.cells[1].innerText.trim();
                 
-                // CORRECTED: Find the checked radio button in this row
+                // Correctly find the checked radio button
                 const checkedRadio = row.querySelector('input[type="radio"]:checked');
                 const status = checkedRadio ? checkedRadio.value : "Present";
 
                 students.push({ rollNo, name, status });
-            }
-        });
+            });
 
-        if (students.length === 0) {
-            alert("No student data found!");
+            if (students.length === 0) {
+                alert("No student data found!");
+                return false;
+            }
+
+            // Stringify the array into the hidden input
+            document.getElementById('hiddenStudentsInput').value = JSON.stringify(students);
+            return true; 
+        } catch (err) {
+            console.error("JavaScript Error:", err);
+            alert("Error preparing data. Check console (F12).");
             return false;
         }
-
-        // Put the JSON data into the hidden input field
-        document.getElementById('hiddenStudentsInput').value = JSON.stringify(students);
-        console.log("Data ready for submission!");
-        return true; 
-    } catch (err) {
-        console.error("Script Error:", err);
-        return false;
     }
-}
-</script>
-
-
-
+    </script>
 </body>
 </html>
