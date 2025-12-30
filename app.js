@@ -425,7 +425,7 @@ app.post('/lock-period', async (req, res) => {
 
     const newAttendance = new Attendance({
         date: date || new Date().toISOString().split('T')[0], // Fallback if date is missing
-        periodNumber: period || "1", // Use the form's 'period' or default to "1"
+        periodNumber: periodNumber, // This is the '1' from your hidden input
         subject,
         leaderEmail: req.session.user.email,
         lecturerEmail: lecturerEmail,
