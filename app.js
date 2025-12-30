@@ -225,17 +225,31 @@ app.get('/lecturer', async (req, res) => {
 });
 
 app.get('/student', async (req, res) => {
-    try {
-        const users = await User.find({});
-        const studentList = users.filter(u => u.role === 'Student');
+    if (!req.session.user) return res.redirect('/login');
 
-        res.render('student', { 
-            users: users, 
-            students: studentList, // ADD THIS LINE TO FIX THE ERROR
-            user: { email: "student@example.com" } 
+    try {
+        const userEmail = req.session.user.email;
+        const allAttendance = await Attendance.find();
+
+        // Logic to calculate subject-wise percentage
+        const subjectStats = {};
+
+        allAttendance.forEach(record => {
+            const studentEntry = record.students.find(s => s.email === userEmail || s.rollNo === req.session.user.rollNo);
+            
+            if (!subjectStats[record.subject]) {
+                subjectStats[record.subject] = { total: 0, present: 0 };
+            }
+
+            subjectStats[record.subject].total++;
+            if (studentEntry && studentEntry.status === 'Present') {
+                subjectStats[record.subject].present++;
+            }
         });
+
+        res.render('student', { user: req.session.user, subjectStats });
     } catch (err) {
-        res.status(500).send("Error loading Student dashboard");
+        res.status(500).send("Error loading student board");
     }
 });
 
@@ -422,7 +436,7 @@ app.post('/lock-period', async (req, res) => {
    try {
     // We extract 'period' (from the form) and rename it to 'periodNumber' for the database
 const { lecturerEmail, subject, date, students } = req.body; 
-
+console.log("-> Lecturer Email received:", lecturerEmail);
 const newAttendance = new Attendance({
     // 2. Use the date from the form or default to today's date
     date: date || new Date().toISOString().split('T')[0], 
