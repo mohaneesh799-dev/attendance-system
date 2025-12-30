@@ -28,20 +28,21 @@
                     <th>Current Status</th>
                     <th>Action</th>
                 </tr>
-                <% record.students.forEach(function(s) { %> <tr>
-                        <td><%= s.rollNo %></td>
-                        <td><%= s.name %></td>
-                        <td><strong><%= s.status || 'Present' %></strong></td>
-                        <td>
-                            <form action="/edit-attendance" method="POST">
-                                <input type="hidden" name="studentId" value="<%= s.studentId %>">
-                                <input type="hidden" name="attendanceId" value="<%= record._id %>">
-                                <input type="hidden" name="newStatus" value="<%= s.status === 'Absent' ? 'Present' : 'Absent' %>">
-                                <button type="submit">Switch to <%= s.status === 'Absent' ? 'Present' : 'Absent' %></button>
-                            </form>
-                        </td>
-                    </tr>
-                <% }); %> </table>
+               <% record.students.forEach(function(s) { %>
+<tr>
+    <td><%= s.rollNo %></td>
+    <td><%= s.name %></td>
+    <td><strong><%= s.status || 'Present' %></strong></td>
+    <td>
+        <form action="/edit-attendance" method="POST">
+            <input type="hidden" name="rollNo" value="<%= s.rollNo %>">
+            <input type="hidden" name="attendanceId" value="<%= record._id %>">
+            <input type="hidden" name="newStatus" value="<%= s.status === 'Absent' ? 'Present' : 'Absent' %>">
+            <button type="submit">Switch to <%= s.status === 'Absent' ? 'Present' : 'Absent' %></button>
+        </form>
+    </td>
+</tr>
+<% }); %></table>
         </div>
     <% }); %> 
 <% } %>
