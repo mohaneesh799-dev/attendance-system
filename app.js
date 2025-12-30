@@ -419,21 +419,22 @@ app.post('/lock-period', async (req, res) => {
         return res.redirect('/login'); 
     }
 
-    try {
-        const { lecturerEmail, subject, periodNumber, date, students } = req.body;
-        
-        const newAttendance = new Attendance({
-            date,
-            periodNumber,
-            subject,
-            leaderEmail: req.session.user.email,
-            lecturerEmail: lecturerEmail,
-            students: JSON.parse(students)
-        });
+   try {
+    // We extract 'period' (from the form) and rename it to 'periodNumber' for the database
+    const { lecturerEmail, subject, period, date, students } = req.body;
 
-        await newAttendance.save();
-        console.log("Record Saved!"); // Add this to debug
-        res.redirect('/leader'); // Ensure this matches your dashboard URL
+    const newAttendance = new Attendance({
+        date: date || new Date().toISOString().split('T')[0], // Fallback if date is missing
+        periodNumber: period || "1", // Use the form's 'period' or default to "1"
+        subject,
+        leaderEmail: req.session.user.email,
+        lecturerEmail: lecturerEmail,
+        students: JSON.parse(students)
+    });
+
+    await newAttendance.save();
+    console.log("✅ Record Saved!");
+    res.redirect('/leader'); 
     } catch (err) {
         console.error("Save Error:", err);
         res.status(500).send(err.message);
