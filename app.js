@@ -546,16 +546,20 @@ app.post('/edit-attendance', async (req, res) => {
 });
 
 
-// Route to add a new subject from the Master Dashboard
+// Add this in the POST routes section of app.js
 app.post('/add-subject', async (req, res) => {
     try {
         const { name, code } = req.body;
-        await new Subject({ name, code }).save();
-        res.redirect('/master-dashboard');
+        const newSubject = new Subject({ name, code });
+        await newSubject.save();
+        console.log("✅ Subject Added:", name);
+        res.redirect('/master'); // Redirect back to master, NOT /master dashboard
     } catch (err) {
+        console.error("Error adding subject:", err);
         res.status(500).send("Error adding subject");
     }
 });
+
 
 // Route to delete a subject
 app.post('/delete-subject/:id', async (req, res) => {
