@@ -186,7 +186,7 @@ app.get('/leader', async (req, res) => {
          return res.redirect('/login');
     try {
         const students = await User.find({ role: 'Student' });
-        const subjects = await Subject.find(); // Load subjects from DB
+        const subjects = (await Subject.find()) || []; // Ensures it's at least an empty list
         const users = await User.find({ role: 'Lecturer', approved: true });
         res.render('leader', { students, subjects, users }); 
     } catch (err) {
