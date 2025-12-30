@@ -16,47 +16,50 @@
     </div>
 </nav>
 
+</nav>
 
-<div class="container" style="padding: 20px; font-family: Arial, sans-serif;">
-    <h2>Your Subject-wise Attendance</h2>
-    
-    <table border="1" style="width:100%; border-collapse: collapse; margin-top: 20px; text-align: left;">
-        <thead>
-            <tr style="background-color: #333; color: white;">
-                <th style="padding: 12px;">Subject Name</th>
-                <th style="padding: 12px;">Total Classes</th>
-                <th style="padding: 12px;">Classes Attended</th>
-                <th style="padding: 12px;">Attendance %</th>
-            </tr>
-        </thead>
-        <tbody>
-            <% if (Object.keys(subjectStats).length === 0) { %>
-                <tr>
-                    <td colspan="4" style="padding: 20px; text-align: center; color: gray;">
-                        No attendance data available yet.
-                    </td>
+<div style="font-family: Arial; padding: 20px;">
+    <h2>Student Dashboard</h2>
+    <p>Logged in as: <b><%= user.email %></b></p>
+
+    <div style="margin-top: 30px;">
+        <h3>Your Subject-wise Attendance</h3>
+        <table border="1" cellpadding="10" style="width:100%; border-collapse: collapse; text-align: left;">
+            <thead>
+                <tr style="background-color: #f2f2f2;">
+                    <th>Subject Name</th>
+                    <th>Total Classes</th>
+                    <th>Classes Attended</th>
+                    <th>Attendance Percentage</th>
                 </tr>
-            <% } else { %>
-                <% Object.keys(subjectStats).forEach(subject => { %>
-                    <% 
-                        let total = subjectStats[subject].total;
-                        let present = subjectStats[subject].present;
-                        let percentage = ((present / total) * 100).toFixed(2);
-                    %>
+            </thead>
+            <tbody>
+                <% if (typeof subjectStats !== 'undefined' && Object.keys(subjectStats).length > 0) { %>
+                    <% Object.keys(subjectStats).forEach(subject => { %>
+                        <% 
+                            let total = subjectStats[subject].total;
+                            let present = subjectStats[subject].present;
+                            let percentage = ((present / total) * 100).toFixed(2);
+                        %>
+                        <tr>
+                            <td><%= subject %></td>
+                            <td><%= total %></td>
+                            <td style="color: green; font-weight: bold;"><%= present %></td>
+                            <td>
+                                <span style="color: <%= percentage < 75 ? 'red' : 'green' %>; font-weight: bold;">
+                                    <%= percentage %>%
+                                </span>
+                            </td>
+                        </tr>
+                    <% }) %>
+                <% } else { %>
                     <tr>
-                        <td style="padding: 12px;"><b><%= subject %></b></td>
-                        <td style="padding: 12px;"><%= total %></td>
-                        <td style="padding: 12px; color: green;"><%= present %></td>
-                        <td style="padding: 12px;">
-                            <span style="font-weight: bold; color: <%= percentage < 75 ? 'red' : 'black' %>;">
-                                <%= percentage %>%
-                            </span>
-                        </td>
+                        <td colspan="4" style="text-align: center; color: gray;">No attendance records found for your account.</td>
                     </tr>
-                <% }) %>
-            <% } %>
-        </tbody>
-    </table>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
 </div>
 
 

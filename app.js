@@ -225,31 +225,48 @@ app.get('/lecturer', async (req, res) => {
 });
 
 app.get('/student', async (req, res) => {
-    if (!req.session.user) return res.redirect('/login');
+    // 1. Session Check
+    if (!req.session || !req.session.user) {
+        return res.redirect('/login');
+    }
 
     try {
         const userEmail = req.session.user.email;
+        // Fetch all attendance records
         const allAttendance = await Attendance.find();
 
-        // Logic to calculate subject-wise percentage
         const subjectStats = {};
 
         allAttendance.forEach(record => {
-            const studentEntry = record.students.find(s => s.email === userEmail || s.rollNo === req.session.user.rollNo);
+            // 2. Safety check: Ensure record.students exists and is an array
+            const studentList = Array.isArray(record.students) ? record.students : [];
             
+            // 3. Find the student by email
+            const studentEntry = studentList.find(s => s.email === userEmail);
+            
+            // Initialize subject if it doesn't exist
             if (!subjectStats[record.subject]) {
                 subjectStats[record.subject] = { total: 0, present: 0 };
             }
 
             subjectStats[record.subject].total++;
+
+            // Increment if student was present
             if (studentEntry && studentEntry.status === 'Present') {
                 subjectStats[record.subject].present++;
             }
         });
 
-        res.render('student', { user: req.session.user, subjectStats });
+        // 4. Render with all necessary variables to avoid "undefined" errors
+        res.render('student', { 
+            user: req.session.user, 
+            subjectStats: subjectStats 
+        });
+
     } catch (err) {
-        res.status(500).send("Error loading student board");
+        console.error("Student Dashboard Error:", err);
+        // This sends the specific error to the screen so you can see why it failed
+        res.status(500).send("Error: " + err.message);
     }
 });
 
