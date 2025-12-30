@@ -225,48 +225,54 @@ app.get('/lecturer', async (req, res) => {
 });
 
 app.get('/student', async (req, res) => {
-    // 1. Session Check
-    if (!req.session || !req.session.user) {
-        return res.redirect('/login');
-    }
+    if (!req.session.user) return res.redirect('/login');
 
     try {
         const userEmail = req.session.user.email;
-        // Fetch all attendance records
-        const allAttendance = await Attendance.find();
-
+        // Fetch all records
+     const allAttendance = await Attendance.find();
         const subjectStats = {};
 
         allAttendance.forEach(record => {
-            // 2. Safety check: Ensure record.students exists and is an array
-            const studentList = Array.isArray(record.students) ? record.students : [];
+            // CRITICAL FIX: Ensure students is an array before searching
+            let studentList = [];
+            if (Array.isArray(record.students)) {
+                studentList = record.students;
+            } else if (typeof record.students === 'string') {
+                try { 
+                    studentList = JSON.parse(record.students); 
+                } catch(e) { 
+                    studentList = []; 
+                }
+            }
+
+            // Find current student by email or rollNo
+            const studentEntry = studentList.find(s => 
+                (s.email && s.email === userEmail) || 
+                (s.rollNo && s.rollNo === req.session.user.rollNo)
+            );
             
-            // 3. Find the student by email
-            const studentEntry = studentList.find(s => s.email === userEmail);
-            
-            // Initialize subject if it doesn't exist
             if (!subjectStats[record.subject]) {
                 subjectStats[record.subject] = { total: 0, present: 0 };
             }
 
             subjectStats[record.subject].total++;
 
-            // Increment if student was present
-            if (studentEntry && studentEntry.status === 'Present') {
+            if (studentEntry && (studentEntry.status === 'Present' || studentEntry.status === 'present')) {
                 subjectStats[record.subject].present++;
             }
         });
 
-        // 4. Render with all necessary variables to avoid "undefined" errors
+
         res.render('student', { 
             user: req.session.user, 
-            subjectStats: subjectStats 
+            subjectStats: subjectStats // Ensure this variable name matches student.ejs
         });
 
     } catch (err) {
-        console.error("Student Dashboard Error:", err);
-        // This sends the specific error to the screen so you can see why it failed
-        res.status(500).send("Error: " + err.message);
+        console.error("CRASH ERROR:", err);
+        // This shows the real error on your screen instead of 'Internal Server Error'
+        res.status(500).send("Student Dashboard failed: " + err.message);
     }
 });
 
