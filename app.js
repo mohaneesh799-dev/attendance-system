@@ -561,11 +561,14 @@ app.post('/add-subject', async (req, res) => {
 });
 
 
-// Route to delete a subject
+
 app.post('/delete-subject/:id', async (req, res) => {
     try {
+        if (!req.session.user || req.session.user.role !== 'Master') {
+            return res.status(403).send("Unauthorized");
+        }
         await Subject.findByIdAndDelete(req.params.id);
-        res.redirect('/master-dashboard');
+        res.redirect('/master');
     } catch (err) {
         res.status(500).send("Error deleting subject");
     }

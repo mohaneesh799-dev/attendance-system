@@ -27,7 +27,16 @@
 
         <form action="/lock-period" method="POST" onsubmit="return prepareAttendanceData()">
             <input type="hidden" name="students" id="hiddenStudentsInput">
-
+            <input type="hidden" name="date" value="<%= new Date().toISOString().split('T')[0] %>">
+<div style="margin-bottom: 20px;">
+    <label><b>Select Subject Lecturer:</b></label><br>
+    <select name="lecturerEmail" required style="padding: 10px; width: 300px; margin-top: 5px;">
+        <option value="">-- Choose Lecturer --</option>
+        <% users.forEach(function(lecturer) { %>
+            <option value="<%= lecturer.email %>"><%= lecturer.name %> (<%= lecturer.email %>)</option>
+        <% }); %>
+    </select>
+</div>
             <div style="margin-bottom: 20px;">
                 <label><b>Select Subject (from Timetable):</b></label><br>
                 <select name="subject" required style="padding: 10px; width: 300px; margin-top: 5px;">
