@@ -182,7 +182,8 @@ app.post('/delete-user/:id', async (req, res) => {
 
 // Change the name to /leader to match your portal URL
 app.get('/leader', async (req, res) => {
-    if (!req.session.user || req.session.user.role !== 'Class Leader') return res.redirect('/login');
+    if (!req.session.user || req.session.user.role !== 'Class Leader')
+         return res.redirect('/login');
     try {
         const students = await User.find({ role: 'Student' });
         const subjects = await Subject.find(); // Load subjects from DB
