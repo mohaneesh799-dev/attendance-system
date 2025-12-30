@@ -129,7 +129,7 @@ const transporter = nodemailer.createTransport({
 
 // --- GET ROUTES (To show pages) ---
 
-app.get('/', (req, res) => {
+app.get('/login', (req, res) => {
     res.render('login');
 });
 
