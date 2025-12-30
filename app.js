@@ -239,42 +239,43 @@ app.post('/login', async (req, res) => {
     try {
         // 1. Find user by email
         const user = await User.findOne({ email: email });
-
-        // If user doesn't exist, stop here
+        
         if (!user) {
             console.log("❌ Login failed: Email not found");
             return res.status(400).send("Invalid email or password");
         }
 
-        // 2. CHECK APPROVAL STATUS
-        // If the user exists but is not approved, send a specific message
+        
         if (user.approved === false) {
-            console.log("⚠️ Login blocked: User not approved yet");
+            console.log("⚠ Login blocked: User not approved yet");
             return res.status(403).send("Your account is pending admin approval.");
         }
 
-        // Inside app.post('/login'), replace lines 91-95 with:
-const isMatch = await bcrypt.compare(password, user.password);
+        // 3. Check password
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            console.log("❌ Login failed: Wrong password");
+            return res.status(400).send("Invalid email or password");
+        }
 
-if (!isMatch) {
-    console.log("❌ Login failed: Wrong password");
-    // 'return' ensures the code stops here if the password is wrong
-    return res.status(400).send("Invalid email or password"); 
-}
+        // 4. SUCCESS BLOCK
+        req.session.user = user;
+        console.log("✅ Login successful for:", email);
 
-// SUCCESS BLOCK (Keep only this one)
-req.session.user = user; 
-console.log("✅ Login successful for:", email);
-// Redirect based on the user's role (Lecturer, Leader, etc.)
-// Manual redirect to match your actual routes
-if (user.role === 'Class Leader') {
-    res.redirect('/leader'); 
-} else if (user.role === 'Master') {
-    res.redirect('/master');
-} else if (user.role === 'Lecturer') {
-    res.redirect('/lecturer');
-}
-} catch (err) {
+        // 5. FIXED REDIRECT LOGIC
+        // We manually check roles to avoid spaces in URLs like "/class leader"
+        if (user.role === 'Class Leader') {
+            return res.redirect('/leader'); 
+        } else if (user.role === 'Master') {
+            return res.redirect('/master');
+        } else if (user.role === 'Lecturer') {
+            return res.redirect('/lecturer');
+        } else {
+            // Default fallback
+            return res.redirect('/');
+        }
+
+    } catch (err) {
         console.error("🔥 Server Error during login:", err);
         res.status(500).send("Internal Server Error");
     }
