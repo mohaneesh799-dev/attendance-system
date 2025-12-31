@@ -3,111 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Portal</title>
+    <title>Student Dashboard</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .container { padding: 20px; font-family: 'Segoe UI', sans-serif; max-width: 900px; margin: auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #007bff; padding-bottom: 10px; margin-bottom: 20px; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+        .stat-card { background: #f8f9fa; padding: 20px; border-radius: 10px; text-align: center; border: 1px solid #dee2e6; }
+        .stat-number { font-size: 2em; font-weight: bold; color: #007bff; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; }
+        th, td { padding: 12px; border: 1px solid #eee; text-align: left; }
+        th { background-color: #007bff; color: white; }
+        .status-present { color: #28a745; font-weight: bold; }
+        .status-absent { color: #dc3545; font-weight: bold; }
+        .logout-btn { background-color: #dc3545; color: white; padding: 8px 15px; text-decoration: none; border-radius: 5px; }
+    </style>
 </head>
-<body style="background-color: <%= user.theme || 'white' %>; padding: 20px; font-family: Arial;">
-    <nav style="background: #333; color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center;">
-    <div>
-        <strong>Attendance System</strong>
-    </div>
-    <div>
-        <a href="/settings" style="color: white; margin-right: 15px; text-decoration: none;">⚙️ Settings</a>
-        <a href="/logout" style="color: #ff4d4d; text-decoration: none; font-weight: bold;">Logout</a>
-    </div>
-</nav>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>Student Dashboard</h1>
+                <p>Welcome, <strong><%= user.name %></strong> (Roll No: <%= user.rollNo || 'N/A' %>)</p>
+            </div>
+            <a href="/logout" class="logout-btn">Logout</a>
+        </div>
 
-</nav>
+        <% 
+            // Logic to calculate stats
+            let totalClasses = 0;
+            let presentCount = 0;
+            
+            attendanceRecords.forEach(record => {
+                const myRecord = record.records.find(r => r.studentName === user.name);
+                if (myRecord) {
+                    totalClasses++;
+                    if (myRecord.status === 'Present') presentCount++;
+                }
+            });
+            
+            let percentage = totalClasses > 0 ? ((presentCount / totalClasses) * 100).toFixed(2) : 0;
+        %>
 
-<div style="font-family: Arial; padding: 20px;">
-    <h2>Student Dashboard</h2>
-    <p>Logged in as: <b><%= user.email %></b></p>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Classes</div>
+                <div class="stat-number"><%= totalClasses %></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Attendance Percentage</div>
+                <div class="stat-number"><%= percentage %>%</div>
+            </div>
+        </div>
 
-    <div style="margin-top: 30px;">
-        <h3>Your Subject-wise Attendance</h3>
-        <table border="1" cellpadding="10" style="width:100%; border-collapse: collapse; text-align: left;">
+        <h3>Detailed Attendance History</h3>
+        <table>
             <thead>
-                <tr style="background-color: #f2f2f2;">
-                    <th>Subject Name</th>
-                    <th>Total Classes</th>
-                    <th>Classes Attended</th>
-                    <th>Attendance Percentage</th>
+                <tr>
+                    <th>Date</th>
+                    <th>Subject</th>
+                    <th>Period/Time</th>
+                    <th>Status</th>
                 </tr>
             </thead>
             <tbody>
-                <% if (typeof subjectStats !== 'undefined' && Object.keys(subjectStats).length > 0) { %>
-                    <% Object.keys(subjectStats).forEach(subject => { %>
-                        <% 
-                            let total = subjectStats[subject].total;
-                            let present = subjectStats[subject].present;
-                            let percentage = ((present / total) * 100).toFixed(2);
-                        %>
-                        <tr>
-                            <td><%= subject %></td>
-                            <td><%= total %></td>
-                            <td style="color: green; font-weight: bold;"><%= present %></td>
-                            <td>
-                                <span style="color: <%= percentage < 75 ? 'red' : 'green' %>; font-weight: bold;">
-                                    <%= percentage %>%
-                                </span>
-                            </td>
-                        </tr>
-                    <% }) %>
+                <% if (attendanceRecords.length === 0) { %>
+                    <tr><td colspan="4" style="text-align: center;">No attendance records found yet.</td></tr>
                 <% } else { %>
-                    <tr>
-                        <td colspan="4" style="text-align: center; color: gray;">No attendance records found for your account.</td>
-                    </tr>
+                    <% attendanceRecords.reverse().forEach(record => { %>
+                        <% const myRecord = record.records.find(r => r.studentName === user.name); %>
+                        <% if (myRecord) { %>
+                            <tr>
+                                <td><%= record.date %></td>
+                                <td><%= record.subject %></td>
+                                <td><%= record.timeSlot || ('Period ' + record.periodNumber) %></td>
+                                <td class="<%= myRecord.status === 'Present' ? 'status-present' : 'status-absent' %>">
+                                    <%= myRecord.status %>
+                                </td>
+                            </tr>
+                        <% } %>
+                    <% }) %>
                 <% } %>
             </tbody>
         </table>
-    </div>
-</div>
-
-
-
-<% if (!user.name || !user.rollNo) { %>
-    <div style="background: #fff3cd; color: #856404; padding: 15px; border: 1px solid #ffeeba; border-radius: 8px; margin: 20px auto; max-width: 700px; text-align: center;">
-        <strong>⚠️ Profile Incomplete:</strong> Please go to your 
-        <a href="/settings" style="color: #856404; font-weight: bold;">Settings</a> 
-        to enter your Name and Roll Number so your attendance can be recorded properly.
-    </div>
-<% } %>
-
-    <div style="max-width: 700px; margin: auto; border: 1px solid #ddd; padding: 30px; border-radius: 12px; background-color: #fff; box-shadow: 0px 4px 10px rgba(0,0,0,0.1);">
-        <h1 style="color: #2c3e50; text-align: center;">Student Dashboard</h1>
-        <p style="text-align: center; color: #7f8c8d;">Welcome back! Here is your latest attendance record.</p>
-        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
-
-        <h3>Attendance Overview</h3>
-        <table border="1" cellpadding="12" style="width: 100%; border-collapse: collapse; margin-top: 10px; border: 1px solid #ddd;">
-            <thead>
-                <tr style="background-color: #34495e; color: white; text-align: left;">
-                    <th>Student Name</th>
-                    <th>Current Status</th>
-                </tr>
-            </thead>
-            <tbody>
-        <% if (typeof history !== 'undefined' && history.length > 0) { %>     
-            <% history.forEach(function(s) { %>            <tr style="border-bottom: 1px solid #eee;">
-                <td style="padding: 10px;"><%= s.subject %></td>
-                <td style="padding: 10px;"><%= s.date %></td>
-                <td style="padding: 10px; font-weight: bold; color: green;"><%= s.status %></td>
-            </tr>
-        <% }); %>
-    <% } else { %>
-        <tr>
-            <td colspan="3" style="text-align: center; padding: 20px;">No attendance found for your account.</td>
-        </tr>
-    <% } %>
-</tbody>
-        </table>
-
-        <div style="margin-top: 25px; padding: 15px; background-color: #fff3cd; border-left: 5px solid #ffecb5; border-radius: 4px;">
-            <p style="margin: 0; font-size: 0.9em; color: #856404;">
-                <strong>Notice:</strong> If your status is incorrect, please contact your <b>Lecturer</b> immediately.
-            </p>
-        </div>
-        
-
     </div>
 </body>
 </html>

@@ -231,11 +231,10 @@ app.get('/lecturer', async (req, res) => {
 
     try {
         // 2. Fetch records where the lecturerEmail matches the logged-in user
-        // We sort by date (descending) so the newest records appear first
+       // 2. Fetch records using a case-insensitive search
         const records = await Attendance.find({ 
-            lecturerEmail: req.session.user.email 
+       lecturerEmail: { $regex: new RegExp("^" + req.session.user.email + "$", "i") } 
         }).sort({ date: -1 });
-
         // 3. Debugging: This helps you see in your Render logs if data is being found
         console.log(`--- Lecturer Dashboard Access ---`);
         console.log(`User: ${req.session.user.email}`);
@@ -257,90 +256,60 @@ app.get('/lecturer', async (req, res) => {
 
 
 app.get('/student', async (req, res) => {
-    if (!req.session.user) return res.redirect('/login');
-
+    if (!req.session.user || req.session.user.role !== 'Student') {
+        return res.redirect('/login');
+    }
     try {
-        const userEmail = req.session.user.email;
-        const allRecords = await Attendance.find(); //
-
-        const subjectStats = {};
-        const history = [];
-
-        allRecords.forEach(rec => {
-            // Find this student in the record's student array
-            const sEntry = rec.students.find(s => s.email === userEmail);
-            
-            if (sEntry) {
-                // Add to Day-wise History
-                history.push({
-                    date: rec.date,
-                    subject: rec.subject,
-                    status: sEntry.status
-                });
-
-                // Calculate Subject-wise stats
-                if (!subjectStats[rec.subject]) {
-                    subjectStats[rec.subject] = { total: 0, present: 0 };
-                }
-                subjectStats[rec.subject].total++;
-                if (sEntry.status === 'Present') subjectStats[rec.subject].present++;
-            }
-        });
-
-res.render('student', { 
+        // Find records where this student is listed in the 'records' array
+        const records = await Attendance.find({ "records.studentName": req.session.user.name });
+        
+        res.render('student', { 
             user: req.session.user, 
-            subjectStats: subjectStats, 
-            history: history           
+            attendanceRecords: records 
         });
     } catch (err) {
-        console.error(err);
-        res.status(500).send("Error: " + err.message);
+        res.status(500).send("Error loading dashboard");
     }
 });
 
 
 app.post('/login', async (req, res) => {
-
     try {
         const { email, password } = req.body;
-        // Find user and handle case-sensitivity/whitespace
         const user = await User.findOne({ email: email.toLowerCase().trim() });
 
         if (!user) {
-            return res.send("<script>alert('User not found. Please contact the Master.'); window.location.href='/login';</script>");
+            return res.send("<script>alert('User not found.'); window.location.href='/login';</script>");
         }
-
 
         if (user.role !== 'Master' && !user.isApproved) {
-            return res.send("<script>alert('Approval Pending: Please wait for the Master to approve your account.'); window.location.href='/login';</script>");
+            return res.send("<script>alert('Approval Pending. Please wait for the Master.'); window.location.href='/login';</script>");
         }
 
-
-        // 2. PASSWORD CHECK (If you are using passwords)
-        if (user.password && user.password !== password) {
+        if (user.password !== password) {
             return res.send("<script>alert('Invalid Password'); window.location.href='/login';</script>");
         }
 
-
+        // SETTING SESSION - Crucial for lecturer data retrieval
         req.session.user = {
             id: user._id,
-            email: user.email,
-            role: user.role, // This will now correctly be 'Master'
+            email: user.email.toLowerCase(),
+            role: user.role, // This will now be 'Lecturer' if updated by Master
             name: user.name
         };
 
-
-        if (user.role === 'Master') {
+     // Replace lines 299-307 in your app.js
+const userRole = user.role.toLowerCase(); 
+if (userRole === 'master') {
     res.redirect('/master');
-} else if (user.role === 'Lecturer') {
-    // Add this specific case
-    res.redirect('/lecturer'); 
-} else if (user.role === 'Leader') {
+} else if (userRole === 'lecturer') {
+    res.redirect('/lecturer');
+} else if (userRole === 'leader') {
     res.redirect('/leader');
 } else {
-    // This is the default catch-all that was sending Lecturers to Student
     res.redirect('/student');
 }
+
     } catch (err) {
         console.error("Login Error:", err);
         res.status(500).send("Internal Server Error during login.");
