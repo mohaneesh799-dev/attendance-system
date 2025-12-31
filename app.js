@@ -219,17 +219,25 @@ if (!req.session.user || (req.session.user.role !== 'Class Leader' && req.sessio
 });
 
 app.get('/lecturer', async (req, res) => {
-    // Security check: Only allow users with the 'Lecturer' role
+    // 1. Security Check
     if (!req.session.user || req.session.user.role !== 'Lecturer') {
         return res.redirect('/login');
     }
 
     try {
-        // Render your lecturer.ejs template
-        res.render('lecturer', { user: req.session.user });
+        // 2. Fetch the data your lecturer.ejs needs
+        // For example, if you show subjects:
+        const subjects = await Subject.find(); 
+        
+        // 3. Render the page and PASS the variables
+        res.render('lecturer', { 
+            user: req.session.user,
+            subjects: subjects // If your EJS uses 'subjects', it MUST be here
+        });
     } catch (err) {
-        console.error("Lecturer Dashboard Error:", err);
-        res.status(500).send("Internal Server Error: Dashboard failed to load.");
+        console.error("Lecturer Route Error:", err);
+        // This is what you see in the browser
+        res.status(500).send("Internal Server Error: Data missing for Lecturer board.");
     }
 });
 
