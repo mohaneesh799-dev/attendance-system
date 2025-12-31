@@ -218,26 +218,25 @@ if (!req.session.user || (req.session.user.role !== 'Class Leader' && req.sessio
     }
 });
 
+
 app.get('/lecturer', async (req, res) => {
-    // 1. Security Check
+    
     if (!req.session.user || req.session.user.role !== 'Lecturer') {
         return res.redirect('/login');
     }
 
     try {
-        // 2. Fetch the data your lecturer.ejs needs
-        // For example, if you show subjects:
-        const subjects = await Subject.find(); 
-        
-        // 3. Render the page and PASS the variables
+        // You MUST fetch these records so line 18 in lecturer.ejs doesn't crash
+        // Replace 'Attendance' with your actual Model name
+        const attendanceRecords = await Attendance.find({ lecturerEmail: req.session.user.email });
+
         res.render('lecturer', { 
             user: req.session.user,
-            subjects: subjects // If your EJS uses 'subjects', it MUST be here
+            attendanceRecords: attendanceRecords // This fixes the ReferenceError
         });
     } catch (err) {
-        console.error("Lecturer Route Error:", err);
-        // This is what you see in the browser
-        res.status(500).send("Internal Server Error: Data missing for Lecturer board.");
+        console.error(err);
+        res.status(500).send("Internal Server Error: Missing Attendance Data");
     }
 });
 
