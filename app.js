@@ -224,19 +224,33 @@ app.get('/leader', async (req, res) => {
 
 
 app.get('/lecturer', async (req, res) => {
+    // 1. Session and Role Security Check
     if (!req.session.user || req.session.user.role !== 'Lecturer') {
         return res.redirect('/login');
     }
+
     try {
-        // We MUST fetch records assigned to this specific lecturer's email
-        const records = await Attendance.find({ lecturerEmail: req.session.user.email });
-        
+        // 2. Fetch records where the lecturerEmail matches the logged-in user
+        // We sort by date (descending) so the newest records appear first
+        const records = await Attendance.find({ 
+            lecturerEmail: req.session.user.email 
+        }).sort({ date: -1 });
+
+        // 3. Debugging: This helps you see in your Render logs if data is being found
+        console.log(`--- Lecturer Dashboard Access ---`);
+        console.log(`User: ${req.session.user.email}`);
+        console.log(`Records Found: ${records.length}`);
+
+        // 4. Render the page and pass the variables
+        // Note: 'attendanceRecords' MUST match the variable name used in your EJS loops
         res.render('lecturer', { 
             user: req.session.user, 
-            attendanceRecords: records // This prevents the 500 error
+            attendanceRecords: records || [] 
         });
+
     } catch (err) {
-        res.status(500).send("Error loading lecturer dashboard.");
+        console.error("Lecturer Route Error:", err);
+        res.status(500).send("Internal Server Error: Could not load dashboard.");
     }
 });
 
@@ -472,7 +486,7 @@ await User.findOneAndUpdate(
 
 
 app.post('/lock-attendance', async (req, res) => {
-    
+
     try {
         // 1. Extract data from req.body
         const { lecturerEmail, subject, date, students, periodNumber, startTime, endTime } = req.body;

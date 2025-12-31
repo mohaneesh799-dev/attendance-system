@@ -6,50 +6,64 @@
     <title>Lecturer Dashboard</title>
     <link rel="stylesheet" href="/css/style.css">
     <style>
-        .record-card { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 8px; background: #f9f9f9; }
-        .student-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #eee; }
-        .btn-update { background-color: #28a745; color: white; padding: 8px 15px; border: none; cursor: pointer; border-radius: 4px; }
-        .status-present { color: green; font-weight: bold; }
-        .status-absent { color: red; font-weight: bold; }
+        .container { padding: 20px; font-family: 'Segoe UI', sans-serif; }
+        .record-card { border: 1px solid #ddd; padding: 20px; margin-bottom: 25px; border-radius: 10px; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
+        .student-row { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; }
+        .btn-update { background-color: #27ae60; color: white; padding: 10px 20px; border: none; cursor: pointer; border-radius: 5px; font-weight: bold; width: 100%; margin-top: 15px; }
+        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 0.9em; font-weight: bold; }
+        .present { background: #e8f5e9; color: #2e7d32; }
+        .absent { background: #ffebee; color: #c62828; }
+        .logout-btn { background-color: #e74c3c; color: white; padding: 8px 15px; text-decoration: none; border-radius: 5px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Lecturer Dashboard</h1>
-        <p>Welcome, <strong><%= user.name %></strong></p>
-        <a href="/logout">Logout</a>
-
-        <hr>
+        <div class="header">
+            <div>
+                <h1>Lecturer Dashboard</h1>
+                <p>Welcome, <strong><%= user.name %></strong> (<%= user.email %>)</p>
+            </div>
+            <a href="/logout" class="logout-btn">Logout</a>
+        </div>
 
         <h2>Assigned Attendance Records</h2>
-        <p>Modify Attendance Mistakes for your assigned periods:</p>
+        <p>You can review and correct attendance for your assigned periods below.</p>
 
         <% if (!attendanceRecords || attendanceRecords.length === 0) { %>
-            <p style="color: gray;">No attendance records have been assigned to you yet.</p>
+            <div class="panel" style="text-align: center; padding: 40px; color: #666;">
+                <p>No attendance records found for your email.</p>
+                <small>Ask the Leader to assign periods to: <%= user.email %></small>
+            </div>
         <% } else { %>
             <% attendanceRecords.forEach(function(record) { %>
                 <div class="record-card">
-                    <h3>Subject: <%= record.subject %></h3>
-                    <p>Date: <%= new Date(record.date).toLocaleString() %></p>
-                    <p>Locked by Leader: <%= record.isLockedByLeader ? 'Yes' : 'No' %></p>
-
+                    <div style="display: flex; justify-content: space-between;">
+                        <h3>Subject: <%= record.subject %></h3>
+                        <span><strong>Period: <%= record.periodNumber %></strong></span>
+                    </div>
+                    <p><strong>Time:</strong> <%= record.timeSlot || 'Not Specified' %></p>
+                    <p><strong>Date:</strong> <%= record.date %></p>
+                    
                     <form action="/lecturer/update-attendance/<%= record._id %>" method="POST">
-                        <div class="student-list">
+                        <div class="student-list" style="margin-top: 15px; border-top: 1px solid #ddd;">
                             <% record.records.forEach(function(student, index) { %>
                                 <div class="student-row">
                                     <span><%= student.studentName %></span>
-                                    <input type="hidden" name="attendance[<%= index %>][studentId]" value="<%= student.studentId %>">
-                                    <input type="hidden" name="attendance[<%= index %>][studentName]" value="<%= student.studentName %>">
                                     
-                                    <select name="attendance[<%= index %>][status]">
-                                        <option value="Present" <%= student.status === 'Present' ? 'selected' : '' %>>Present</option>
-                                        <option value="Absent" <%= student.status === 'Absent' ? 'selected' : '' %>>Absent</option>
-                                    </select>
+                                    <div style="display: flex; gap: 10px; align-items: center;">
+                                        <input type="hidden" name="attendance[<%= index %>][studentId]" value="<%= student.studentId %>">
+                                        <input type="hidden" name="attendance[<%= index %>][studentName]" value="<%= student.studentName %>">
+                                        
+                                        <select name="attendance[<%= index %>][status]" class="status-badge <%= student.status === 'Present' ? 'present' : 'absent' %>">
+                                            <option value="Present" <%= student.status === 'Present' ? 'selected' : '' %>>Present</option>
+                                            <option value="Absent" <%= student.status === 'Absent' ? 'selected' : '' %>>Absent</option>
+                                        </select>
+                                    </div>
                                 </div>
                             <% }); %>
                         </div>
-                        <br>
-                        <button type="submit" class="btn-update">Update & Confirm Attendance</button>
+                        <button type="submit" class="btn-update">Update & Finalize Record</button>
                     </form>
                 </div>
             <% }); %>
