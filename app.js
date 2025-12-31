@@ -227,23 +227,17 @@ app.get('/leader', async (req, res) => {
 
 
 app.get('/lecturer', async (req, res) => {
-    
-    if (!req.session.user || req.session.user.role !== 'Lecturer') {
-        return res.redirect('/login');
-    }
+
 
     try {
-        // You MUST fetch these records so line 18 in lecturer.ejs doesn't crash
-        // Replace 'Attendance' with your actual Model name
-        const attendanceRecords = await Attendance.find({ lecturerEmail: req.session.user.email });
-
+        // Find records where this lecturer is assigned
+        const records = await Attendance.find({ lecturerId: req.session.user.id });
         res.render('lecturer', { 
-            user: req.session.user,
-            attendanceRecords: attendanceRecords // This fixes the ReferenceError
+            user: req.session.user, 
+            attendanceRecords: records // MUST MATCH EJS VARIABLE NAME
         });
     } catch (err) {
-        console.error(err);
-        res.status(500).send("Internal Server Error: Missing Attendance Data");
+        res.status(500).send("Error loading dashboard");
     }
 });
 
@@ -476,36 +470,34 @@ await User.findOneAndUpdate(
 });
 
 
-app.post('/lock-period', async (req, res) => {
-    // If this check fails, it redirects and looks like a refresh
-    if (!req.session || !req.session.user) {
-        console.log("Session missing!"); // Add this to debug
-        return res.redirect('/login'); 
+app.post('/lock-attendance', async (req, res) => {
+    if (!req.session.user || req.session.user.role !== 'Leader') {
+        return res.redirect('/login');
     }
 
-   try {
-    // We extract 'period' (from the form) and rename it to 'periodNumber' for the database
-const { lecturerEmail, subject, date, students } = req.body; 
-console.log("-> Lecturer Email received:", lecturerEmail);
-const newAttendance = new Attendance({
-    // 2. Use the date from the form or default to today's date
-    date: date || new Date().toISOString().split('T')[0], 
-    
-    // 3. Keep this hardcoded as '1' so the database is satisfied
-    periodNumber: '1', 
-    
-    subject: subject,
-    leaderEmail: req.session.user.email,
-    lecturerEmail: lecturerEmail,
-    // 4. Add a fallback to '[]' to prevent JSON.parse from crashing if students is empty
-    students: JSON.parse(students || '[]') 
-});
-    await newAttendance.save();
-    console.log("✅ Record Saved!");
-    res.send("<script>alert('Attendance Locked Successfully!'); window.location.href='/leader';</script>"); 
-   } catch (err) {
+    try {
+        const { lecturerEmail, subject, date, students } = req.body;
+
+        // 'students' will arrive as an array of objects from the leader.ejs form
+        const newAttendance = new Attendance({
+            date: date || new Date().toISOString().split('T')[0],
+            subject: subject,
+            leaderEmail: req.session.user.email,
+            lecturerEmail: lecturerEmail,
+            // Map the form data into your database schema
+            records: students.map(s => ({
+                studentId: s.id,
+                studentName: s.name,
+                status: s.status || 'Absent' // Default to absent if not checked
+            })),
+            isLockedByLeader: true
+        });
+
+        await newAttendance.save();
+        res.send("<script>alert('Attendance Locked Successfully!'); window.location.href='/leader';</script>");
+    } catch (err) {
         console.error("Save Error:", err);
-        res.status(500).send(err.message);
+        res.status(500).send("Error saving attendance: " + err.message);
     }
 });
 

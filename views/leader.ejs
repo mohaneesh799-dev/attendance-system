@@ -2,91 +2,61 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leader Dashboard</title>
+    <title>Leader Dashboard - Attendance</title>
     <link rel="stylesheet" href="/css/style.css">
-    <style>
-        .lecturer-badge { background-color: #007bff; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.8em; }
-        .student-badge { background-color: #6c757d; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.8em; }
-        .search-box { margin-bottom: 20px; padding: 10px; width: 100%; border: 1px solid #ddd; border-radius: 5px; }
-    </style>
 </head>
-
 <body>
     <div class="container">
         <h1>Leader Dashboard</h1>
-        <p>Welcome, <strong><%= user.name %></strong></p>
-        <a href="/logout" class="btn-logout">Logout</a>
+        <p>Welcome, <%= user.name %></p>
 
-        <hr>
-
-        <h3>Assign Attendance / Period</h3>
-        <form action="/assign-period" method="POST">
+        <form action="/lock-attendance" method="POST">
+            <h3>Step 1: Select Lecturer & Period</h3>
             <div class="form-group">
-                <label for="userSelect">Select Student or Lecturer:</label>
-                <select name="userId" id="userSelect" required style="width: 100%; padding: 10px;">
-                    <option value="">-- Choose from List --</option>
-                    <% allUsers.forEach(function(person) { %>
-                        <option value="<%= person._id %>">
-                            <%= person.name %> — <%= person.role %>
-                        </option>
+                <label>Assign to Lecturer:</label>
+                <select name="lecturerId" required>
+                    <% allUsers.filter(u => u.role === 'Lecturer').forEach(lecturer => { %>
+                        <option value="<%= lecturer._id %>"><%= lecturer.name %></option>
                     <% }); %>
                 </select>
             </div>
 
             <div class="form-group">
-                <label for="subject">Subject Name:</label>
+                <label>Period/Subject:</label>
                 <input type="text" name="subject" placeholder="e.g. Mathematics" required>
             </div>
 
-            <button type="submit" class="btn-submit">Assign Now</button>
-        </form>
+            <hr>
 
-        <hr>
-
-        <h3>User Management List</h3>
-        <input type="text" id="userSearch" class="search-box" placeholder="Search by name or email...">
-
-        <table id="userTable" border="1" style="width:100%; border-collapse: collapse;">
-            <thead>
-                <tr style="background-color: #f8f9fa;">
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% allUsers.forEach(function(person) { %>
+            <h3>Step 2: Mark Student Attendance</h3>
+            <table border="1" style="width:100%; border-collapse: collapse;">
+                <thead>
                     <tr>
-                        <td class="user-name"><%= person.name %></td>
-                        <td><%= person.email %></td>
-                        <td>
-                            <span class="<%= person.role === 'Lecturer' ? 'lecturer-badge' : 'student-badge' %>">
-                                <%= person.role %>
-                            </span>
-                        </td>
+                        <th>Student Name</th>
+                        <th>Present?</th>
                     </tr>
-                <% }); %>
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    <% allUsers.filter(u => u.role === 'Student').forEach((student, index) => { %>
+                        <tr>
+                            <td>
+                                <%= student.name %>
+                                <input type="hidden" name="attendance[<%= index %>][studentId]" value="<%= student._id %>">
+                                <input type="hidden" name="attendance[<%= index %>][studentName]" value="<%= student.name %>">
+                            </td>
+                            <td>
+                                <input type="checkbox" name="attendance[<%= index %>][status]" value="Present" checked>
+                            </td>
+                        </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+
+            <br>
+            <button type="submit" style="background-color: #d9534f; color: white; padding: 10px;">
+                Lock Attendance & Send to Lecturer
+            </button>
+        </form>
     </div>
-
-    <script>
-        document.getElementById('userSearch').addEventListener('keyup', function() {
-            let filter = this.value.toLowerCase();
-            let rows = document.querySelectorAll('#userTable tbody tr');
-
-            rows.forEach(row => {
-                let name = row.querySelector('.user-name').textContent.toLowerCase();
-                let email = row.cells[1].textContent.toLowerCase();
-                
-                if (name.includes(filter) || email.includes(filter)) {
-                    row.style.display = "";
-                } else {
-                    row.style.display = "none";
-                }
-            });
-        });
-    </script>
 </body>
 </html>

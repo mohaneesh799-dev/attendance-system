@@ -1,51 +1,59 @@
-<div style="font-family: Arial; padding: 20px;">
-    <nav style="background: #333; color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center;">
-    <div>
-        <strong>Attendance System</strong>
-    </div>
-    <div>
-        <a href="/settings" style="color: white; margin-right: 15px; text-decoration: none;">⚙️ Settings</a>
-        <a href="/logout" style="color: #ff4d4d; text-decoration: none; font-weight: bold;">Logout</a>
-    </div>
-</nav>
-    <h2>Lecturer Dashboard</h2>
-    <p>Modify Attendance Mistakes</p>
-    <div style="font-family: Arial; padding: 20px;">
-    <h2>Lecturer Dashboard</h2>
-    <p>Logged in as: <b><%= user.email %></b></p>
-    <p>Modify Attendance Mistakes for your assigned periods:</p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lecturer Dashboard</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .record-card { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 8px; background: #f9f9f9; }
+        .student-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #eee; }
+        .btn-update { background-color: #28a745; color: white; padding: 8px 15px; border: none; cursor: pointer; border-radius: 4px; }
+        .status-present { color: green; font-weight: bold; }
+        .status-absent { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Lecturer Dashboard</h1>
+        <p>Welcome, <strong><%= user.name %></strong></p>
+        <a href="/logout">Logout</a>
 
-<% if (attendanceRecords.length === 0) { %>
-    <p style="color: gray;">No attendance records have been assigned to you yet.</p>
-<% } else { %>
-    <% attendanceRecords.forEach(function(record) { %>
-        <div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 8px;">
-            <h3>Period <%= record.periodNumber %>: <%= record.subject %></h3>
-            <table border="1" cellpadding="10" style="width:100%; border-collapse: collapse;">
-                <tr style="background-color: #f2f2f2;">
-                    <th>Roll No</th>
-                    <th>Student Name</th>
-                    <th>Current Status</th>
-                    <th>Action</th>
-                </tr>
-               <% record.students.forEach(function(s) { %>
-<tr>
-    <td><%= s.rollNo %></td>
-    <td><%= s.name %></td>
-    <td><strong><%= s.status || 'Present' %></strong></td>
-    <td>
-        <form action="/edit-attendance" method="POST">
-            <input type="hidden" name="rollNo" value="<%= s.rollNo %>">
-            <input type="hidden" name="attendanceId" value="<%= record._id %>">
-            <input type="hidden" name="newStatus" value="<%= s.status === 'Absent' ? 'Present' : 'Absent' %>">
-            <button type="submit">Switch to <%= s.status === 'Absent' ? 'Present' : 'Absent' %></button>
-        </form>
-    </td>
-</tr>
-<% }); %></table>
-        </div>
-    <% }); %> 
-<% } %>
+        <hr>
 
-    <br>
-</div>
+        <h2>Assigned Attendance Records</h2>
+        <p>Modify Attendance Mistakes for your assigned periods:</p>
+
+        <% if (!attendanceRecords || attendanceRecords.length === 0) { %>
+            <p style="color: gray;">No attendance records have been assigned to you yet.</p>
+        <% } else { %>
+            <% attendanceRecords.forEach(function(record) { %>
+                <div class="record-card">
+                    <h3>Subject: <%= record.subject %></h3>
+                    <p>Date: <%= new Date(record.date).toLocaleString() %></p>
+                    <p>Locked by Leader: <%= record.isLockedByLeader ? 'Yes' : 'No' %></p>
+
+                    <form action="/lecturer/update-attendance/<%= record._id %>" method="POST">
+                        <div class="student-list">
+                            <% record.records.forEach(function(student, index) { %>
+                                <div class="student-row">
+                                    <span><%= student.studentName %></span>
+                                    <input type="hidden" name="attendance[<%= index %>][studentId]" value="<%= student.studentId %>">
+                                    <input type="hidden" name="attendance[<%= index %>][studentName]" value="<%= student.studentName %>">
+                                    
+                                    <select name="attendance[<%= index %>][status]">
+                                        <option value="Present" <%= student.status === 'Present' ? 'selected' : '' %>>Present</option>
+                                        <option value="Absent" <%= student.status === 'Absent' ? 'selected' : '' %>>Absent</option>
+                                    </select>
+                                </div>
+                            <% }); %>
+                        </div>
+                        <br>
+                        <button type="submit" class="btn-update">Update & Confirm Attendance</button>
+                    </form>
+                </div>
+            <% }); %>
+        <% } %>
+    </div>
+</body>
+</html>
