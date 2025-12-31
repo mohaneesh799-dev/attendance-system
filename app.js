@@ -214,26 +214,17 @@ if (!req.session.user || (req.session.user.role !== 'Class Leader' && req.sessio
 });
 
 app.get('/lecturer', async (req, res) => {
+    // Security check: Only allow users with the 'Lecturer' role
+    if (!req.session.user || req.session.user.role !== 'Lecturer') {
+        return res.redirect('/login');
+    }
+
     try {
-        // 1. Check if the session and user exist first
-        if (!req.session || !req.session.user) {
-            return res.redirect('/login'); // Redirect to login if not authenticated
-        }
-
-       // Inside app.get('/lecturer', ...) in app.js
-            const loggedInEmail = req.session.user.email.toLowerCase(); // Convert to lowercase
-            const records = await Attendance.find({ 
-            lecturerEmail: { $regex: new RegExp("^" + loggedInEmail + "$", "i") } // Case-insensitive search
-        });
-
-        // 3. Render using the exact name expected by your EJS
-        res.render('lecturer', { 
-            attendanceRecords: records, 
-            user: req.session.user
-        });
+        // Render your lecturer.ejs template
+        res.render('lecturer', { user: req.session.user });
     } catch (err) {
-        console.error(err);
-        res.status(500).send("Error loading dashboard");
+        console.error("Lecturer Dashboard Error:", err);
+        res.status(500).send("Internal Server Error: Dashboard failed to load.");
     }
 });
 
@@ -291,8 +282,7 @@ app.post('/login', async (req, res) => {
             return res.send("<script>alert('User not found. Please contact the Master.'); window.location.href='/login';</script>");
         }
 
-        // 1. ROLE-BASED ACCESS CONTROL
-        // Allow the Master to log in regardless of approval status
+
         if (user.role !== 'Master' && !user.isApproved) {
             return res.send("<script>alert('Approval Pending: Please wait for the Master to approve your account.'); window.location.href='/login';</script>");
         }
@@ -303,7 +293,7 @@ app.post('/login', async (req, res) => {
             return res.send("<script>alert('Invalid Password'); window.location.href='/login';</script>");
         }
 
-        // 3. SESSION ASSIGNMENT
+
         req.session.user = {
             id: user._id,
             email: user.email,
@@ -311,15 +301,18 @@ app.post('/login', async (req, res) => {
             name: user.name
         };
 
-        // 4. REDIRECTION LOGIC
-        if (user.role === 'Master') {
-            res.redirect('/master');
-        } else if (user.role === 'Leader') {
-            res.redirect('/leader');
-        } else {
-            res.redirect('/student');
-        }
 
+        if (user.role === 'Master') {
+    res.redirect('/master');
+} else if (user.role === 'Lecturer') {
+    // Add this specific case
+    res.redirect('/lecturer'); 
+} else if (user.role === 'Leader') {
+    res.redirect('/leader');
+} else {
+    // This is the default catch-all that was sending Lecturers to Student
+    res.redirect('/student');
+}
     } catch (err) {
         console.error("Login Error:", err);
         res.status(500).send("Internal Server Error during login.");
