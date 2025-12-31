@@ -77,13 +77,13 @@ passport.deserializeUser(async (id, done) => {
 
 // Line 37 in app.js
 const userSchema = new mongoose.Schema({
-    name: { type: String, default: "" },
-    rollNo: { type: String, default: "" },
-    email: { type: String, unique: true, required: true },
-    password: { type: String, required: false }, // Change to false for Google users
-    googleId: { type: String }, // ADD THIS LINE
+    email: { type: String, required: true, unique: true },
+    password: { type: String }, // Optional for pre-registered students until they sign up
     role: { type: String, default: 'Student' },
-    approved: { type: Boolean, default: false }
+    isApproved: { type: Boolean, default: false }, // Master must toggle this
+    isPreRegistered: { type: Boolean, default: false }, // True if added via CSV
+    name: String,
+    rollNo: String
 });
 
 const User = mongoose.model('User', userSchema); // Fixed: Only one declaration here
@@ -162,27 +162,24 @@ app.get('/auth/google/callback',
     res.redirect('/student');
   });
 
-// Ensure the URL matches exactly what the browser is looking for
+
 app.get('/master', async (req, res) => {
     if (!req.session.user || req.session.user.role !== 'Master') {
         return res.redirect('/login');
     }
     try {
-        const users = await User.find();
-        const subjects = await Subject.find(); // This is needed for your new feature
-        res.render('master', { users, subjects }); 
+        const subjects = await Subject.find();
+        // Fetch all users who are not the Master themselves
+        const allUsers = await User.find({ role: { $ne: 'Master' } }); 
+        
+        res.render('master', { 
+            subjects: subjects, 
+            allUsers: allUsers // This allows one table to handle everyone
+        });
     } catch (err) {
-        res.status(500).send("Error loading Master Portal");
+        res.status(500).send("Error loading master board");
     }
-});
 
-
-app.post('/delete-user/:id', async (req, res) => {
-    if (!req.session.user || req.session.user.role !== 'Master') {
-        return res.status(403).send("Unauthorized");
-    }
-    await User.findByIdAndDelete(req.params.id); // Deletes from MongoDB
-    res.redirect('/master');
 });
 
 
@@ -451,16 +448,18 @@ app.post('/upload-students', upload.single('studentFile'), async (req, res) => {
         .on('end', async () => {
             try {
                 for (let student of studentsToUpload) {
-                    // This updates existing students or creates new ones based on email
-                    await User.findOneAndUpdate(
-                        { email: student.email.toLowerCase().trim() }, 
-                        { 
-                            rollNo: student.rollNo, 
-                            name: student.name, 
-                            role: 'Student' 
-                        },
-                        { upsert: true }
-                    );
+                   // Inside your csv().on('end') loop
+await User.findOneAndUpdate(
+    { email: student.email.toLowerCase().trim() }, 
+    { 
+        rollNo: student.rollNo, 
+        name: student.name, 
+        role: 'Student',
+        isPreRegistered: true, // Mark as coming from the official file
+        isApproved: false      // Must wait for Master's approval
+    },
+    { upsert: true }
+);
                 }
                 fs.unlinkSync(req.file.path); // Deletes the temporary file
                 res.send("<script>alert('Master student list updated!'); window.location.href='/master';</script>");
@@ -507,21 +506,35 @@ const newAttendance = new Attendance({
 
 app.post('/approve-user/:id', async (req, res) => {
     try {
-        // 1. Get the role from the dropdown menu
-        // The name in req.body must match the name in your <select> tag
-        const assignedRole = req.body[`assignedRole_${req.params.id}`];
+        // This captures the role from the dropdown in your new unified table
+        const assignedRole = req.body.role; 
 
-        // 2. Update the user in MongoDB
+
         await User.findByIdAndUpdate(req.params.id, { 
-            approved: true, 
+            isApproved: true, 
             role: assignedRole 
         });
 
-        // 3. Refresh the Master Dashboard
+
         res.redirect('/master');
     } catch (err) {
         console.error("Approval Error:", err);
         res.status(500).send("Failed to approve user.");
+    }
+});
+
+
+// --- DELETE USER ROUTE ---
+app.post('/delete-user/:id', async (req, res) => {
+    try {
+        // This removes the user from the MongoDB collection based on their unique ID
+        await User.findByIdAndDelete(req.params.id);
+        
+        // After deletion, refresh the Master Dashboard to show the updated list
+        res.redirect('/master');
+    } catch (err) {
+        console.error("Delete Error:", err);
+        res.status(500).send("Failed to delete user: " + err.message);
     }
 });
 

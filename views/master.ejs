@@ -1,201 +1,112 @@
 <!DOCTYPE html>
 <html>
-<head><title>Master Dashboard</title></head>
+<head>
+    <title>Master Dashboard</title>
+</head>
 <body style="font-family: Arial; padding: 30px; background: #f4f4f4;">
     <nav style="background: #333; color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center;">
-    <div>
-        <strong>Attendance System</strong>
-    </div>
-    <div>
-        <a href="/settings" style="color: white; margin-right: 15px; text-decoration: none;">⚙️ Settings</a>
-        <a href="/logout" style="color: red; font-weight: bold;">Logout</a></nav>
-    <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+        <div><strong>Attendance System</strong></div>
+        <div>
+            <a href="/settings" style="color: white; margin-right: 15px; text-decoration: none;">⚙️ Settings</a>
+            <a href="/logout" style="color: red; font-weight: bold; text-decoration: none;">Logout</a>
+        </div>
+    </nav>
+
+    <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); margin-top: 20px;">
         <h1>Level 1: Master Control</h1>
-    <hr>
-      
-    <div style="background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); margin-bottom: 30px;">
-    <h3>📚 Manage Subjects (Timetable)</h3>
-    <form action="/add-subject" method="POST" style="display: flex; gap: 10px; margin-bottom: 20px;">
-        <input type="text" name="name" placeholder="Subject Name (e.g. OS)" required style="padding: 10px; flex: 2; border: 1px solid #ddd; border-radius: 5px;">
-        <input type="text" name="code" placeholder="Code (e.g. CE418)" required style="padding: 10px; flex: 1; border: 1px solid #ddd; border-radius: 5px;">
-        <button type="submit" style="background: #2ecc71; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 5px; font-weight: bold;">+ Add Subject</button>
-    </form>
+        <hr>
 
-    <table border="1" style="width: 100%; border-collapse: collapse; background: #fafafa;">
-        <tr style="background: #eee;">
-            <th style="padding: 10px;">Subject Name</th>
-            <th style="padding: 10px;">Code</th>
-            <th style="padding: 10px;">Action</th>
-        </tr>
-        <% subjects.forEach(sub => { %>
-        <tr>
-            <td style="padding: 10px;"><%= sub.name %></td>
-            <td style="padding: 10px; text-align: center;"><%= sub.code %></td>
-            <td style="padding: 10px; text-align: center;">
-                <form action="/delete-subject/<%= sub._id %>" method="POST" style="display:inline;">
-                    <button type="submit" onclick="return confirm('Delete this subject?')" style="background: none; border: none; color: #e74c3c; cursor: pointer; font-weight: bold;">[Delete]</button>
-                </form>
-            </td>
-        </tr>
-        <% }) %>
-    </table>
-</div>
+        <div style="background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); margin-bottom: 30px;">
+            <h3>📚 Manage Subjects (Timetable)</h3>
+            <form action="/add-subject" method="POST" style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <input type="text" name="name" placeholder="Subject Name (e.g. OS)" required style="padding: 10px; flex: 2; border: 1px solid #ccc;">
+                <input type="text" name="code" placeholder="Code (e.g. CE418)" required style="padding: 10px; flex: 1; border: 1px solid #ccc;">
+                <button type="submit" style="background: #2ecc71; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 5px;">Add</button>
+            </form>
 
-
-<hr>
-<div style="background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); margin-top: 30px;">
-    <h3>📂 Upload Student Master List</h3>
-    <p style="color: #666; font-size: 0.9em;">Upload a CSV file with columns: <b>rollNo, name, email</b></p>
-    
-    <form action="/upload-students" method="POST" enctype="multipart/form-data" style="margin-top: 15px;">
-        <input type="file" name="studentFile" accept=".csv" required style="padding: 10px; border: 1px dashed #ccc; width: 100%; margin-bottom: 15px;">
-        <br>
-        <button type="submit" style="background-color: #3498db; color: white; padding: 10px 25px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
-            Upload & Sync Students
-        </button>
-    </form>
-</div>
-
-
-    <h3>Lecturer</h3>
-
-        <table border="1" cellpadding="10" style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-            <tr style="background-color: #eee;">
-                <th>Email</th>
-                <th>Assign Role</th>
-                <th>Status</th>
-                <th>Action</th>
-            </tr>
-            <% users.filter(u => u.role === 'Lecturer' && !u.approved).forEach(function(u) { %>
-                <tr>
-                    <td><%= u.name %></td>
-                    <td><%= u.email %></td>
-                    <td>
-    <select name="assignedRole_<%= u._id %>" form="approve-form-<%= u._id %>" style="padding: 5px; border-radius: 4px;">
-        <option value="Student" <%= u.role === 'Student' ? 'selected' : '' %>>Student</option>
-        <option value="Lecturer" <%= u.role === 'Lecturer' ? 'selected' : '' %>>Lecturer</option>
-        <option value="Leader" <%= u.role === 'Leader' ? 'selected' : '' %>>Leader</option>
-    </select>
-</td>
-<td style="color: red;">Pending</td>
-<td>
-    <form id="approve-form-<%= u._id %>" action="/approve-user/<%= u._id %>" method="POST" style="display: inline;">
-    <button type="submit" style="background: green; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 4px;">
-        Approve
-    </button>
-</form>
-    
-    <form action="/delete-user/<%= u._id %>" method="POST" onsubmit="return confirm('Delete user?')" style="display: inline;">
-        <button type="submit" style="background: red; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 4px;">
-            Delete
-        </button>
-    </form>
-</td>
-    <form action="/delete-user/<%= u._id %>" method="POST" onsubmit="return confirm('Delete this user?')">
-        <button type="submit" style="background: red; color: white; border: none; padding: 5px; cursor: pointer; border-radius: 4px;">
-            Delete
-        </button>
-    </form>
-</td>
+            <table border="1" style="width: 100%; border-collapse: collapse; background: #fafafa;">
+                <tr style="background: #eee;">
+                    <th style="padding: 10px;">Subject Name</th>
+                    <th style="padding: 10px;">Code</th>
+                    <th style="padding: 10px;">Action</th>
                 </tr>
-            <% }); %>
-      
+                <% subjects.forEach(sub => { %>
+                    <tr>
+                        <td style="padding: 10px;"><%= sub.name %></td>
+                        <td style="padding: 10px; text-align: center;"><%= sub.code %></td>
+                        <td style="padding: 10px; text-align: center;">
+                            <form action="/delete-subject/<%= sub._id %>" method="POST" style="display:inline;">
+                                <button type="submit" onclick="return confirm('Delete this subject?')" style="background: none; border: none; color: red; cursor: pointer;">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                <% }) %>
+            </table>
+        </div>
 
+        <hr>
 
-    <br><hr><br>
+        <div style="background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); margin-top: 20px;">
+            <h3>📤 Upload Student Master List</h3>
+            <p style="font-size: 0.9em; color: #666;">Upload a CSV with headers: <strong>rollNo, name, email</strong></p>
+            <form action="/upload-students" method="POST" enctype="multipart/form-data">
+                <input type="file" name="studentFile" accept=".csv" required style="margin-bottom: 10px;">
+                <br>
+                <button type="submit" style="background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
+                    Upload & Sync Students
+                </button>
+            </form>
+        </div>
 
-    <h3>Student/Approval Requests</h3>
-        <table border="1" cellpadding="10" style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-            <tr style="background-color: #eee;">
-                <th>Email</th>
-                <th>Assign Role</th> 
-                <th>Status</th>
-                <th>Action</th>
-            </tr>
-            <% users.filter(u => u.role === 'Student' && !u.approved).forEach(function(u) { %>
-                <tr>
-                    <td><%= u.name %></td>
-                    <td><%= u.email %></td>
-                    <td>
-        <select name="assignedRole_<%= u._id %>" form="approve-form-<%= u._id %>" style="padding: 5px; border-radius: 4px;">
-        <option value="Student" <%= u.role === 'Student' ? 'selected' : '' %>>Student</option>
-        <option value="Lecturer" <%= u.role === 'Lecturer' ? 'selected' : '' %>>Lecturer</option>
-        <option value="Leader" <%= u.role === 'Leader' ? 'selected' : '' %>>Leader</option>
-     </select>
-        </td>
-        <td style="color: red;">Pending</td>
-        <td>
-        <form id="approve-form-<%= u._id %>" action="/approve-user/<%= u._id %>" method="POST" style="display: inline;">
-        <button type="submit" style="background: green; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 4px;">
-            Approve
-        </button>
-         </form>
-    
-         <form action="/delete-user/<%= u._id %>" method="POST" onsubmit="return confirm('Delete this user?')" style="display: inline;">
-        <button type="submit" style="background: red; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 4px;">
-            Delete
-        </button>
-         </form>
-        </td>
-         <form action="/delete-user/<%= u._id %>" method="POST" onsubmit="return confirm('Delete this student?')">
-        <button type="submit" style="background: red; color: white; border: none; cursor: pointer;">Delete</button>
-         </form>
-        </td>
+        <hr>
+
+        <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); margin-top: 20px;">
+            <h3>👥 User Management (Total Users: <%= allUsers.length %>)</h3>
+            <table border="1" style="width:100%; border-collapse: collapse; text-align: left;">
+                <tr style="background-color: #f2f2f2;">
+                    <th style="padding: 12px;">Name</th>
+                    <th style="padding: 12px;">Email</th>
+                    <th style="padding: 12px;">Current Role</th>
+                    <th style="padding: 12px;">Status</th>
+                    <th style="padding: 12px;">Actions</th>
                 </tr>
-            <% }); %>
-        
+                <% allUsers.forEach(user => { %>
+                    <tr style="border-bottom: 1px solid #eee;">
+                        <td style="padding: 10px;"><%= user.name || 'N/A' %></td>
+                        <td style="padding: 10px;"><%= user.email %></td>
+                        <td style="padding: 10px;">
+                            <span style="padding: 4px 8px; border-radius: 4px; background: #e8f4fd; font-size: 0.9em;">
+                                <%= user.role %>
+                            </span>
+                        </td>
+                        <td style="padding: 10px;">
+                            <% if (user.isApproved) { %>
+                                <span style="color: green; font-weight: bold;">✓ Approved</span>
+                            <% } else { %>
+                                <span style="color: orange; font-weight: bold;">⌛ Pending</span>
+                            <% } %>
+                        </td>
+                        <td style="padding: 10px;">
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <% if (!user.isApproved) { %>
+                                    <form action="/approve-user/<%= user._id %>" method="POST" style="display: flex; gap: 5px;">
+                                        <select name="role" style="padding: 5px; border-radius: 3px;">
+                                            <option value="Student">Student</option>
+                                            <option value="Leader">Leader</option>
+                                        </select>
+                                        <button type="submit" style="background: #2ecc71; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">Approve</button>
+                                    </form>
+                                <% } %>
 
-
-    <br><hr><br>
-
-<h3>Class Leader</h3>
-        <table border="1" cellpadding="10" style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-            <tr style="background-color: #eee;">
-                <th>Email</th>
-                <th>Assign Role</th> 
-                <th>Status</th>
-                <th>Action</th>
-
-            </tr>
-            <% users.filter(u => u.role === 'Leader' && !u.approved).forEach(function(u) { %>
-                <tr>
-                    <td><%= u.name %></td>
-                    <td><%= u.email %></td>
-                    <td>
-    <select name="assignedRole_<%= u._id %>" form="approve-form-<%= u._id %>" style="padding: 5px; border-radius: 4px;">
-        <option value="Student" <%= u.role === 'Student' ? 'selected' : '' %>>Student</option>
-        <option value="Lecturer" <%= u.role === 'Lecturer' ? 'selected' : '' %>>Lecturer</option>
-        <option value="Leader" <%= u.role === 'Leader' ? 'selected' : '' %>>Leader</option>
-    </select>
-</td>
-<td style="color: red;">Pending</td>
-<td>
-    <form id="approve-form-<%= u._id %>" action="/approve-user/<%= u._id %>" method="POST" style="display: inline;">
-        <button type="submit" style="background: green; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 4px;">
-            Approve
-        </button>
-    </form>
-    
-    <form action="/delete-user/<%= u._id %>" method="POST" onsubmit="return confirm('Delete this user?')" style="display: inline;">
-        <button type="submit" style="background: red; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 4px;">
-            Delete
-        </button>
-    </form>
-</td>
-    <form action="/delete-user/<%= u._id %>" method="POST" onsubmit="return confirm('Delete this leader?')">
-        <button type="submit" style="background: red; color: white; border: none; cursor: pointer;">Delete</button>
-    </form>
-</td>
-                </tr>
-            <% }); %>
-        
-
-
-    <script>
-        function toggle(source, className) {
-            const checkboxes = document.getElementsByClassName(className);
-            for(let i=0; i < checkboxes.length; i++) {
-                checkboxes[i].checked = source.checked;
-            }
-        }
-    </script>
+                                <form action="/delete-user/<%= user._id %>" method="POST" onsubmit="return confirm('Permanently delete this user?');">
+                                    <button type="submit" style="background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">Delete</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                <% }) %>
+            </table>
+        </div>
+    </div>
+</body>
+</html>
