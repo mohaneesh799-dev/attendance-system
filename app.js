@@ -164,24 +164,18 @@ app.get('/auth/google/callback',
 
 
 app.get('/master', async (req, res) => {
-
-
     try {
-
         const subjects = await Subject.find();
-        
-        // This is the CRITICAL line. 
-        // Without this, the 'allUsers' loop in master.ejs will crash.
+        // You MUST fetch allUsers here because master.ejs loops through it
         const allUsers = await User.find({ role: { $ne: 'Master' } }); 
 
-        
         res.render('master', { 
             subjects: subjects, 
-            allUsers: allUsers // This MUST match the name used in your EJS
+            allUsers: allUsers // Ensure this name matches your .ejs file
         });
     } catch (err) {
-        console.error(err);
-        res.status(500).send("Internal Server Error");
+        console.error("Dashboard Load Error:", err);
+        res.status(500).send("Internal Server Error: " + err.message);
     }
 });
 
