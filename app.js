@@ -9,9 +9,7 @@ const multer = require('multer');
 const csv = require('csv-parser');
 const upload = multer({ dest: 'uploads/' });
 const session = require('express-session'); 
-const User = require('./models/User');
-const Attendance = require('./models/Attendance');
-const Subject = require('./models/Subject'); // Check if this file exists!
+
 const app = express();
 
 // 2. PASTE THIS CONFIGURATION HERE (Before your routes)
@@ -88,7 +86,7 @@ const userSchema = new mongoose.Schema({
     rollNo: String
 });
 
-
+const User = mongoose.model('User', userSchema);
 
 const attendanceSchema = new mongoose.Schema({
     date: { type: String, required: true },
@@ -107,13 +105,13 @@ const attendanceSchema = new mongoose.Schema({
     isLockedByLeader: { type: Boolean, default: true }
 });
 
-
+const Attendance = mongoose.model('Attendance', attendanceSchema);
 
 const subjectSchema = new mongoose.Schema({
     name: String,
     code: String
 });
-
+const Subject = mongoose.model('Subject', subjectSchema);
 
 // --- Middleware ---
 app.set('view engine', 'ejs');
