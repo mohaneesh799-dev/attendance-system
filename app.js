@@ -146,36 +146,53 @@ app.get('/auth/google',
   })
 );
 
-// Handle the callback after Google login
+
 app.get('/auth/google/callback', 
   passport.authenticate('google', { failureRedirect: '/login' }),
   (req, res) => {
-    if (!req.user.approved) { // Master still controls access
-        return res.send("<h1>Pending Master Approval</h1><a href='/logout'>Logout</a>");
+    // Passport puts the user data in req.user
+    const user = req.user;
+
+    // 1. Explicitly check for Master role to bypass the approval wall
+    if (user.role === 'Master') {
+        req.session.user = user; 
+        return res.redirect('/master');
     }
-    req.session.user = req.user; // Set session for your existing dashboard logic
-    
-    // Redirect based on the role you assigned in Master Dashboard
-    if (req.user.role === 'Master') return res.redirect('/master');
-    if (req.user.role === 'Lecturer') return res.redirect('/lecturer');
-    if (req.user.role === 'Leader') return res.redirect('/leader');
+
+    // 2. Logic for Students/Leaders
+    if (!user.isApproved) {
+        return res.render('pending-approval'); // The screen from your 1st pic
+    }
+
+    // 3. Normal redirects for approved users
+    req.session.user = user;
+    if (user.role === 'Leader') return res.redirect('/leader');
     res.redirect('/student');
-  });
+  }
+);
 
 
 app.get('/master', async (req, res) => {
+    // Safety check: Only allow Master role
+    if (!req.session.user || req.session.user.role !== 'Master') {
+        return res.redirect('/login');
+    }
+
     try {
+        // Fetch subjects for the timetable section
         const subjects = await Subject.find();
-        // You MUST fetch allUsers here because master.ejs loops through it
-        const allUsers = await User.find({ role: { $ne: 'Master' } }); 
+
+        // FETCH ALL USERS: This is what prevents the Internal Server Error
+        // We find everyone who is NOT the Master to show in your new management table
+        const allUsers = await User.find({ role: { $ne: 'Master' } });
 
         res.render('master', { 
             subjects: subjects, 
-            allUsers: allUsers // Ensure this name matches your .ejs file
+            allUsers: allUsers // This variable MUST be passed for the EJS loop to work
         });
     } catch (err) {
-        console.error("Dashboard Load Error:", err);
-        res.status(500).send("Internal Server Error: " + err.message);
+        console.error("Master Route Error:", err);
+        res.status(500).send("Internal Server Error: Missing 'allUsers' data.");
     }
 });
 
@@ -264,7 +281,7 @@ res.render('student', {
 
 
 app.post('/login', async (req, res) => {
-    
+
     try {
         const { email, password } = req.body;
         // Find user and handle case-sensitivity/whitespace
