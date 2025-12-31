@@ -570,57 +570,93 @@ app.post('/approve-multiple', async (req, res) => {
 });
 
 
-app.post('/generate-daily-pdf', async (req, res) => {
+// 1. ROUTE TO GENERATE/RE-GENERATE THE PDF
+app.post('/generate-pdf', async (req, res) => {
     try {
         const today = new Date().toISOString().split('T')[0];
+        // Fetch all periods locked for today, sorted by time/period
         const allPeriods = await Attendance.find({ date: today }).sort({ periodNumber: 1 });
 
-        if (allPeriods.length === 0) return res.send("No periods locked today.");
-
-        const PDFDocument = require('pdfkit'); // Ensure this is installed
-        const doc = new PDFDocument();
+        if (allPeriods.length === 0) {
+            return res.send("<script>alert('No periods locked today. Cannot generate PDF.'); window.location.href='/leader';</script>");
+        }
         
-        // Loop through all periods to build one PDF
-        doc.text(`Daily Attendance Report - ${today}`, { align: 'center' });
+
+
+        const doc = new PDFDocument();
+        const filePath = path.join(__dirname, 'daily_attendance.pdf');
+        
+        // Save file to server so it can be viewed/checked
+        const stream = fs.createWriteStream(filePath);
+        doc.pipe(stream);
+
+        // PDF Header
+        doc.fontSize(20).text(`Daily Attendance Report - ${today}`, { align: 'center' });
+        doc.moveDown();
+
+        // Loop through each period locked by the leader
         allPeriods.forEach(p => {
-            doc.moveDown().fontSize(14).text(`Period ${p.periodNumber}: ${p.subject}`);
-            p.students.forEach(s => doc.fontSize(10).text(`- ${s.status}: ${s.studentId}`));
+            doc.fontSize(14).fillColor('blue').text(`Subject: ${p.subject} (Period: ${p.periodNumber || 'N/A'})`);
+            doc.fontSize(10).fillColor('black').text(`Lecturer: ${p.lecturerEmail}`);
+            
+            // List students for this specific period
+            p.students.forEach(s => {
+                const statusColor = s.status === 'Present' ? 'green' : 'red';
+                doc.fontSize(11).fillColor(statusColor).text(`  - ${s.studentId}: ${s.status}`);
+            });
+            doc.moveDown();
         });
+
         doc.end();
 
-        // Send one email with the full report
-        const mailOptions = {
-            from: 'your-email@gmail.com',
-            to: 'master-email@gmail.com', 
-            subject: `Full Attendance Report - ${today}`,
-            attachments: [{ filename: `Daily_Report.pdf`, content: doc }]
-        };
+        // Wait for the file to finish writing before redirecting
+        stream.on('finish', () => {
+            res.send("<script>alert('PDF Generated Successfully! You can now check it.'); window.location.href='/leader';</script>");
+        });
 
-
-
-// --- NEW ROUTE FOR TEACHER DASHBOARD ATTENDANCE SWITCHING ---
-app.post('/edit-attendance', async (req, res) => {
-    try {
-        const { studentId, newStatus } = req.body; // Gets data from your lecturer.ejs
-
-        // Update the student's status in MongoDB
-        await User.findByIdAndUpdate(studentId, { status: newStatus });
-
-        console.log(`✅ Attendance updated: ${studentId} is now ${newStatus}`);
-        
-        // Refresh the page so the teacher sees the new status
-        res.redirect('back'); 
     } catch (err) {
-        console.error("Edit Attendance Error:", err);
-        res.status(500).send("Error updating attendance.");
+        console.error("PDF Generation Error:", err);
+        res.status(500).send("Error generating PDF: " + err.message);
+    }
+});
+
+// 2. ROUTE TO VIEW THE PDF (FOR THE "CHECK PDF" BUTTON)
+app.get('/view-pdf', (req, res) => {
+    const filePath = path.join(__dirname, 'daily_attendance.pdf');
+    if (fs.existsSync(filePath)) {
+        res.contentType("application/pdf");
+        fs.createReadStream(filePath).pipe(res);
+    } else {
+        res.send("<script>alert('PDF not found. Please generate it first.'); window.location.href='/leader';</script>");
     }
 });
 
 
-        await transporter.sendMail(mailOptions);
-        res.send("Full Day PDF Sent Successfully!");
+// NEW REPLACEMENT ROUTE FOR LECTURER CORRECTIONS
+app.post('/lecturer/update-attendance/:id', async (req, res) => {
+    if (!req.session.user || req.session.user.role !== 'Lecturer') {
+        return res.redirect('/login');
+    }
+
+    try {
+        const attendanceId = req.params.id;
+        const updatedRecords = req.body.attendance; // From the lecturer.ejs form
+
+        // Find the specific attendance document and update the records array
+        await Attendance.findByIdAndUpdate(attendanceId, {
+            records: updatedRecords.map(s => ({
+                studentId: s.studentId,
+                studentName: s.studentName,
+                status: s.status
+            })),
+            lastModifiedBy: 'Lecturer',
+            lastModifiedDate: new Date()
+        });
+
+        res.send("<script>alert('Attendance Updated Successfully!'); window.location.href='/lecturer';</script>");
     } catch (err) {
-        res.status(500).send("Error: " + err.message);
+        console.error("Lecturer Update Error:", err);
+        res.status(500).send("Error updating record: " + err.message);
     }
 });
 
