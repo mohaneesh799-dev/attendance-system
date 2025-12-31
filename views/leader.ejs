@@ -2,123 +2,91 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Leader Portal - Attendance System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leader Dashboard</title>
+    <link rel="stylesheet" href="/css/style.css">
     <style>
-        body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f4; }
-        .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-        th { background-color: #eee; }
-        .lock-btn { background-color: #ff9800; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        .submit-all-btn { background-color: #2ecc71; color: white; padding: 15px; width: 100%; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; margin-top: 20px; }
+        .lecturer-badge { background-color: #007bff; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.8em; }
+        .student-badge { background-color: #6c757d; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.8em; }
+        .search-box { margin-bottom: 20px; padding: 10px; width: 100%; border: 1px solid #ddd; border-radius: 5px; }
     </style>
 </head>
-<nav style="background: #333; color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center;">
-    <div><strong>Attendance System - Leader</strong></div>
-    <div>
-        <a href="/settings" style="color: white; margin-right: 15px; text-decoration: none;">⚙ Settings</a>
-        <a href="/logout" style="color: red; font-weight: bold; text-decoration: none;">Logout</a>
-    </div>
-</nav>
+
 <body>
     <div class="container">
-        <h2>Class Leader Dashboard</h2>
+        <h1>Leader Dashboard</h1>
+        <p>Welcome, <strong><%= user.name %></strong></p>
+        <a href="/logout" class="btn-logout">Logout</a>
+
         <hr>
 
-        <form action="/lock-period" method="POST" onsubmit="return prepareAttendanceData()">
-             <input type="hidden" name="students" id="hiddenStudentsInput">
-            <input type="hidden" name="date" value="<%= new Date().toISOString().split('T')[0] %>">
-
-
-<div style="margin-bottom: 20px;">
-    <label><b>Select Lecturer:</b></label><br>
-    <select name="lecturerEmail" required style="padding: 10px; width: 300px; margin-top: 5px;">
-        <option value="">-- Choose Lecturer --</option>
-        <% users.forEach(function(lecturer) { %>
-            <option value="<%= lecturer.email %>"><%= lecturer.name %></option>
-        <% }); %>
-    </select>
-</div>
-            <div style="margin-bottom: 20px;">
-                <label><b>Select Subject (from Timetable):</b></label><br>
-                <select name="subject" required style="padding: 10px; width: 300px; margin-top: 5px;">
-                    <option value="">-- Choose Subject --</option>
-                    <% subjects.forEach(function(sub) { %>
-                        <option value="<%= sub.name %>"><%= sub.name %> (<%= sub.code %>)</option>
+        <h3>Assign Attendance / Period</h3>
+        <form action="/assign-period" method="POST">
+            <div class="form-group">
+                <label for="userSelect">Select Student or Lecturer:</label>
+                <select name="userId" id="userSelect" required style="width: 100%; padding: 10px;">
+                    <option value="">-- Choose from List --</option>
+                    <% allUsers.forEach(function(person) { %>
+                        <option value="<%= person._id %>">
+                            <%= person.name %> — <%= person.role %>
+                        </option>
                     <% }); %>
                 </select>
             </div>
 
+            <div class="form-group">
+                <label for="subject">Subject Name:</label>
+                <input type="text" name="subject" placeholder="e.g. Mathematics" required>
+            </div>
 
+            <button type="submit" class="btn-submit">Assign Now</button>
+        </form>
 
-            <table id="studentTable">
-                <thead>
+        <hr>
+
+        <h3>User Management List</h3>
+        <input type="text" id="userSearch" class="search-box" placeholder="Search by name or email...">
+
+        <table id="userTable" border="1" style="width:100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background-color: #f8f9fa;">
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% allUsers.forEach(function(person) { %>
                     <tr>
-                        <th>Roll No</th>
-                        <th>Student Name</th>
-                        <th>Status (Present / Absent)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% students.forEach(student => { %>
-                    <tr>
-                        <td><%= student.rollNo %></td>
-                        <td><%= student.name %></td>
+                        <td class="user-name"><%= person.name %></td>
+                        <td><%= person.email %></td>
                         <td>
-                            <input type="radio" name="status_<%= student.rollNo %>" value="Present" checked> Present
-                            <input type="radio" name="status_<%= student.rollNo %>" value="Absent" style="margin-left: 15px;"> Absent
+                            <span class="<%= person.role === 'Lecturer' ? 'lecturer-badge' : 'student-badge' %>">
+                                <%= person.role %>
+                            </span>
                         </td>
                     </tr>
-                    <% }) %>
-                </tbody>
-            </table>
-
-            <div style="margin-top: 20px; text-align: right;">
-                <button type="submit" class="lock-btn">Lock This Period</button>
-            </div>
-        </form> 
-        <hr style="margin-top: 40px;">
-        <div style="border: 2px solid #2ecc71; padding: 20px; border-radius: 8px; text-align: center;">
-            <h3>Final Daily Submission</h3>
-            <p>Use this after all periods for the day are locked.</p>
-            <form action="/submit-day" method="POST">
-                <button type="submit" class="submit-all-btn">Submit Entire Day & Generate PDF</button>
-            </form>
-        </div>
+                <% }); %>
+            </tbody>
+        </table>
     </div>
 
     <script>
-    function prepareAttendanceData() {
-        try {
-            const students = [];
-            // Select all rows in the table body
-            const rows = document.querySelectorAll("#studentTable tbody tr");
+        document.getElementById('userSearch').addEventListener('keyup', function() {
+            let filter = this.value.toLowerCase();
+            let rows = document.querySelectorAll('#userTable tbody tr');
 
             rows.forEach(row => {
-                const rollNo = row.cells[0].innerText.trim();
-                const name = row.cells[1].innerText.trim();
+                let name = row.querySelector('.user-name').textContent.toLowerCase();
+                let email = row.cells[1].textContent.toLowerCase();
                 
-                // Correctly find the checked radio button
-                const checkedRadio = row.querySelector('input[type="radio"]:checked');
-                const status = checkedRadio ? checkedRadio.value : "Present";
-
-                students.push({ rollNo, name, status });
+                if (name.includes(filter) || email.includes(filter)) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
             });
-
-            if (students.length === 0) {
-                alert("No student data found!");
-                return false;
-            }
-
-            // Stringify the array into the hidden input
-            document.getElementById('hiddenStudentsInput').value = JSON.stringify(students);
-            return true; 
-        } catch (err) {
-            console.error("JavaScript Error:", err);
-            alert("Error preparing data. Check console (F12).");
-            return false;
-        }
-    }
+        });
     </script>
 </body>
 </html>

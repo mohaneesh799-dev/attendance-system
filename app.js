@@ -202,19 +202,26 @@ app.get('/master', async (req, res) => {
 });
 
 
-// Change the name to /leader to match your portal URL
+
 app.get('/leader', async (req, res) => {
-if (!req.session.user || (req.session.user.role !== 'Class Leader' && req.session.user.role !== 'Leader')) {
-    console.log("Access Denied: User role is", req.session.user ? req.session.user.role : "None");
-    return res.redirect('/login');
-}
+    // Security check
+    if (!req.session.user || req.session.user.role !== 'Leader') {
+        return res.redirect('/login');
+    }
+
     try {
-        const students = await User.find({ role: 'Student' });
-        const subjects = (await Subject.find()) || []; // Ensures it's at least an empty list
-        const users = await User.find({ role: 'Lecturer', approved: true });
-        res.render('leader', { students, subjects, users }); 
+        // UPDATE THIS LINE: Use $in to find both Students and Lecturers
+        const staffAndStudents = await User.find({ 
+            role: { $in: ['Student', 'Lecturer'] } 
+        });
+
+        res.render('leader', { 
+            user: req.session.user,
+            allUsers: staffAndStudents // Use the name your leader.ejs expects
+        });
     } catch (err) {
-        res.status(500).send("Error loading Leader page");
+        console.error("Leader Route Error:", err);
+        res.status(500).send("Error loading user list.");
     }
 });
 
