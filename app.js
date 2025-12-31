@@ -9,7 +9,9 @@ const multer = require('multer');
 const csv = require('csv-parser');
 const upload = multer({ dest: 'uploads/' });
 const session = require('express-session'); 
-
+const User = require('./models/User');
+const Attendance = require('./models/Attendance');
+const Subject = require('./models/Subject'); // Check if this file exists!
 const app = express();
 
 // 2. PASTE THIS CONFIGURATION HERE (Before your routes)
@@ -185,20 +187,20 @@ app.get('/master', async (req, res) => {
         return res.redirect('/login');
     }
     try {
+        // Fetch ALL data required by the master.ejs template
         const users = await User.find({});
-        const subjects = await Subject.find({}); // Ensure you have a Subject model
-        
+        const subjects = await Subject.find({}); 
+
         res.render('master', { 
-            user: req.session.user, 
-            allUsers: users,      // Required for the user management table
-            masterSubjects: subjects // Required for the subject list
+            user: req.session.user,
+            allUsers: users,          // MUST match the loop in master.ejs
+            masterSubjects: subjects  // MUST match the loop in master.ejs
         });
     } catch (err) {
-        console.error(err);
-        res.status(500).send("Master Dashboard Error: Missing data in render.");
+        console.error("Master Route Error:", err);
+        res.status(500).send("Internal Server Error: Missing data for Master Dashboard.");
     }
 });
-
 
 
 app.get('/leader', async (req, res) => {
@@ -226,17 +228,18 @@ app.get('/lecturer', async (req, res) => {
         return res.redirect('/login');
     }
     try {
-        // Search by lecturerEmail (case-insensitive)
+        // Use a case-insensitive search for the email
         const records = await Attendance.find({ 
             lecturerEmail: { $regex: new RegExp("^" + req.session.user.email + "$", "i") } 
         }).sort({ date: -1 });
 
         res.render('lecturer', { 
             user: req.session.user, 
-            attendanceRecords: records || [] // Always pass an empty array if no records found
+            attendanceRecords: records || [] // Pass empty array if no data found
         });
     } catch (err) {
-        res.status(500).send("Lecturer Dashboard Error: Check if attendanceRecords is passed.");
+        console.error("Lecturer Route Error:", err);
+        res.status(500).send("Internal Server Error: Lecturer data could not be loaded.");
     }
 });
 
