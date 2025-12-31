@@ -224,19 +224,23 @@ app.get('/leader', async (req, res) => {
 
 
 app.get('/lecturer', async (req, res) => {
-
-
+    if (!req.session.user || req.session.user.role !== 'Lecturer') {
+        return res.redirect('/login');
+    }
     try {
-        // Find records where this lecturer is assigned
-        const records = await Attendance.find({ lecturerId: req.session.user.id });
+        // We MUST fetch records assigned to this specific lecturer's email
+        const records = await Attendance.find({ lecturerEmail: req.session.user.email });
+        
         res.render('lecturer', { 
             user: req.session.user, 
-            attendanceRecords: records // MUST MATCH EJS VARIABLE NAME
+            attendanceRecords: records // This prevents the 500 error
         });
     } catch (err) {
-        res.status(500).send("Error loading dashboard");
+        res.status(500).send("Error loading lecturer dashboard.");
     }
 });
+
+
 
 app.get('/student', async (req, res) => {
     if (!req.session.user) return res.redirect('/login');
@@ -468,31 +472,35 @@ await User.findOneAndUpdate(
 
 
 app.post('/lock-attendance', async (req, res) => {
-
-
+    
     try {
-        const { lecturerEmail, subject, date, students, periodNumber } = req.body;
+        // 1. Extract data from req.body
+        const { lecturerEmail, subject, date, students, periodNumber, startTime, endTime } = req.body;
 
-
+        // 2. Create the new attendance document
         const newAttendance = new Attendance({
             date: date || new Date().toISOString().split('T')[0],
-            periodNumber: periodNumber || "1", // FIX: Added default value to stop the error
+            periodNumber: periodNumber || "1", // Fallback to "1" if empty
             subject: subject,
+            timeSlot: `${startTime} - ${endTime}`, // Matches your manual time request
             leaderEmail: req.session.user.email,
-            lecturerEmail: lecturerEmail,
-
+            lecturerEmail: lecturerEmail, // This fixes the blank column in the table
+            
+            // 3. Map the student array (No JSON.parse needed here)
             records: students.map(s => ({
                 studentId: s.id,
                 studentName: s.name,
-                status: s.status || 'Absent'
+                status: s.status === 'Present' ? 'Present' : 'Absent'
             })),
             isLockedByLeader: true
         });
 
         await newAttendance.save();
-        res.send("<script>alert('Locked!'); window.location.href='/leader';</script>");
+        res.send("<script>alert('Attendance Locked Successfully!'); window.location.href='/leader';</script>");
+        
     } catch (err) {
-        res.status(500).send("Error saving: " + err.message);
+        console.error("Lock Attendance Error:", err);
+        res.status(500).send("Error saving attendance: " + err.message);
     }
 });
 
