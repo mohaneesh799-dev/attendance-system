@@ -150,24 +150,29 @@ app.get('/auth/google',
 app.get('/auth/google/callback', 
   passport.authenticate('google', { failureRedirect: '/login' }),
   (req, res) => {
-    // Passport puts the user data in req.user
-    const user = req.user;
+    // 1. Refresh the local session user with the latest data from Passport
+    req.session.user = req.user; 
 
-    // 1. Explicitly check for Master role to bypass the approval wall
-    if (user.role === 'Master') {
-        req.session.user = user; 
-        return res.redirect('/master');
-    }
+    // 2. FORCE a save to the session store
+    req.session.save((err) => {
+      if (err) {
+          console.error("Session save error:", err);
+          return res.redirect('/login');
+      }
 
-    // 2. Logic for Students/Leaders
-    if (!user.isApproved) {
-        return res.render('pending-approval'); // The screen from your 1st pic
-    }
+      const user = req.session.user;
 
-    // 3. Normal redirects for approved users
-    req.session.user = user;
-    if (user.role === 'Leader') return res.redirect('/leader');
-    res.redirect('/student');
+      // 3. Precise Role-Based Redirection
+      if (user.role === 'Master') {
+          res.redirect('/master');
+      } else if (user.role === 'Lecturer') {
+          res.redirect('/lecturer'); // Redirecting specifically for Lecturers
+      } else if (user.role === 'Leader') {
+          res.redirect('/leader');
+      } else {
+          res.redirect('/student'); // Default fallback
+      }
+    });
   }
 );
 
