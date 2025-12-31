@@ -181,26 +181,21 @@ app.get('/auth/google/callback',
 
 
 app.get('/master', async (req, res) => {
-    // Safety check: Only allow Master role
     if (!req.session.user || req.session.user.role !== 'Master') {
         return res.redirect('/login');
     }
-
     try {
-        // Fetch subjects for the timetable section
-        const subjects = await Subject.find();
-
-        // FETCH ALL USERS: This is what prevents the Internal Server Error
-        // We find everyone who is NOT the Master to show in your new management table
-        const allUsers = await User.find({ role: { $ne: 'Master' } });
-
+        const users = await User.find({});
+        const subjects = await Subject.find({}); // Ensure you have a Subject model
+        
         res.render('master', { 
-            subjects: subjects, 
-            allUsers: allUsers // This variable MUST be passed for the EJS loop to work
+            user: req.session.user, 
+            allUsers: users,      // Required for the user management table
+            masterSubjects: subjects // Required for the subject list
         });
     } catch (err) {
-        console.error("Master Route Error:", err);
-        res.status(500).send("Internal Server Error: Missing 'allUsers' data.");
+        console.error(err);
+        res.status(500).send("Master Dashboard Error: Missing data in render.");
     }
 });
 
@@ -227,32 +222,21 @@ app.get('/leader', async (req, res) => {
 
 
 app.get('/lecturer', async (req, res) => {
-    // 1. Session and Role Security Check
     if (!req.session.user || req.session.user.role !== 'Lecturer') {
         return res.redirect('/login');
     }
-
     try {
-        // 2. Fetch records where the lecturerEmail matches the logged-in user
-       // 2. Fetch records using a case-insensitive search
+        // Search by lecturerEmail (case-insensitive)
         const records = await Attendance.find({ 
-       lecturerEmail: { $regex: new RegExp("^" + req.session.user.email + "$", "i") } 
+            lecturerEmail: { $regex: new RegExp("^" + req.session.user.email + "$", "i") } 
         }).sort({ date: -1 });
-        // 3. Debugging: This helps you see in your Render logs if data is being found
-        console.log(`--- Lecturer Dashboard Access ---`);
-        console.log(`User: ${req.session.user.email}`);
-        console.log(`Records Found: ${records.length}`);
 
-        // 4. Render the page and pass the variables
-        // Note: 'attendanceRecords' MUST match the variable name used in your EJS loops
         res.render('lecturer', { 
             user: req.session.user, 
-            attendanceRecords: records || [] 
+            attendanceRecords: records || [] // Always pass an empty array if no records found
         });
-
     } catch (err) {
-        console.error("Lecturer Route Error:", err);
-        res.status(500).send("Internal Server Error: Could not load dashboard.");
+        res.status(500).send("Lecturer Dashboard Error: Check if attendanceRecords is passed.");
     }
 });
 
