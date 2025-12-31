@@ -204,24 +204,21 @@ app.get('/master', async (req, res) => {
 
 
 app.get('/leader', async (req, res) => {
-    // Security check
-    if (!req.session.user || req.session.user.role !== 'Leader') {
-        return res.redirect('/login');
-    }
-
     try {
-        // UPDATE THIS LINE: Use $in to find both Students and Lecturers
-        const staffAndStudents = await User.find({ 
-            role: { $in: ['Student', 'Lecturer'] } 
+        const allUsers = await User.find({ role: { $in: ['Student', 'Lecturer'] } });
+        const masterSubjects = await Subject.find({}); // Fetch the Master's fixed subjects
+        const todayRecords = await Attendance.find({ 
+            date: new Date().toISOString().split('T')[0] 
         });
 
         res.render('leader', { 
-            user: req.session.user,
-            allUsers: staffAndStudents // Use the name your leader.ejs expects
+            user: req.session.user, 
+            allUsers, 
+            masterSubjects, // Pass fixed subjects to EJS
+            todayRecords 
         });
     } catch (err) {
-        console.error("Leader Route Error:", err);
-        res.status(500).send("Error loading user list.");
+        res.status(500).send("Error loading dashboard");
     }
 });
 
@@ -471,33 +468,31 @@ await User.findOneAndUpdate(
 
 
 app.post('/lock-attendance', async (req, res) => {
-    if (!req.session.user || req.session.user.role !== 'Leader') {
-        return res.redirect('/login');
-    }
+
 
     try {
-        const { lecturerEmail, subject, date, students } = req.body;
+        const { lecturerEmail, subject, date, students, periodNumber } = req.body;
 
-        // 'students' will arrive as an array of objects from the leader.ejs form
+
         const newAttendance = new Attendance({
             date: date || new Date().toISOString().split('T')[0],
+            periodNumber: periodNumber || "1", // FIX: Added default value to stop the error
             subject: subject,
             leaderEmail: req.session.user.email,
             lecturerEmail: lecturerEmail,
-            // Map the form data into your database schema
+
             records: students.map(s => ({
                 studentId: s.id,
                 studentName: s.name,
-                status: s.status || 'Absent' // Default to absent if not checked
+                status: s.status || 'Absent'
             })),
             isLockedByLeader: true
         });
 
         await newAttendance.save();
-        res.send("<script>alert('Attendance Locked Successfully!'); window.location.href='/leader';</script>");
+        res.send("<script>alert('Locked!'); window.location.href='/leader';</script>");
     } catch (err) {
-        console.error("Save Error:", err);
-        res.status(500).send("Error saving attendance: " + err.message);
+        res.status(500).send("Error saving: " + err.message);
     }
 });
 
@@ -580,7 +575,7 @@ app.post('/generate-pdf', async (req, res) => {
         if (allPeriods.length === 0) {
             return res.send("<script>alert('No periods locked today. Cannot generate PDF.'); window.location.href='/leader';</script>");
         }
-        
+
 
 
         const doc = new PDFDocument();
