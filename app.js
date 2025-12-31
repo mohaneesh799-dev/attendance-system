@@ -429,27 +429,7 @@ app.post('/register', async (req, res) => {
 
 
 
-app.post('/approve-user/:id', async (req, res) => {
-    try {
-        // Ensure only Master can do this
-        if (!req.session.user || req.session.user.role !== 'Master') {
-            return res.status(403).send("Unauthorized");
-        }
 
-        // Get the role from the dropdown (named assignedRole_ID)
-        const assignedRole = req.body[`assignedRole_${req.params.id}`];
-
-        await User.findByIdAndUpdate(req.params.id, { 
-            approved: true, 
-            role: assignedRole || 'Student' // Default to student if something goes wrong
-        });
-
-        res.redirect('/master'); // Refresh dashboard
-    } catch (err) {
-        console.error(err);
-        res.status(500).send("Error updating user");
-    }
-});
 
 
 app.post('/upload-students', upload.single('studentFile'), async (req, res) => {
@@ -518,22 +498,26 @@ const newAttendance = new Attendance({
 });
 
 
+// --- KEEP ONLY THIS SINGLE BLOCK ---
 app.post('/approve-user/:id', async (req, res) => {
     try {
-        // This captures the role from the dropdown in your new unified table
+        const userId = req.params.id;
+        
+        // This 'role' name must match the <select name="role"> in master.ejs
         const assignedRole = req.body.role; 
 
-
-        await User.findByIdAndUpdate(req.params.id, { 
+        // Update the user: Approve them and set their new role simultaneously
+        await User.findByIdAndUpdate(userId, { 
             isApproved: true, 
             role: assignedRole 
         });
 
-
+        console.log(`User ${userId} approved as ${assignedRole}`);
         res.redirect('/master');
+
     } catch (err) {
         console.error("Approval Error:", err);
-        res.status(500).send("Failed to approve user.");
+        res.status(500).send("Internal Server Error: Could not approve user.");
     }
 });
 
