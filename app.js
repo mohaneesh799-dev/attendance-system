@@ -164,22 +164,28 @@ app.get('/auth/google/callback',
 
 
 app.get('/master', async (req, res) => {
+    // 1. Safety Check: Only allow logged-in Masters
     if (!req.session.user || req.session.user.role !== 'Master') {
         return res.redirect('/login');
     }
+
     try {
+        // 2. Fetch Subjects for the first table
         const subjects = await Subject.find();
-        // Fetch all users who are not the Master themselves
+
+        // 3. Fetch all users (Students/Leaders) for the new unified table
+        // This is the missing piece causing your error!
         const allUsers = await User.find({ role: { $ne: 'Master' } }); 
-        
+
+        // 4. Render the page with both variables
         res.render('master', { 
             subjects: subjects, 
-            allUsers: allUsers // This allows one table to handle everyone
+            allUsers: allUsers // This must match the name in your master.ejs
         });
     } catch (err) {
-        res.status(500).send("Error loading master board");
+        console.error("Master Board Load Error:", err);
+        res.status(500).send("Internal Server Error: " + err.message);
     }
-
 });
 
 
