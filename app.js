@@ -113,7 +113,6 @@ const subjectSchema = new mongoose.Schema({
     name: String,
     code: String
 });
-const Subject = mongoose.model('Subject', subjectSchema);
 
 
 // --- Middleware ---
@@ -438,7 +437,6 @@ await User.findOneAndUpdate(
 
 app.post('/lock-attendance', async (req, res) => {
     try {
-        // 1. Destructure exactly what comes from your leader dashboard form
         const { lecturerEmail, subject, date, students, periodNumber } = req.body;
 
         const newAttendance = new Attendance({
@@ -447,8 +445,6 @@ app.post('/lock-attendance', async (req, res) => {
             subject: subject,
             leaderEmail: req.session.user.email,
             lecturerEmail: lecturerEmail, // CRITICAL: Fixes blank Lecturer Dashboard
-            
-            // 2. Map the students array to match your Atlas schema
             students: Object.values(students).map(s => ({
                 studentId: s.id,
                 studentName: s.name,
@@ -458,10 +454,9 @@ app.post('/lock-attendance', async (req, res) => {
         });
 
         await newAttendance.save();
-        res.send("<script>alert('Locked Successfully!'); window.location.href='/leader';</script>");
+        res.send("<script>alert('Locked!'); window.location.href='/leader';</script>");
     } catch (err) {
-        console.error("Locking Error:", err);
-        res.status(500).send("Error saving attendance: " + err.message);
+        res.status(500).send("Error: " + err.message);
     }
 });
 
