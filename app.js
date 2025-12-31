@@ -107,7 +107,6 @@ const attendanceSchema = new mongoose.Schema({
     isLockedByLeader: { type: Boolean, default: true }
 });
 
-const Attendance = mongoose.model('Attendance', attendanceSchema);
 
 
 const subjectSchema = new mongoose.Schema({
@@ -227,18 +226,17 @@ app.get('/lecturer', async (req, res) => {
         return res.redirect('/login');
     }
     try {
-        // Use a case-insensitive search for the email
+        // Use regex for case-insensitive email matching
         const records = await Attendance.find({ 
             lecturerEmail: { $regex: new RegExp("^" + req.session.user.email + "$", "i") } 
         }).sort({ date: -1 });
 
         res.render('lecturer', { 
             user: req.session.user, 
-            attendanceRecords: records || [] // Pass empty array if no data found
+            attendanceRecords: records || [] 
         });
     } catch (err) {
-        console.error("Lecturer Route Error:", err);
-        res.status(500).send("Internal Server Error: Lecturer data could not be loaded.");
+        res.status(500).send("Internal Server Error: Could not load dashboard.");
     }
 });
 
@@ -440,6 +438,7 @@ await User.findOneAndUpdate(
 
 app.post('/lock-attendance', async (req, res) => {
     try {
+        // 1. Destructure exactly what comes from your leader dashboard form
         const { lecturerEmail, subject, date, students, periodNumber } = req.body;
 
         const newAttendance = new Attendance({
@@ -447,9 +446,9 @@ app.post('/lock-attendance', async (req, res) => {
             periodNumber: periodNumber || "1",
             subject: subject,
             leaderEmail: req.session.user.email,
-            lecturerEmail: lecturerEmail, // This fixes the blank lecturer column
+            lecturerEmail: lecturerEmail, // CRITICAL: Fixes blank Lecturer Dashboard
             
-            // USE 'students' TO MATCH ATLAS
+            // 2. Map the students array to match your Atlas schema
             students: Object.values(students).map(s => ({
                 studentId: s.id,
                 studentName: s.name,
@@ -461,11 +460,10 @@ app.post('/lock-attendance', async (req, res) => {
         await newAttendance.save();
         res.send("<script>alert('Locked Successfully!'); window.location.href='/leader';</script>");
     } catch (err) {
-        console.error(err);
-        res.status(500).send("Error saving: " + err.message);
+        console.error("Locking Error:", err);
+        res.status(500).send("Error saving attendance: " + err.message);
     }
 });
-
 
 // --- KEEP ONLY THIS SINGLE BLOCK ---
 app.post('/approve-user/:id', async (req, res) => {
