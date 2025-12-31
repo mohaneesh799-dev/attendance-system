@@ -88,7 +88,6 @@ const userSchema = new mongoose.Schema({
     rollNo: String
 });
 
-const User = mongoose.model('User', userSchema); // Fixed: Only one declaration here
 
 
 const attendanceSchema = new mongoose.Schema({
@@ -441,19 +440,16 @@ await User.findOneAndUpdate(
 
 app.post('/lock-attendance', async (req, res) => {
     try {
-        // Destructure the names exactly as they appear in the EJS 'name' attributes
-        const { lecturerEmail, subject, date, students, periodNumber, startTime, endTime } = req.body;
+        const { lecturerEmail, subject, date, students, periodNumber } = req.body;
 
         const newAttendance = new Attendance({
             date: date || new Date().toISOString().split('T')[0],
             periodNumber: periodNumber || "1",
             subject: subject,
-            timeSlot: `${startTime} - ${endTime}`,
             leaderEmail: req.session.user.email,
-            lecturerEmail: lecturerEmail, // Fixes blank column
+            lecturerEmail: lecturerEmail, // This fixes the blank lecturer column
             
-            // Map the students array from the form
-            // We use 'students' to match your Atlas collection
+            // USE 'students' TO MATCH ATLAS
             students: Object.values(students).map(s => ({
                 studentId: s.id,
                 studentName: s.name,
@@ -463,11 +459,10 @@ app.post('/lock-attendance', async (req, res) => {
         });
 
         await newAttendance.save();
-        res.send("<script>alert('Attendance Locked Successfully!'); window.location.href='/leader';</script>");
-        
+        res.send("<script>alert('Locked Successfully!'); window.location.href='/leader';</script>");
     } catch (err) {
-        console.error("Lock Error:", err);
-        res.status(500).send("Error saving attendance: " + err.message);
+        console.error(err);
+        res.status(500).send("Error saving: " + err.message);
     }
 });
 
