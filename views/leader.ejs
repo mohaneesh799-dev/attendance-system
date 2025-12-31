@@ -103,6 +103,7 @@
                                     <%= student.name %>
                                     <input type="hidden" name="students[<%= index %>][id]" value="<%= student._id %>">
                                     <input type="hidden" name="students[<%= index %>][name]" value="<%= student.name %>">
+                                    <input type="checkbox" name="students[<%= index %>][status]" value="Present">
                                 </td>
                                 <td style="text-align: center;">
                                     <input type="checkbox" name="students[<%= index %>][status]" value="Present" class="att-check">

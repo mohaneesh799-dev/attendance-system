@@ -89,18 +89,21 @@ const userSchema = new mongoose.Schema({
 const User = mongoose.model('User', userSchema); // Fixed: Only one declaration here
 
 
-// --- ATTENDANCE SCHEMA (Added for daily periods) ---
 const attendanceSchema = new mongoose.Schema({
     date: { type: String, required: true },
     periodNumber: { type: String, required: true },
     subject: { type: String, required: true },
-    leaderEmail: String,
-    students: [
+    leaderEmail: { type: String, required: true },
+    lecturerEmail: { type: String, required: true }, // Crucial for Lecturer Dashboard
+    timeSlot: String,
+    students: [ // Named 'students' to match Atlas
         {
             studentId: String,
-            status: String
+            studentName: String,
+            status: { type: String, default: 'Absent' }
         }
-    ]
+    ],
+    isLockedByLeader: { type: Boolean, default: true }
 });
 
 const Attendance = mongoose.model('Attendance', attendanceSchema);
@@ -256,19 +259,14 @@ app.get('/lecturer', async (req, res) => {
 
 
 app.get('/student', async (req, res) => {
-    if (!req.session.user || req.session.user.role !== 'Student') {
-        return res.redirect('/login');
-    }
     try {
-        // Find records where this student is listed in the 'records' array
-        const records = await Attendance.find({ "records.studentName": req.session.user.name });
-        
-        res.render('student', { 
-            user: req.session.user, 
-            attendanceRecords: records 
+        // Query must search inside the 'records' array for the student's name
+        const records = await Attendance.find({ 
+            "records.studentName": req.session.user.name 
         });
+        res.render('student', { user: req.session.user, attendanceRecords: records });
     } catch (err) {
-        res.status(500).send("Error loading dashboard");
+        res.status(500).send("Error loading student data.");
     }
 });
 
@@ -455,25 +453,24 @@ await User.findOneAndUpdate(
 
 
 app.post('/lock-attendance', async (req, res) => {
-
     try {
-        // 1. Extract data from req.body
+        // Destructure the names exactly as they appear in the EJS 'name' attributes
         const { lecturerEmail, subject, date, students, periodNumber, startTime, endTime } = req.body;
 
-        // 2. Create the new attendance document
         const newAttendance = new Attendance({
             date: date || new Date().toISOString().split('T')[0],
-            periodNumber: periodNumber || "1", // Fallback to "1" if empty
+            periodNumber: periodNumber || "1",
             subject: subject,
-            timeSlot: `${startTime} - ${endTime}`, // Matches your manual time request
+            timeSlot: `${startTime} - ${endTime}`,
             leaderEmail: req.session.user.email,
-            lecturerEmail: lecturerEmail, // This fixes the blank column in the table
+            lecturerEmail: lecturerEmail, // Fixes blank column
             
-            // 3. Map the student array (No JSON.parse needed here)
-            records: students.map(s => ({
+            // Map the students array from the form
+            // We use 'students' to match your Atlas collection
+            students: Object.values(students).map(s => ({
                 studentId: s.id,
                 studentName: s.name,
-                status: s.status === 'Present' ? 'Present' : 'Absent'
+                status: s.status || 'Absent'
             })),
             isLockedByLeader: true
         });
@@ -482,7 +479,7 @@ app.post('/lock-attendance', async (req, res) => {
         res.send("<script>alert('Attendance Locked Successfully!'); window.location.href='/leader';</script>");
         
     } catch (err) {
-        console.error("Lock Attendance Error:", err);
+        console.error("Lock Error:", err);
         res.status(500).send("Error saving attendance: " + err.message);
     }
 });
