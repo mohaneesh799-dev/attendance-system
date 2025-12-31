@@ -264,48 +264,48 @@ res.render('student', {
 
 
 app.post('/login', async (req, res) => {
-    const { email, password } = req.body;
+    
     try {
+        const { email, password } = req.body;
+        // Find user and handle case-sensitivity/whitespace
+        const user = await User.findOne({ email: email.toLowerCase().trim() });
 
-        const user = await User.findOne({ email: email });
-        
         if (!user) {
-            console.log("❌ Login failed: Email not found");
-            return res.status(400).send("Invalid email or password");
+            return res.send("<script>alert('User not found. Please contact the Master.'); window.location.href='/login';</script>");
         }
 
-        
-        if (user.approved === false) {
-            console.log("⚠ Login blocked: User not approved yet");
-            return res.status(403).send("Your account is pending admin approval.");
-        }
-
-
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            console.log("❌ Login failed: Wrong password");
-            return res.status(400).send("Invalid email or password");
+        // 1. ROLE-BASED ACCESS CONTROL
+        // Allow the Master to log in regardless of approval status
+        if (user.role !== 'Master' && !user.isApproved) {
+            return res.send("<script>alert('Approval Pending: Please wait for the Master to approve your account.'); window.location.href='/login';</script>");
         }
 
 
-        req.session.user = user;
-        console.log("✅ Login successful for:", email);
+        // 2. PASSWORD CHECK (If you are using passwords)
+        if (user.password && user.password !== password) {
+            return res.send("<script>alert('Invalid Password'); window.location.href='/login';</script>");
+        }
 
+        // 3. SESSION ASSIGNMENT
+        req.session.user = {
+            id: user._id,
+            email: user.email,
+            role: user.role, // This will now correctly be 'Master'
+            name: user.name
+        };
 
-        if (user.role === 'Class Leader') {
-            return res.redirect('/leader'); 
-        } else if (user.role === 'Master') {
-            return res.redirect('/master');
-        } else if (user.role === 'Lecturer') {
-            return res.redirect('/lecturer');
+        // 4. REDIRECTION LOGIC
+        if (user.role === 'Master') {
+            res.redirect('/master');
+        } else if (user.role === 'Leader') {
+            res.redirect('/leader');
         } else {
-
-            return res.redirect('/');
+            res.redirect('/student');
         }
 
     } catch (err) {
-        console.error("🔥 Server Error during login:", err);
-        res.status(500).send("Internal Server Error");
+        console.error("Login Error:", err);
+        res.status(500).send("Internal Server Error during login.");
     }
 });
 
