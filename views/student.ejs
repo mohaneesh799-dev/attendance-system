@@ -86,9 +86,8 @@
                 </tr>
             </thead>
             <tbody>
-    <% if (typeof students !== 'undefined' && students.length > 0) { %>
-        <% students.forEach(function(s) { %>
-            <tr style="border-bottom: 1px solid #eee;">
+        <% if (typeof history !== 'undefined' && history.length > 0) { %>     
+            <% history.forEach(function(s) { %>            <tr style="border-bottom: 1px solid #eee;">
                 <td style="padding: 10px;"><%= s.subject %></td>
                 <td style="padding: 10px;"><%= s.date %></td>
                 <td style="padding: 10px; font-weight: bold; color: green;"><%= s.status %></td>

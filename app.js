@@ -5,7 +5,9 @@ const mongoose = require('mongoose');
 const nodemailer = require('nodemailer');
 const path = require('path');
 const bcrypt = require('bcrypt');
-// 1. ADD THIS LINE HERE
+const multer = require('multer');
+const csv = require('csv-parser');
+const upload = multer({ dest: 'uploads/' });
 const session = require('express-session'); 
 
 const app = express();
@@ -225,45 +227,43 @@ app.get('/lecturer', async (req, res) => {
 });
 
 app.get('/student', async (req, res) => {
-    if (!req.session || !req.session.user) return res.redirect('/login');
+    if (!req.session.user) return res.redirect('/login');
 
     try {
         const userEmail = req.session.user.email;
-        const allAttendance = await Attendance.find();
+        const allRecords = await Attendance.find(); //
 
         const subjectStats = {};
-        let myFullAttendanceHistory = []; // Initialize this for the table in student.ejs
+        const history = [];
 
-        allAttendance.forEach(record => {
-            // Safety check for students array structure
-            const studentList = Array.isArray(record.students) ? record.students : [];
-            const studentEntry = studentList.find(s => s.email === userEmail);
+        allRecords.forEach(rec => {
+            // Find this student in the record's student array
+            const sEntry = rec.students.find(s => s.email === userEmail);
             
-            if (!subjectStats[record.subject]) {
-                subjectStats[record.subject] = { total: 0, present: 0 };
-            }
-
-            subjectStats[record.subject].total++;
-            if (studentEntry && studentEntry.status === 'Present') {
-                subjectStats[record.subject].present++;
-                
-                // Track history for the detailed list
-                myFullAttendanceHistory.push({
-                    subject: record.subject,
-                    date: record.date,
-                    status: studentEntry.status
+            if (sEntry) {
+                // Add to Day-wise History
+                history.push({
+                    date: rec.date,
+                    subject: rec.subject,
+                    status: sEntry.status
                 });
+
+                // Calculate Subject-wise stats
+                if (!subjectStats[rec.subject]) {
+                    subjectStats[rec.subject] = { total: 0, present: 0 };
+                }
+                subjectStats[rec.subject].total++;
+                if (sEntry.status === 'Present') subjectStats[rec.subject].present++;
             }
         });
 
-        // CRITICAL: Pass 'students' (history) and 'subjectStats'
-        res.render('student', { 
+res.render('student', { 
             user: req.session.user, 
-            subjectStats: subjectStats,
-            students: myFullAttendanceHistory // This fixes the 'students is not defined' error
-      });
+            subjectStats: subjectStats, 
+            history: history           
+        });
     } catch (err) {
-        console.error("Dashboard Error:", err);
+        console.error(err);
         res.status(500).send("Error: " + err.message);
     }
 });
@@ -272,7 +272,7 @@ app.get('/student', async (req, res) => {
 app.post('/login', async (req, res) => {
     const { email, password } = req.body;
     try {
-        // 1. Find user by email
+
         const user = await User.findOne({ email: email });
         
         if (!user) {
@@ -286,19 +286,18 @@ app.post('/login', async (req, res) => {
             return res.status(403).send("Your account is pending admin approval.");
         }
 
-        // 3. Check password
+
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             console.log("❌ Login failed: Wrong password");
             return res.status(400).send("Invalid email or password");
         }
 
-        // 4. SUCCESS BLOCK
+
         req.session.user = user;
         console.log("✅ Login successful for:", email);
 
-        // 5. FIXED REDIRECT LOGIC
-        // We manually check roles to avoid spaces in URLs like "/class leader"
+
         if (user.role === 'Class Leader') {
             return res.redirect('/leader'); 
         } else if (user.role === 'Master') {
@@ -306,7 +305,7 @@ app.post('/login', async (req, res) => {
         } else if (user.role === 'Lecturer') {
             return res.redirect('/lecturer');
         } else {
-            // Default fallback
+
             return res.redirect('/');
         }
 
@@ -323,24 +322,24 @@ app.get('/logout', (req, res, next) => {
             return next(err); 
         }
         req.session.destroy(() => {
-            res.clearCookie('connect.sid'); // Clears the login cookie
-            res.redirect('/'); // Sends you back to the login page
+            res.clearCookie('connect.sid'); 
+            res.redirect('/'); 
         });
     });
 });
 
-// --- UPDATE YOUR SETTINGS ROUTE IN app.js ---
+
 app.get('/settings', async (req, res) => {
     try {
-        // Find the user by their email (in a real app, use req.session.email)
-        // For now, we search for the student role to get their profile
+
+    
         const currentUser = await User.findOne({ role: 'Student' }); 
 
         if (!currentUser) {
             return res.send("User not found. Please log in again.");
         }
 
-        // Pass the 'currentUser' as 'user' to the EJS template
+
         res.render('settings', { user: currentUser }); 
     } catch (err) {
         console.error(err);
@@ -350,9 +349,11 @@ app.get('/settings', async (req, res) => {
 
 app.post('/update-settings', async (req, res) => {
     try {
-        const { name, rollNo, themeColor, email } = req.body; // Added email from form
+        const { name, rollNo, themeColor, email } = req.body;
+       
         
-        // Instead of a hardcoded email, use the one from the form
+
+      
         const userEmail = email; 
 
         await User.findOneAndUpdate(
@@ -439,6 +440,35 @@ app.post('/approve-user/:id', async (req, res) => {
     }
 });
 
+
+app.post('/upload-students', upload.single('studentFile'), async (req, res) => {
+    const studentsToUpload = [];
+    if (!req.file) return res.status(400).send("No file uploaded.");
+
+    fs.createReadStream(req.file.path)
+        .pipe(csv())
+        .on('data', (data) => studentsToUpload.push(data))
+        .on('end', async () => {
+            try {
+                for (let student of studentsToUpload) {
+                    // This updates existing students or creates new ones based on email
+                    await User.findOneAndUpdate(
+                        { email: student.email.toLowerCase().trim() }, 
+                        { 
+                            rollNo: student.rollNo, 
+                            name: student.name, 
+                            role: 'Student' 
+                        },
+                        { upsert: true }
+                    );
+                }
+                fs.unlinkSync(req.file.path); // Deletes the temporary file
+                res.send("<script>alert('Master student list updated!'); window.location.href='/master';</script>");
+            } catch (err) {
+                res.status(500).send("Upload Error: " + err.message);
+            }
+        });
+});
 
 
 app.post('/lock-period', async (req, res) => {
