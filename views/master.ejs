@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Master Dashboard - Admin</title>
+    <title>Master Dashboard - Control Panel</title>
     <link rel="stylesheet" href="/style.css">
     <style>
         :root { --sidebar-width: 260px; --primary: #2c3e50; --danger: #e74c3c; --success: #27ae60; --accent: #3498db; }
@@ -11,27 +11,27 @@
         
         .sidebar { width: var(--sidebar-width); background: var(--primary); color: white; height: 100vh; padding: 20px; position: fixed; }
         .sidebar h2 { border-bottom: 1px solid #34495e; padding-bottom: 10px; margin-bottom: 20px; }
-        .sidebar a { color: #ecf0f1; text-decoration: none; display: block; padding: 12px; border-radius: 5px; margin-bottom: 5px; }
+        .sidebar a { color: #ecf0f1; text-decoration: none; display: block; padding: 12px; border-radius: 5px; margin-bottom: 5px; transition: 0.3s; }
         .sidebar a:hover { background: #34495e; }
         
         .main-content { margin-left: var(--sidebar-width); padding: 40px; width: calc(100% - var(--sidebar-width)); }
         .card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 30px; }
         
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
         th { background: #f8f9fa; color: var(--primary); font-weight: 600; }
         
-        .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; }
+        .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
         .Student { background: #e3f2fd; color: #0d47a1; }
         .Lecturer { background: #e8f5e9; color: #1b5e20; }
         .Leader { background: #fff3e0; color: #e65100; }
         
-        .btn { padding: 8px 16px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: white; }
+        .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: white; text-decoration: none; display: inline-block; }
         .btn-approve { background: var(--success); }
-        .btn-delete { background: var(--danger); }
+        .btn-delete { background: var(--danger); font-size: 11px; }
         
-        .action-bar { background: #fff; padding: 15px; border-radius: 8px; margin-bottom: 15px; display: flex; gap: 10px; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        select { padding: 8px; border-radius: 4px; border: 1px solid #ddd; }
+        .action-bar { background: #fff; padding: 15px; border-radius: 8px; margin-bottom: 15px; display: flex; gap: 15px; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 5px solid var(--success); }
+        input[type="text"], select { padding: 10px; border-radius: 4px; border: 1px solid #ddd; }
     </style>
 </head>
 <body>
@@ -40,51 +40,56 @@
     <h2>Master Portal</h2>
     <p>Admin: <strong><%= user.name %></strong></p>
     <nav>
-        <a href="/master">Dashboard Overview</a>
-        <a href="/logout" style="color: #ff7675; margin-top: 30px;">Logout</a>
+        <a href="/master">🏠 Dashboard Overview</a>
+        <a href="/attendance-history">📅 Attendance History</a> <a href="/logout" style="color: #ff7675; margin-top: 50px;">🚪 Logout</a>
     </nav>
 </div>
 
 <div class="main-content">
-    <h1>Master Dashboard</h1>
+    <h1>Administration Control Panel</h1>
 
     <div class="card">
         <h3>Subject Management</h3>
+        <p style="color: #666; font-size: 14px;">Add subjects that Leaders will select for attendance marking.</p>
         <form action="/add-subject" method="POST" style="display: flex; gap: 10px; margin-bottom: 20px;">
-            <input type="text" name="subjectName" placeholder="New Subject Name" required style="flex:1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            <input type="text" name="subjectName" placeholder="Enter New Subject Name" required style="flex:1;">
             <button type="submit" class="btn" style="background: var(--accent);">Add Subject</button>
         </form>
         <table>
             <thead><tr><th>Subject Name</th><th>Action</th></tr></thead>
             <tbody>
-                <% masterSubjects.forEach(sub => { %>
-                    <tr>
-                        <td><%= sub.name %></td>
-                        <td>
-                            <form action="/delete-subject/<%= sub._id %>" method="POST">
-                                <button type="submit" class="btn btn-delete" style="font-size: 11px;">Remove</button>
-                            </form>
-                        </td>
-                    </tr>
-                <% }) %>
+                <% if (masterSubjects && masterSubjects.length > 0) { %>
+                    <% masterSubjects.forEach(sub => { %>
+                        <tr>
+                            <td><strong><%= sub.name %></strong></td> <td>
+                                <form action="/delete-subject/<%= sub._id %>" method="POST">
+                                    <button type="submit" class="btn btn-delete" onclick="return confirm('Delete this subject?')">Remove</button>
+                                </form>
+                            </td>
+                        </tr>
+                    <% }) %>
+                <% } else { %>
+                    <tr><td colspan="2" style="text-align: center;">No subjects found.</td></tr>
+                <% } %>
             </tbody>
         </table>
     </div>
 
     <div class="card">
-        <h3>User Management & Approvals</h3>
+        <h3>User Management</h3>
         
         <form action="/bulk-approve" method="POST" id="bulkForm">
             <div class="action-bar">
-                <input type="checkbox" id="selectAll" style="width: 18px; height: 18px; cursor: pointer;">
-                <strong>Select All</strong>
-                <span style="margin-left: 20px;">Change Selected to:</span>
+                <input type="checkbox" id="selectAll" style="width: 20px; height: 20px; cursor: pointer;">
+                <label for="selectAll" style="font-weight: bold; cursor: pointer;">Select All</label>
+                
+                <span style="margin-left: 20px;">Assign Role:</span>
                 <select name="targetRole">
                     <option value="Student">Student</option>
                     <option value="Leader">Leader</option>
                     <option value="Lecturer">Lecturer</option>
                 </select>
-                <button type="submit" class="btn btn-approve">Approve Selected Users</button>
+                <button type="submit" class="btn btn-approve">Approve & Save Selected</button>
             </div>
 
             <table>
@@ -94,7 +99,7 @@
                         <th>Roll No</th>
                         <th>Name</th>
                         <th>Email</th>
-                        <th>Current Role</th>
+                        <th>Status</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -114,7 +119,7 @@
                             </td>
                             <td>
                                 <form action="/delete-user/<%= u._id %>" method="POST" style="display:inline;">
-                                    <button type="submit" class="btn btn-delete" style="padding: 4px 8px; font-size: 11px;" onclick="return confirm('Delete user?')">Delete</button>
+                                    <button type="submit" class="btn btn-delete" onclick="return confirm('Delete user?')">Delete</button>
                                 </form>
                             </td>
                         </tr>
@@ -125,17 +130,19 @@
     </div>
 
     <div class="card">
-        <h3>Bulk User Upload (CSV)</h3>
-        <p style="font-size: 13px; color: #666;">Format: <strong>rollno, name, email</strong></p>
+        <h3>Bulk Registration (CSV)</h3>
+        <p style="font-size: 13px; color: #666; margin-bottom: 15px;">
+            Columns required: <strong>rollno, name, email</strong>
+        </p>
         <form action="/upload-users" method="POST" enctype="multipart/form-data">
             <input type="file" name="csvFile" accept=".csv" required>
-            <button type="submit" class="btn" style="background: var(--accent);">Upload CSV</button>
+            <button type="submit" class="btn" style="background: var(--accent);">Upload & Sync Users</button>
         </form>
     </div>
 </div>
 
 <script>
-    // SELECT ALL LOGIC
+    // SELECT ALL CHECKBOX LOGIC
     document.getElementById('selectAll').addEventListener('change', function() {
         const checkboxes = document.querySelectorAll('.user-checkbox');
         checkboxes.forEach(cb => cb.checked = this.checked);

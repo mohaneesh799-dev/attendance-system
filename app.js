@@ -649,10 +649,25 @@ app.post('/update-attendance-status', async (req, res) => {
 
 
 app.post('/add-subject', async (req, res) => {
-    if (!req.body.name || req.body.name.trim() === "") return res.redirect('/master');
-    const newSub = new Subject({ name: req.body.name.trim() });
-    await newSub.save();
-    res.redirect('/master');
+    try {
+        const { subjectName } = req.body;
+        
+        // Validation: Prevent adding empty subjects
+        if (!subjectName || subjectName.trim() === "") {
+            return res.status(400).send("Subject name cannot be empty");
+        }
+
+        // Create new subject using the 'name' field
+        const newSubject = new Subject({ 
+            name: subjectName.trim() 
+        });
+        
+        await newSubject.save();
+        res.redirect('/master');
+    } catch (err) {
+        console.error("Subject Add Error:", err);
+        res.status(500).send("Error adding subject.");
+    }
 });
 
 
@@ -697,6 +712,42 @@ app.get('/fix-database', async (req, res) => {
         res.send(`Database Fixed! Updated ${updatedCount} users. Now check your Leader Board.`);
     } catch (err) {
         res.status(500).send("Error fixing database: " + err.message);
+    }
+});
+
+
+
+app.get('/attendance-history', async (req, res) => {
+    if (!req.session.user) return res.redirect('/login');
+
+    try {
+        const { startDate, endDate } = req.query;
+        const user = req.session.user;
+        let query = {};
+
+        // Date filtering logic
+        if (startDate && endDate) {
+            query.date = { $gte: startDate, $lte: endDate };
+        }
+
+        // Role-based data scoping
+        if (user.role === 'Student') {
+            query["students.studentId"] = user.rollNo;
+        } else if (user.role === 'Lecturer') {
+            query.lecturerEmail = user.email;
+        } 
+        // Leaders and Masters see all records within the date range by default
+
+        const history = await Attendance.find(query).sort({ date: -1 });
+        
+        res.render('history', { 
+            user: user, 
+            records: history,
+            startDate,
+            endDate
+        });
+    } catch (err) {
+        res.status(500).send("Error fetching history");
     }
 });
 

@@ -3,40 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leader Dashboard - Attendance Management</title>
+    <title>Leader Dashboard - Attendance</title>
     <link rel="stylesheet" href="/style.css">
     <style>
-        :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --whatsapp: #25D366; --danger: #e74c3c; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 20px; }
+        :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --danger: #e74c3c; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; padding: 20px; }
         .container { max-width: 1100px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid #eee; padding-bottom: 15px; }
         .card { background: #fff; padding: 20px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 20px; }
         .grid-inputs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 15px; }
         input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { padding: 12px; border: 1px solid #eee; text-align: left; }
         th { background: var(--primary); color: white; }
-        .btn { padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: white; text-align: center; text-decoration: none; }
-        .btn-lock { background: var(--danger); width: 100%; margin-top: 10px; font-size: 16px; }
-        .btn-whatsapp { background: var(--whatsapp); width: 100%; margin-top: 15px; }
-        .quick-panel { background: #eef2f3; border-left: 5px solid var(--primary); }
-        .student-check { width: 22px; height: 22px; cursor: pointer; }
-        .checkbox-cell { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        .btn { padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: white; text-decoration: none; display: inline-block; }
+        .btn-lock { background: var(--danger); width: 100%; margin-top: 15px; font-size: 16px; }
+        .btn-history { background: var(--primary); }
+        .checkbox-container { display: flex; align-items: center; justify-content: space-between; }
+        .student-check { width: 20px; height: 20px; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-        <h1>Leader Attendance Entry</h1>
-        <div>Welcome, <strong><%= user.name %></strong> | <a href="/logout" style="color: var(--danger);">Logout</a></div>
+    <div class="header">
+        <div>
+            <h1>Leader Attendance Portal</h1>
+            <p>Welcome, <strong><%= user.name %></strong></p>
+        </div>
+        <div>
+            <a href="/attendance-history" class="btn btn-history">📅 View History</a>
+            <a href="/logout" style="color: var(--danger); margin-left: 15px; font-weight: bold; text-decoration: none;">Logout</a>
+        </div>
     </div>
 
-    <div class="card quick-panel">
-        <h3>Quick Mark Panel</h3>
-        <p style="font-size: 13px; color: #666; margin-bottom: 10px;">Type Roll Nos or Names (comma separated) to mark present instantly.</p>
+    <div class="card" style="background: #eef2f3; border-left: 5px solid var(--accent);">
+        <h3>Quick Mark</h3>
         <div style="display: flex; gap: 10px;">
-            <input type="text" id="quickInput" placeholder="e.g. 972, Lachi, Navaneeth">
-            <button type="button" onclick="applyQuickMark()" class="btn" style="background: var(--primary);">Mark Present</button>
+            <input type="text" id="quickInput" placeholder="Enter Roll Nos separated by commas (e.g., 101, 105, 110)">
+            <button type="button" onclick="applyQuickMark()" class="btn" style="background: var(--accent);">Mark Present</button>
         </div>
     </div>
 
@@ -44,11 +49,11 @@
         <div class="card">
             <div class="grid-inputs">
                 <div>
-                    <label>Select Lecturer</label>
+                    <label>Lecturer Name</label>
                     <select name="lecturerEmail" required>
-                        <option value="">-- Choose Lecturer --</option>
+                        <option value="">-- Select Lecturer --</option>
                         <% allUsers.forEach(u => { %>
-                            <% if(u.role === 'Lecturer') { %>
+                            <% if (u.role === 'Lecturer') { %>
                                 <option value="<%= u.email %>"><%= u.name %></option>
                             <% } %>
                         <% }) %>
@@ -56,23 +61,25 @@
                 </div>
                 <div>
                     <label>Time Slot</label>
-                    <input type="text" name="manualTime" placeholder="e.g. 09:15 AM - 10:05 AM" required>
+                    <input type="text" name="manualTime" placeholder="e.g. 10:00 AM - 11:00 AM" required>
                 </div>
                 <div>
                     <label>Date</label>
-                    <input type="date" name="date" id="currentDate" value="<%= new Date().toISOString().split('T')[0] %>" required>
+                    <input type="date" name="date" value="<%= new Date().toISOString().split('T')[0] %>" required>
                 </div>
             </div>
 
             <label>Subject</label>
-            <select name="subject" required style="margin-bottom:15px;">
+            <select name="subject" required style="margin-bottom: 20px;">
                 <option value="">-- Choose Subject --</option>
                 <% masterSubjects.forEach(sub => { %>
-                    <option value="<%= sub.name %>"><%= sub.name %></option>
+                    <% if (sub.name) { %>
+                        <option value="<%= sub.name %>"><%= sub.name %></option>
+                    <% } %>
                 <% }) %>
             </select>
 
-            <h3>Student List</h3>
+            <h3>Student Attendance List</h3>
             <table id="studentTable">
                 <thead>
                     <tr>
@@ -82,94 +89,48 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <% let studentIndex = 0; %>
+                    <% let studentIdx = 0; %>
                     <% allUsers.forEach(u => { %>
-                        <% 
-                           // FORCE FILTER: Exclude Master and Lecturer roles
-                           const isStaff = (u.role === 'Lecturer' || u.role === 'Master' || u.role === 'Admin');
-                           if (!isStaff) { 
-                        %>
+                        <% if (u.role !== 'Master' && u.role !== 'Lecturer' && u.role !== 'Admin') { %>
                             <tr>
                                 <td><%= u.rollNo || u.rollno || 'N/A' %></td>
                                 <td><%= u.name %></td>
                                 <td>
-                                    <div class="checkbox-cell">
+                                    <div class="checkbox-container">
                                         <span>Mark Present</span>
-                                        <input type="hidden" name="students[<%= studentIndex %>][id]" value="<%= u.rollNo || u.rollno %>">
-                                        <input type="hidden" name="students[<%= studentIndex %>][name]" value="<%= u.name %>">
-                                        <input type="checkbox" name="students[<%= studentIndex %>][status]" value="Present" class="student-check">
+                                        <input type="hidden" name="students[<%= studentIdx %>][id]" value="<%= u.rollNo || u.rollno %>">
+                                        <input type="hidden" name="students[<%= studentIdx %>][name]" value="<%= u.name %>">
+                                        <input type="checkbox" name="students[<%= studentIdx %>][status]" value="Present" class="student-check">
                                     </div>
                                 </td>
                             </tr>
-                            <% studentIndex++; %>
+                            <% studentIdx++; %>
                         <% } %>
                     <% }) %>
                 </tbody>
             </table>
-            <button type="submit" class="btn btn-lock">Lock Period Attendance</button>
+            
+            <button type="submit" class="btn btn-lock" onclick="return confirm('Confirm locking attendance for this period?')">Lock Period Attendance</button>
         </div>
     </form>
-
-    <div class="card">
-        <h3>Daily Report Management</h3>
-        <div style="display: flex; gap: 15px; align-items: flex-end;">
-            <div style="flex: 1;">
-                <label>Filter PDF By:</label>
-                <select id="reportFilter">
-                    <option value="">All Students</option>
-                    <option value="Present">Present Only</option>
-                    <option value="Absent">Absent Only</option>
-                </select>
-            </div>
-            <button type="button" class="btn" style="background: var(--accent);" onclick="downloadPDF()">Download PDF</button>
-        </div>
-
-        <button type="button" class="btn btn-whatsapp" onclick="submitToWhatsApp()">
-            Submit Report to Master via WhatsApp
-        </button>
-    </div>
 </div>
 
 <script>
     // Quick Mark Logic
     function applyQuickMark() {
         const input = document.getElementById('quickInput').value.toLowerCase();
-        const targets = input.split(',').map(t => t.trim());
+        const searchTerms = input.split(',').map(s => s.trim());
         const rows = document.querySelectorAll('#studentTable tbody tr');
-        
+
         rows.forEach(row => {
             const rollNo = row.cells[0].innerText.toLowerCase();
             const name = row.cells[1].innerText.toLowerCase();
             const checkbox = row.querySelector('.student-check');
-            
-            if (targets.some(t => (name.includes(t) || rollNo.includes(t)) && t !== "")) {
+
+            if (searchTerms.some(term => (rollNo === term || name.includes(term)) && term !== "")) {
                 checkbox.checked = true;
             }
         });
-    }
-
-    // PDF Download Fix
-    function downloadPDF() {
-        const date = document.getElementById('currentDate').value;
-        const filter = document.getElementById('reportFilter').value;
-        if (!date) return alert("Please select a date");
-        window.open(`/generate-day-pdf/${date}?filter=${filter}`, '_blank');
-    }
-
-    // WHATSAPP 404 FIX: Uses proper encoding
-    function submitToWhatsApp() {
-        const date = document.getElementById('currentDate').value;
-        const filter = document.getElementById('reportFilter').value;
-        if (!date) return alert("Select a date first");
-
-        const masterPhone = "916281173870"; // REPLACEME
-        const baseUrl = window.location.origin;
-        const pdfUrl = `${baseUrl}/generate-day-pdf/${date}?filter=${filter}`;
-        
-        const message = `Attendance Report for ${date}.\n\nView ${filter || 'full'} report:\n${pdfUrl}`;
-        
-        const finalUrl = `https://api.whatsapp.com/send?phone=${masterPhone}&text=${encodeURIComponent(message)}`;
-        window.open(finalUrl, '_blank');
     }
 </script>
 
