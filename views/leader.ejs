@@ -3,16 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leader Dashboard - Attendance</title>
+    <title>Leader Dashboard - Attendance Management</title>
     <link rel="stylesheet" href="/style.css">
     <style>
         :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --whatsapp: #25D366; }
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 20px; }
         .container { max-width: 1100px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .header { display: flex; justify-content: space-between; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 20px; }
         .card { background: #fff; padding: 20px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 20px; }
         .quick-panel { background: #eef2f3; border-left: 5px solid var(--primary); }
-        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 15px; }
+        .grid-inputs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 15px; }
         input[type="text"], input[type="date"], select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { padding: 12px; border: 1px solid #eee; text-align: left; }
@@ -21,33 +20,31 @@
         .btn-lock { background: #e74c3c; width: 100%; margin-top: 10px; }
         .btn-whatsapp { background: var(--whatsapp); width: 100%; margin-top: 15px; font-size: 16px; }
         .btn-pdf { background: var(--accent); }
-        .btn-edit { background: #95a5a6; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="header">
-        <h1>Attendance Entry</h1>
+    <div class="header" style="display:flex; justify-content:space-between; margin-bottom:20px;">
+        <h1>Leader Attendance Entry</h1>
         <div>Leader: <strong><%= user.name %></strong> | <a href="/logout">Logout</a></div>
     </div>
 
     <div class="card quick-panel">
         <h3>Quick Mark Panel</h3>
-        <p style="font-size: 13px; color: #666;">Type names or unique IDs separated by commas to mark them "Present" instantly.</p>
+        <p style="font-size: 13px; color: #666;">Enter Roll Numbers or Names (comma separated) to mark present instantly.</p>
         <div style="display: flex; gap: 10px;">
-            <input type="text" id="quickInput" placeholder="e.g. Lachi, Navaneeth, 972">
-            <button type="button" onclick="applyQuickMark()" class="btn" style="background: var(--primary);">Apply Present</button>
+            <input type="text" id="quickInput" placeholder="e.g. 972, Lachi, Navaneeth">
+            <button type="button" onclick="applyQuickMark()" class="btn" style="background: var(--primary);">Mark Present</button>
         </div>
     </div>
 
-    <form action="/lock-attendance" method="POST" id="attendanceForm">
+    <form action="/lock-attendance" method="POST">
         <div class="card">
-            <div class="grid-3">
+            <div class="grid-inputs">
                 <div>
-                    <label>Lecturer</label>
+                    <label>Select Lecturer</label>
                     <select name="lecturerEmail" required>
-                        <option value="">-- Select Lecturer --</option>
                         <% allUsers.filter(u => u.role === 'Lecturer').forEach(l => { %>
                             <option value="<%= l.email %>"><%= l.name %></option>
                         <% }) %>
@@ -55,16 +52,16 @@
                 </div>
                 <div>
                     <label>Manual Time Slot</label>
-                    <input type="text" name="manualTime" placeholder="e.g. 09:00 AM - 10:00 AM" required>
+                    <input type="text" name="manualTime" placeholder="e.g. 09:15 AM - 10:05 AM" required>
                 </div>
                 <div>
                     <label>Date</label>
-                    <input type="date" name="date" id="attendanceDate" value="<%= new Date().toISOString().split('T')[0] %>" required>
+                    <input type="date" name="date" id="currentDate" value="<%= new Date().toISOString().split('T')[0] %>" required>
                 </div>
             </div>
-            
+
             <label>Subject</label>
-            <select name="subject" required style="margin-bottom: 15px;">
+            <select name="subject" required style="margin-bottom:15px;">
                 <% masterSubjects.forEach(sub => { %>
                     <option value="<%= sub.name %>"><%= sub.name %></option>
                 <% }) %>
@@ -74,88 +71,94 @@
             <table id="studentTable">
                 <thead>
                     <tr>
+                        <th>Roll No</th>
                         <th>Student Name</th>
-                        <th>Select Status</th>
+                        <th>Status</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <% let i = 0; allUsers.filter(u => u.role === 'Student').forEach(student => { %>
+                    <% let i = 0; allUsers.filter(u => u.role === 'Student' || u.isPreRegistered).forEach(student => { %>
                         <tr>
+                            <td><%= student.rollNo || 'N/A' %></td>
                             <td><%= student.name %></td>
                             <td>
-                                <label>
-                                    <input type="checkbox" name="students[<%=i%>][status]" value="Present" class="student-checkbox"> 
-                                    Mark Present
-                                </label>
-                                <input type="hidden" name="students[<%=i%>][id]" value="<%= student._id %>">
+                                <input type="checkbox" name="students[<%=i%>][status]" value="Present" class="student-check">
+                                <input type="hidden" name="students[<%=i%>][id]" value="<%= student.rollNo || student._id %>">
                                 <input type="hidden" name="students[<%=i%>][name]" value="<%= student.name %>">
+                                <span style="margin-left:8px;">Mark Present</span>
                             </td>
                         </tr>
                     <% i++; }) %>
                 </tbody>
             </table>
-            <button type="submit" class="btn btn-lock" onclick="return confirm('Lock this period?')">Lock Period</button>
+            <button type="submit" class="btn btn-lock">Lock Period Attendance</button>
         </div>
     </form>
 
-    <div class="card" style="border-top: 5px solid var(--success);">
-        <h3>Entire Day Management</h3>
-        <p>Generate specific reports and share the day's record with the Master.</p>
-        
-        <div class="grid-3">
+    <div class="card">
+        <h3>Entire Day Report Management</h3>
+        <div class="grid-inputs" style="grid-template-columns: 1fr 2fr;">
             <div>
-                <label>Filter By:</label>
+                <label>Filter PDF By:</label>
                 <select id="reportFilter">
-                    <option value="Present">Present Record Only</option>
-                    <option value="Absent">Absent Record Only</option>
-                    <option value="All">Full Combined Report</option>
+                    <option value="">All Students</option>
+                    <option value="Present">Present Students Only</option>
+                    <option value="Absent">Absent Students Only</option>
                 </select>
             </div>
-            <div style="display: flex; align-items: flex-end; gap: 10px; grid-column: span 2;">
-                <button type="button" class="btn btn-pdf" onclick="generateReport()">Generate & Check PDF</button>
-                <button type="button" class="btn btn-edit" onclick="alert('Edit Mode: Unlocking last record...')">Edit PDF Data</button>
+            <div style="display:flex; align-items:flex-end; gap:10px;">
+                <button type="button" class="btn btn-pdf" onclick="generateAndCheckPDF()">Check & Download PDF</button>
             </div>
         </div>
 
-        <button type="button" class="btn btn-whatsapp" onclick="shareToWhatsApp()">
-            Submit Entire Day Attendance to Master via WhatsApp
+        <button type="button" class="btn btn-whatsapp" onclick="submitToWhatsApp()">
+            Submit Entire Day Report to Master via WhatsApp
         </button>
     </div>
 </div>
 
+
+
 <script>
-    // QUICK MARK LOGIC
+    // Quick Mark Functionality: Matches name or Roll No
     function applyQuickMark() {
         const input = document.getElementById('quickInput').value.toLowerCase();
-        const namesToMark = input.split(',').map(s => s.trim());
+        const targets = input.split(',').map(t => t.trim());
         const rows = document.querySelectorAll('#studentTable tbody tr');
-
+        
         rows.forEach(row => {
-            const studentName = row.cells[0].innerText.toLowerCase();
-            const checkbox = row.querySelector('.student-checkbox');
-            if (namesToMark.some(n => studentName.includes(n) && n !== "")) {
+            const rollNo = row.cells[0].innerText.toLowerCase();
+            const name = row.cells[1].innerText.toLowerCase();
+            const checkbox = row.querySelector('.student-check');
+            
+            if (targets.some(t => (name.includes(t) || rollNo.includes(t)) && t !== "")) {
                 checkbox.checked = true;
             }
         });
     }
 
-    // PDF GENERATION LOGIC
-    function generateReport() {
-        const date = document.getElementById('attendanceDate').value;
+    // PDF Filtering & Checking
+    function generateAndCheckPDF() {
+        const date = document.getElementById('currentDate').value;
         const filter = document.getElementById('reportFilter').value;
-        // Opens the PDF in a new tab for checking
+        
+        if(!date) {
+            alert("Please select a date first");
+            return;
+        }
+        
+        // Matches the updated route: /generate-day-pdf/:date?filter=...
         window.open(`/generate-day-pdf/${date}?filter=${filter}`, '_blank');
     }
 
-    // WHATSAPP SUBMISSION LOGIC
-    function shareToWhatsApp() {
-        const date = document.getElementById('attendanceDate').value;
+    // WhatsApp Direct Submit
+    function submitToWhatsApp() {
+        const date = document.getElementById('currentDate').value;
         const filter = document.getElementById('reportFilter').value;
-        const masterPhone = "916281173870"; // REPLACE WITH MASTER NUMBER
+        const masterPhone = "91XXXXXXXXXX"; // Replace with actual Master's phone number
         
-        // Construct the direct link to the generated PDF
-        const pdfLink = window.location.origin + `/generate-day-pdf/${date}?filter=${filter}`;
-        const message = `Hello Master, here is the ${filter} attendance report for ${date}. You can view the PDF here: ${pdfLink}`;
+        const pdfUrl = window.location.origin + `/generate-day-pdf/${date}?filter=${filter}`;
+        const message = `Hello Master, here is the ${filter || 'full'} attendance report for ${date}.\n\nView Report: ${pdfUrl}`;
         
         window.open(`https://wa.me/${masterPhone}?text=${encodeURIComponent(message)}`, '_blank');
     }

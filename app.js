@@ -260,14 +260,34 @@ app.get('/lecturer', async (req, res) => {
 
 
 app.get('/student', async (req, res) => {
+    if (!req.session.user || req.session.user.role !== 'Student') {
+        return res.redirect('/login');
+    }
+
     try {
-        // Query must search inside the 'records' array for the student's name
-        const records = await Attendance.find({ 
-            "records.studentName": req.session.user.name 
+        // Find attendance where the student's rollNo exists in the students array
+        const studentRoll = req.session.user.rollNo;
+        
+        const attendanceRecords = await Attendance.find({
+            "students": { $elemMatch: { studentId: studentRoll } }
+        }).sort({ date: -1 });
+
+        // Calculate basic stats for the dashboard
+        let presentCount = 0;
+        attendanceRecords.forEach(rec => {
+            const entry = rec.students.find(s => s.studentId === studentRoll);
+            if (entry && entry.status === 'Present') presentCount++;
         });
-        res.render('student', { user: req.session.user, attendanceRecords: records });
+
+        res.render('student', { 
+            user: req.session.user, 
+            records: attendanceRecords,
+            presentCount: presentCount,
+            totalCount: attendanceRecords.length
+        });
     } catch (err) {
-        res.status(500).send("Error loading student data.");
+        console.error("Student Dashboard Error:", err);
+        res.status(500).send("Error loading attendance data.");
     }
 });
 
@@ -538,27 +558,42 @@ app.post('/approve-multiple', async (req, res) => {
 });
 
 
-// --- Consolidated PDF Route (Present vs. Absent) ---
-app.get('/generate-filtered-pdf', async (req, res) => {
-    const { date, filterType } = req.query; // filterType can be 'Present' or 'Absent'
-    const records = await Attendance.find({ date: date });
+// UPDATED PDF GENERATION ROUTE
+app.get('/generate-day-pdf/:date', async (req, res) => {
+    try {
+        const { date } = req.params;
+        const { filter } = req.query; // Capture the 'filter' from the URL
+        
+        const records = await Attendance.find({ date: date }).sort({ manualTime: 1 });
 
-    const PDFDocument = require('pdfkit');
-    const doc = new PDFDocument();
-    res.setHeader('Content-Type', 'application/pdf');
-    
-    doc.text(`Attendance Report (${filterType} only) - ${date}`, { align: 'center', size: 18 });
-    doc.moveDown();
+        const PDFDocument = require('pdfkit');
+        const doc = new PDFDocument();
+        
+        res.setHeader('Content-Type', 'application/json');
+        res.setHeader('Content-Disposition', `attachment; filename=Attendance_Report_${date}.pdf`);
 
-    records.forEach(rec => {
-        doc.text(`Time: ${rec.manualTime} | Subject: ${rec.subject}`, { underline: true });
-        rec.students.filter(s => s.status === filterType).forEach(s => {
-            doc.text(`- ${s.studentName}`);
-        });
+        doc.fontSize(20).text(`Attendance Report: ${date}`, { align: 'center' });
+        if (filter) doc.fontSize(12).text(`Filter Applied: ${filter}`, { align: 'center' });
         doc.moveDown();
-    });
-    doc.pipe(res);
-    doc.end();
+
+        records.forEach(rec => {
+            doc.fontSize(14).text(`Slot: ${rec.manualTime} | Subject: ${rec.subject}`, { underline: true });
+            
+            rec.students.forEach(s => {
+                // Apply the filter logic
+                if (!filter || s.status === filter) {
+                    doc.fontSize(10).text(`${s.studentName} (${s.studentId}): ${s.status}`);
+                }
+            });
+            doc.moveDown();
+        });
+
+        doc.pipe(res);
+        doc.end();
+    } catch (err) {
+        console.error("PDF Error:", err);
+        res.status(500).send("Error generating PDF");
+    }
 });
 
 // History Route for Leader Dashboard
