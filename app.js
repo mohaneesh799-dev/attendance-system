@@ -243,23 +243,25 @@ app.get('/leader', async (req, res) => {
     }
 });
 
-// --- Get Lecturer's Locked Records ---
 app.get('/lecturer', async (req, res) => {
-    if (!req.session.user || req.session.user.role !== 'Lecturer') return res.redirect('/login');
-
     try {
-        // Filter by Lecturer Email AND ensure it is locked by the Leader
-        const assignedRecords = await Attendance.find({ 
-            lecturerEmail: req.session.user.email,
-            isLockedByLeader: true 
-        }).sort({ date: -1 });
+        // 1. Get Today's Date in YYYY-MM-DD format to match your DB strings
+        const today = new Date().toISOString().split('T')[0];
 
+        // 2. Fetch records where this lecturer is assigned for TODAY
+        const todayRecords = await Attendance.find({
+            lecturerEmail: req.session.user.email,
+            date: today
+        });
+
+        // 3. Render the page (Crucial: pass todayRecords so it's not undefined)
         res.render('lecturer', { 
             user: req.session.user, 
-            records: assignedRecords 
+            todayRecords: todayRecords 
         });
     } catch (err) {
-        res.status(500).send("Error loading dashboard.");
+        console.error(err);
+        res.status(500).send("Internal Server Error: Could not load Lecturer Dashboard");
     }
 });
 
