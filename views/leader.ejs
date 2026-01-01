@@ -3,25 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leader Dashboard - Attendance Management</title>
+    <title>Leader Dashboard - Attendance</title>
     <link rel="stylesheet" href="/style.css">
     <style>
-        :root { --primary: #2c3e50; --accent: #3498db; --whatsapp: #25D366; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; margin: 0; padding: 20px; }
-        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; margin-bottom: 25px; }
-        .form-section { background: #fff; padding: 20px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 30px; }
-        .grid-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
-        label { font-weight: bold; display: block; margin-bottom: 5px; color: var(--primary); }
-        select, input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
-        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --whatsapp: #25D366; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 20px; }
+        .container { max-width: 1100px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .header { display: flex; justify-content: space-between; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 20px; }
+        .card { background: #fff; padding: 20px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 20px; }
+        .quick-panel { background: #eef2f3; border-left: 5px solid var(--primary); }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 15px; }
+        input[type="text"], input[type="date"], select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { padding: 12px; border: 1px solid #eee; text-align: left; }
         th { background: var(--primary); color: white; }
-        .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; text-decoration: none; display: inline-block; }
-        .btn-lock { background: #e74c3c; color: white; width: 100%; font-size: 16px; }
-        .btn-pdf { background: var(--accent); color: white; font-size: 13px; }
-        .btn-whatsapp { background: var(--whatsapp); color: white; width: 100%; margin-top: 10px; }
-        .history-card { background: #f9f9f9; padding: 20px; border-radius: 8px; border-left: 5px solid var(--accent); }
+        .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; text-decoration: none; display: inline-block; color: white; }
+        .btn-lock { background: #e74c3c; width: 100%; margin-top: 10px; }
+        .btn-whatsapp { background: var(--whatsapp); width: 100%; margin-top: 15px; font-size: 16px; }
+        .btn-pdf { background: var(--accent); }
+        .btn-edit { background: #95a5a6; }
     </style>
 </head>
 <body>
@@ -29,108 +29,135 @@
 <div class="container">
     <div class="header">
         <h1>Attendance Entry</h1>
-        <div>
-            <span>Leader: <strong><%= user.name %></strong></span> | 
-            <a href="/logout">Logout</a>
+        <div>Leader: <strong><%= user.name %></strong> | <a href="/logout">Logout</a></div>
+    </div>
+
+    <div class="card quick-panel">
+        <h3>Quick Mark Panel</h3>
+        <p style="font-size: 13px; color: #666;">Type names or unique IDs separated by commas to mark them "Present" instantly.</p>
+        <div style="display: flex; gap: 10px;">
+            <input type="text" id="quickInput" placeholder="e.g. Lachi, Navaneeth, 972">
+            <button type="button" onclick="applyQuickMark()" class="btn" style="background: var(--primary);">Apply Present</button>
         </div>
     </div>
 
-    <form action="/lock-attendance" method="POST" class="form-section">
-        <div class="grid-inputs">
-            <div>
-                <label>Select Lecturer</label>
-                <select name="lecturerEmail" required>
-                    <option value="">-- Choose Lecturer --</option>
-                    <% allUsers.filter(u => u.role === 'Lecturer').forEach(l => { %>
-                        <option value="<%= l.email %>"><%= l.name %></option>
-                    <% }) %>
-                </select>
+    <form action="/lock-attendance" method="POST" id="attendanceForm">
+        <div class="card">
+            <div class="grid-3">
+                <div>
+                    <label>Lecturer</label>
+                    <select name="lecturerEmail" required>
+                        <option value="">-- Select Lecturer --</option>
+                        <% allUsers.filter(u => u.role === 'Lecturer').forEach(l => { %>
+                            <option value="<%= l.email %>"><%= l.name %></option>
+                        <% }) %>
+                    </select>
+                </div>
+                <div>
+                    <label>Manual Time Slot</label>
+                    <input type="text" name="manualTime" placeholder="e.g. 09:00 AM - 10:00 AM" required>
+                </div>
+                <div>
+                    <label>Date</label>
+                    <input type="date" name="date" id="attendanceDate" value="<%= new Date().toISOString().split('T')[0] %>" required>
+                </div>
             </div>
-            <div>
-                <label>Manual Time Slot</label>
-                <select name="timeSlot" required>
-                    <option value="09:00 AM - 10:00 AM">09:00 AM - 10:00 AM</option>
-                    <option value="10:00 AM - 11:00 AM">10:00 AM - 11:00 AM</option>
-                    <option value="11:15 AM - 12:15 PM">11:15 AM - 12:15 PM</option>
-                    <option value="12:15 PM - 01:15 PM">12:15 PM - 01:15 PM</option>
-                    <option value="02:00 PM - 03:00 PM">02:00 PM - 03:00 PM</option>
-                    <option value="03:00 PM - 04:00 PM">03:00 PM - 04:00 PM</option>
-                </select>
-            </div>
-        </div>
+            
+            <label>Subject</label>
+            <select name="subject" required style="margin-bottom: 15px;">
+                <% masterSubjects.forEach(sub => { %>
+                    <option value="<%= sub.name %>"><%= sub.name %></option>
+                <% }) %>
+            </select>
 
-        <div class="grid-inputs">
-            <div>
-                <label>Subject</label>
-                <select name="subject" required>
-                    <% masterSubjects.forEach(sub => { %>
-                        <option value="<%= sub.name %>"><%= sub.name %></option>
-                    <% }) %>
-                </select>
-            </div>
-            <div>
-                <label>Date</label>
-                <input type="date" name="date" id="currentDate" value="<%= new Date().toISOString().split('T')[0] %>" required>
-            </div>
-        </div>
-
-        <h3>Student List</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Student Name</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% let i = 0; allUsers.filter(u => u.role === 'Student').forEach(student => { %>
+            <h3>Student List</h3>
+            <table id="studentTable">
+                <thead>
                     <tr>
-                        <td>
-                            <%= student.name %>
-                            <input type="hidden" name="students[<%= i %>][id]" value="<%= student._id %>">
-                            <input type="hidden" name="students[<%= i %>][name]" value="<%= student.name %>">
-                        </td>
-                        <td>
-                            <label><input type="checkbox" name="students[<%= i %>][status]" value="Present"> Mark Present</label>
-                        </td>
+                        <th>Student Name</th>
+                        <th>Select Status</th>
                     </tr>
-                <% i++; }) %>
-            </tbody>
-        </table>
-
-        <button type="submit" class="btn btn-lock" onclick="return confirm('Lock attendance for this slot?')">Lock Attendance</button>
+                </thead>
+                <tbody>
+                    <% let i = 0; allUsers.filter(u => u.role === 'Student').forEach(student => { %>
+                        <tr>
+                            <td><%= student.name %></td>
+                            <td>
+                                <label>
+                                    <input type="checkbox" name="students[<%=i%>][status]" value="Present" class="student-checkbox"> 
+                                    Mark Present
+                                </label>
+                                <input type="hidden" name="students[<%=i%>][id]" value="<%= student._id %>">
+                                <input type="hidden" name="students[<%=i%>][name]" value="<%= student.name %>">
+                            </td>
+                        </tr>
+                    <% i++; }) %>
+                </tbody>
+            </table>
+            <button type="submit" class="btn btn-lock" onclick="return confirm('Lock this period?')">Lock Period</button>
+        </div>
     </form>
 
-    <div class="history-card">
+    <div class="card" style="border-top: 5px solid var(--success);">
         <h3>Entire Day Management</h3>
-        <p>Generate a single PDF for all periods of the selected day and share with Master.</p>
+        <p>Generate specific reports and share the day's record with the Master.</p>
         
-        <div style="display: flex; gap: 10px; margin-top: 15px;">
-            <button class="btn btn-pdf" onclick="generateDailyPDF()">Check & Download Entire Day PDF</button>
-            <button class="btn btn-pdf" style="background: #95a5a6;" onclick="window.location.href='/settings'">Edit Profile</button>
+        <div class="grid-3">
+            <div>
+                <label>Filter By:</label>
+                <select id="reportFilter">
+                    <option value="Present">Present Record Only</option>
+                    <option value="Absent">Absent Record Only</option>
+                    <option value="All">Full Combined Report</option>
+                </select>
+            </div>
+            <div style="display: flex; align-items: flex-end; gap: 10px; grid-column: span 2;">
+                <button type="button" class="btn btn-pdf" onclick="generateReport()">Generate & Check PDF</button>
+                <button type="button" class="btn btn-edit" onclick="alert('Edit Mode: Unlocking last record...')">Edit PDF Data</button>
+            </div>
         </div>
 
-        <button class="btn btn-whatsapp" onclick="shareToWhatsApp()">
+        <button type="button" class="btn btn-whatsapp" onclick="shareToWhatsApp()">
             Submit Entire Day Attendance to Master via WhatsApp
         </button>
     </div>
 </div>
 
 <script>
-    function generateDailyPDF() {
-        const date = document.getElementById('currentDate').value;
-        if(!date) return alert("Please select a date first");
-        // Route to generate consolidated PDF for all slots of that day
-        window.location.href = `/generate-day-pdf/${date}`;
+    // QUICK MARK LOGIC
+    function applyQuickMark() {
+        const input = document.getElementById('quickInput').value.toLowerCase();
+        const namesToMark = input.split(',').map(s => s.trim());
+        const rows = document.querySelectorAll('#studentTable tbody tr');
+
+        rows.forEach(row => {
+            const studentName = row.cells[0].innerText.toLowerCase();
+            const checkbox = row.querySelector('.student-checkbox');
+            if (namesToMark.some(n => studentName.includes(n) && n !== "")) {
+                checkbox.checked = true;
+            }
+        });
     }
 
+    // PDF GENERATION LOGIC
+    function generateReport() {
+        const date = document.getElementById('attendanceDate').value;
+        const filter = document.getElementById('reportFilter').value;
+        // Opens the PDF in a new tab for checking
+        window.open(`/generate-day-pdf/${date}?filter=${filter}`, '_blank');
+    }
+
+    // WHATSAPP SUBMISSION LOGIC
     function shareToWhatsApp() {
-        const date = document.getElementById('currentDate').value;
-        const masterPhone = "919703636298"; // REPLACE WITH ACTUAL MASTER PHONE NUMBER
-        const message = `Hello Master, I have generated and locked the consolidated attendance for ${date}. The entair day's PDF is ready on the portal for your review.`;
+        const date = document.getElementById('attendanceDate').value;
+        const filter = document.getElementById('reportFilter').value;
+        const masterPhone = "916281173870"; // REPLACE WITH MASTER NUMBER
         
-        const url = `https://wa.me/${masterPhone}?text=${encodeURIComponent(message)}`;
-        window.open(url, '_blank');
+        // Construct the direct link to the generated PDF
+        const pdfLink = window.location.origin + `/generate-day-pdf/${date}?filter=${filter}`;
+        const message = `Hello Master, here is the ${filter} attendance report for ${date}. You can view the PDF here: ${pdfLink}`;
+        
+        window.open(`https://wa.me/${masterPhone}?text=${encodeURIComponent(message)}`, '_blank');
     }
 </script>
 

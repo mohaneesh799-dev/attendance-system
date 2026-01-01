@@ -88,21 +88,20 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', userSchema);
 
+// --- Updated Attendance Schema ---
 const attendanceSchema = new mongoose.Schema({
-    date: { type: String, required: true },
-    periodNumber: { type: String, required: true },
-    subject: { type: String, required: true },
-    leaderEmail: { type: String, required: true },
-    lecturerEmail: { type: String, required: true }, // Crucial for Lecturer Dashboard
-    timeSlot: String,
-    students: [ // Named 'students' to match Atlas
-        {
-            studentId: String,
-            studentName: String,
-            status: { type: String, default: 'Absent' }
-        }
-    ],
-    isLockedByLeader: { type: Boolean, default: true }
+    date: String,
+    manualTime: String, // New field for manual entry
+    periodNumber: { type: String, required: false }, // Made optional to fix the error in image 1c6329
+    subject: String,
+    lecturerEmail: String,
+    leaderEmail: String,
+    students: [{
+        studentId: String,
+        studentName: String,
+        status: String
+    }],
+    isLockedByLeader: { type: Boolean, default: false }
 });
 
 const Attendance = mongoose.model('Attendance', attendanceSchema);
@@ -437,11 +436,10 @@ app.post('/upload-users', upload.single('csvFile'), (req, res) => {
 
 app.post('/lock-attendance', async (req, res) => {
     try {
-        const { lecturerEmail, subject, date, students, periodNumber, timeSlot } = req.body;
+        const { lecturerEmail, manualTime, subject, date, students } = req.body;
         const newAttendance = new Attendance({
             date,
-            periodNumber,
-            timeSlot, // Saving the manual time slot
+            manualTime, // Save the manual text string
             subject,
             lecturerEmail,
             leaderEmail: req.session.user.email,
@@ -452,10 +450,13 @@ app.post('/lock-attendance', async (req, res) => {
             })),
             isLockedByLeader: true
         });
+        // IMPORTANT: Ensure periodNumber is NOT required in your mongoose schema!
         await newAttendance.save();
-        res.send("<script>alert('Locked Successfully!'); window.location.href='/leader';</script>");
+        res.send("<script>alert('Locked!'); window.location.href='/leader';</script>");
     } catch (err) { res.status(500).send(err.message); }
 });
+
+
 
 // --- KEEP ONLY THIS SINGLE BLOCK ---
 app.post('/approve-user/:id', async (req, res) => {
@@ -525,27 +526,25 @@ app.post('/approve-multiple', async (req, res) => {
 });
 
 
-// 2. GENERATE PDF FOR ENTIRE DAY
-app.get('/generate-day-pdf/:date', async (req, res) => {
-    const { date } = req.params;
-    const records = await Attendance.find({ date: date }).sort({ timeSlot: 1 });
+// --- Consolidated PDF Route (Present vs. Absent) ---
+app.get('/generate-filtered-pdf', async (req, res) => {
+    const { date, filterType } = req.query; // filterType can be 'Present' or 'Absent'
+    const records = await Attendance.find({ date: date });
 
     const PDFDocument = require('pdfkit');
     const doc = new PDFDocument();
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename=Daily_Report_${date}.pdf`);
-
-    doc.fontSize(20).text(`Consolidated Attendance: ${date}`, { align: 'center' });
+    
+    doc.text(`Attendance Report (${filterType} only) - ${date}`, { align: 'center', size: 18 });
     doc.moveDown();
 
     records.forEach(rec => {
-        doc.fontSize(14).text(`Slot: ${rec.timeSlot} | Subject: ${rec.subject}`, { underline: true });
-        rec.students.forEach(s => {
-            doc.fontSize(10).text(`${s.studentName}: ${s.status}`);
+        doc.text(`Time: ${rec.manualTime} | Subject: ${rec.subject}`, { underline: true });
+        rec.students.filter(s => s.status === filterType).forEach(s => {
+            doc.text(`- ${s.studentName}`);
         });
         doc.moveDown();
     });
-
     doc.pipe(res);
     doc.end();
 });
