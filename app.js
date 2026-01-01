@@ -222,20 +222,26 @@ app.get('/leader', async (req, res) => {
     if (!req.session.user || req.session.user.role !== 'Leader') return res.redirect('/login');
 
     try {
-        // Fetch all users and subjects
-        const allUsers = await User.find({}); 
+        // Fetch only students and pre-registered users to exclude Master/Lecturer from the list
+        const studentsOnly = await User.find({ 
+            $or: [
+                { role: 'Student' }, 
+                { isPreRegistered: true }
+            ] 
+        }).sort({ rollNo: 1 }); // Sort by rollNo to keep the list organized
+
         const masterSubjects = await Subject.find({});
 
         res.render('leader', { 
             user: req.session.user, 
-            allUsers: allUsers, 
+            allUsers: studentsOnly, // Only contains students now
             masterSubjects: masterSubjects 
         });
     } catch (err) {
-        res.status(500).send("Error loading Leader Dashboard");
+        console.error("Leader Route Error:", err);
+        res.status(500).send("Error loading dashboard.");
     }
 });
-
 
 // --- Get Lecturer's Locked Records ---
 app.get('/lecturer', async (req, res) => {
