@@ -450,19 +450,22 @@ app.post('/upload-users', upload.single('csvFile'), (req, res) => {
     const users = [];
     fs.createReadStream(req.file.path)
         .pipe(csv())
+        // image_38fb48 updated for better compatibility
         .on('data', (row) => {
-            // Mapping CSV columns to your UserSchema
             if (row.email) {
-                users.push({
-                    rollNo: row.rollno ? row.rollno.trim() : '',
-                    name: row.name ? row.name.trim() : 'New User',
-                    email: row.email.toLowerCase().trim(),
-                    role: 'Student', // Default until Master changes it
-                    isApproved: false,
-                    isPreRegistered: true // Match the field in your schema
-                });
-            }
-        })
+        // Look for common variations of the roll number header
+           const csvRoll = row.rollno || row.RollNo || row['Roll No'] || row.roll_no;
+        
+        users.push({
+            rollNo: csvRoll ? csvRoll.trim() : '', // Always save as rollNo
+            name: row.name ? row.name.trim() : 'New User',
+            email: row.email.toLowerCase().trim(),
+            role: 'Student',
+            isApproved: true, // Auto-approve if uploaded by Master
+            isPreRegistered: true
+            });
+        }
+    })
         .on('end', async () => {
             try {
                 if (users.length > 0) {

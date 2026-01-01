@@ -3,39 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Master Dashboard - Admin Control</title>
+    <title>Master Dashboard</title>
     <link rel="stylesheet" href="/style.css">
     <style>
-        :root { --primary: #2c3e50; --accent: #3498db; --danger: #e74c3c; --success: #2ecc71; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; display: flex; }
-        .sidebar { width: 250px; background-color: var(--primary); color: white; height: 100vh; padding: 20px; position: fixed; }
-        .main-content { margin-left: 290px; padding: 40px; width: calc(100% - 310px); }
-        .card { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 30px; }
-        h2, h3 { color: var(--primary); margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        :root { --sidebar-width: 250px; --primary: #2c3e50; --danger: #e74c3c; --accent: #3498db; }
+        body { display: flex; font-family: 'Segoe UI', sans-serif; margin: 0; background: #f4f7f6; }
+        
+        /* Sidebar Styles */
+        .sidebar { width: var(--sidebar-width); background: var(--primary); color: white; height: 100vh; padding: 20px; position: fixed; }
+        .sidebar h2 { border-bottom: 1px solid #34495e; padding-bottom: 10px; }
+        .sidebar a { color: white; text-decoration: none; display: block; padding: 10px 0; }
+        .sidebar a:hover { color: var(--accent); }
+
+        .main-content { margin-left: var(--sidebar-width); padding: 40px; width: calc(100% - var(--sidebar-width)); }
+        .card { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 30px; }
+        
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
-        th { background-color: #f8f9fa; color: #333; }
-        .btn { padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; text-decoration: none; display: inline-block; }
-        .btn-delete { background-color: var(--danger); color: white; }
-        .btn-approve { background-color: var(--success); color: white; }
-        .status-badge { padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; }
-        input[type="text"], input[type="file"], select { padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        th, td { padding: 12px; border: 1px solid #eee; text-align: left; }
+        th { background: #f8f9fa; color: var(--primary); }
+        
+        .badge { padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+        .Student { background: #d1ecf1; color: #0c5460; }
+        .Lecturer { background: #d4edda; color: #155724; }
+        .Leader { background: #fff3cd; color: #856404; }
+        
+        .btn { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; color: white; font-weight: bold; }
+        .btn-delete { background: var(--danger); }
+        .btn-add { background: var(--accent); }
+        
+        .form-inline { display: flex; gap: 10px; margin-bottom: 20px; }
+        .form-inline input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
     </style>
 </head>
 <body>
 
 <div class="sidebar">
-    <h2>Admin Panel</h2>
-    <p>Logged in as: <br><strong><%= user.name %></strong></p>
+    <h2>Master Portal</h2>
+    <p>Logged in as:<br><strong><%= user.name %></strong></p>
     <hr>
-    <ul style="list-style: none; padding: 0;">
-        <li style="margin-bottom: 15px;"><a href="/master" style="color: white; text-decoration: none;">Dashboard</a></li>
-        <li><a href="/logout" style="color: #ff7675; text-decoration: none;">Logout</a></li>
-    </ul>
+    <a href="/master">Dashboard</a>
+    <a href="/logout" style="color: #ff7675;">Logout</a>
 </div>
 
 <div class="main-content">
-    <h1>Master Dashboard</h1>
+    <h1>Master Administration</h1>
+
+    <div class="card">
+        <h3>Subject Management</h3>
+        <p style="font-size: 0.9rem; color: #666;">Add subjects here so they appear in the Leader's dropdown menu.</p>
+        <form action="/add-subject" method="POST" class="form-inline">
+            <input type="text" name="subjectName" placeholder="Enter Subject Name (e.g., Mathematics)" required>
+            <button type="submit" class="btn btn-add">Add Subject</button>
+        </form>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Subject Name</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (masterSubjects && masterSubjects.length > 0) { %>
+                    <% masterSubjects.forEach(sub => { %>
+                        <tr>
+                            <td><%= sub.name %></td>
+                            <td>
+                                <form action="/delete-subject/<%= sub._id %>" method="POST" style="display:inline;">
+                                    <button type="submit" class="btn-delete" style="padding: 5px 10px;" onclick="return confirm('Delete subject?')">Remove</button>
+                                </form>
+                            </td>
+                        </tr>
+                    <% }) %>
+                <% } else { %>
+                    <tr><td colspan="2" style="text-align:center;">No subjects found.</td></tr>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
 
     <div class="card">
         <h3>User Management</h3>
@@ -51,34 +96,21 @@
             </thead>
             <tbody>
                 <% allUsers.forEach(u => { %>
-                    <% if(u.role !== 'Master') { %>
                     <tr>
                         <td><%= u.rollNo || 'N/A' %></td>
                         <td><%= u.name %></td>
                         <td><%= u.email %></td>
                         <td>
-                            <% if(u.isApproved) { %>
-                                <span class="status-badge" style="background:#d4edda; color:#155724;">
-                                    <%= u.role %> (Approved)
-                                </span>
-                            <% } else { %>
-                                <form action="/approve-user/<%= u._id %>" method="POST" style="display:flex; gap:5px;">
-                                    <select name="role" required>
-                                        <option value="Student">Student</option>
-                                        <option value="Lecturer">Lecturer</option>
-                                        <option value="Leader">Leader</option>
-                                    </select>
-                                    <button type="submit" class="btn btn-approve">Approve</button>
-                                </form>
-                            <% } %>
+                            <span class="badge <%= u.role %>">
+                                <%= u.role %> (Approved)
+                            </span>
                         </td>
                         <td>
-                            <form action="/delete-user/<%= u._id %>" method="POST" onsubmit="return confirm('Delete user?')">
-                                <button type="submit" class="btn btn-delete">Delete</button>
+                            <form action="/delete-user/<%= u._id %>" method="POST" style="display:inline;">
+                                <button type="submit" class="btn-delete" style="padding: 5px 10px;" onclick="return confirm('Delete this user?')">Delete</button>
                             </form>
                         </td>
                     </tr>
-                    <% } %>
                 <% }) %>
             </tbody>
         </table>
@@ -86,45 +118,13 @@
 
     <div class="card">
         <h3>Bulk User Upload (CSV)</h3>
-        <p style="font-size: 12px; color: #666;">CSV Format: <strong>rollno, name, email</strong> (No headers needed)</p>
-        <form action="/upload-users" method="POST" enctype="multipart/form-data">
+        <p style="font-size: 13px; color: #666;">
+            Required CSV Columns: <strong>rollno, name, email</strong>
+        </p>
+        <form action="/upload-users" method="POST" enctype="multipart/form-data" style="margin-top: 15px;">
             <input type="file" name="csvFile" accept=".csv" required>
-            <button type="submit" class="btn" style="background-color: var(--accent); color: white;">Upload CSV</button>
+            <button type="submit" class="btn btn-add">Upload CSV</button>
         </form>
-    </div>
-
-    <div class="card">
-        <h3>Subject Management</h3>
-        <form action="/add-subject" method="POST" style="display: flex; gap: 10px; margin-bottom: 20px;">
-            <input type="text" name="name" placeholder="Enter Subject Name" required style="flex-grow: 1;">
-            <button type="submit" class="btn" style="background-color: var(--primary); color: white;">Add Subject</button>
-        </form>
-
-        <table>
-            <thead>
-                <tr>
-                    <th>Subject Name</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% if (masterSubjects && masterSubjects.length > 0) { %>
-                    <% masterSubjects.forEach(sub => { %>
-                        <% if (sub.name && sub.name.trim() !== "") { %> <tr>
-                            <td><%= sub.name %></td>
-                            <td>
-                                <form action="/delete-subject/<%= sub._id %>" method="POST">
-                                    <button type="submit" class="btn btn-delete">Remove</button>
-                                </form>
-                            </td>
-                        </tr>
-                        <% } %>
-                    <% }) %>
-                <% } else { %>
-                    <tr><td colspan="2" style="text-align:center;">No subjects available.</td></tr>
-                <% } %>
-            </tbody>
-        </table>
     </div>
 </div>
 
