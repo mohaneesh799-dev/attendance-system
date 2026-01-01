@@ -560,16 +560,23 @@ app.post('/bulk-approve', async (req, res) => {
 app.get('/generate-day-pdf/:date', async (req, res) => {
     try {
         const { date } = req.params;
-        const { filter } = req.query; // Capture the 'filter' from the URL
-        
+        const { filter } = req.query;
+
         const records = await Attendance.find({ date: date }).sort({ manualTime: 1 });
 
         const PDFDocument = require('pdfkit');
-        const doc = new PDFDocument();
-        
-        res.setHeader('Content-Type', 'application/json');
-        res.setHeader('Content-Disposition', `attachment; filename=Attendance_Report_${date}.pdf`);
+        const doc = new PDFDocument({ margin: 30 });
 
+        // FIX 1: Change Content-Type to application/pdf
+        res.setHeader('Content-Type', 'application/pdf');
+        
+        // FIX 2: Ensure the filename ends in .pdf and set to 'inline' so it opens in the browser/app
+        res.setHeader('Content-Disposition', `inline; filename=Attendance_Report_${date}.pdf`);
+
+        // FIX 3: Pipe the document to the response BEFORE ending the doc
+        doc.pipe(res);
+
+        // PDF Content Construction
         doc.fontSize(20).text(`Attendance Report: ${date}`, { align: 'center' });
         if (filter) doc.fontSize(12).text(`Filter Applied: ${filter}`, { align: 'center' });
         doc.moveDown();
@@ -580,14 +587,15 @@ app.get('/generate-day-pdf/:date', async (req, res) => {
             rec.students.forEach(s => {
                 // Apply the filter logic
                 if (!filter || s.status === filter) {
-                    doc.fontSize(10).text(`${s.studentName} (${s.studentId}): ${s.status}`);
+                    doc.fontSize(10).text(`${s.name || s.studentName} (${s.studentId}): ${s.status}`);
                 }
             });
             doc.moveDown();
         });
 
-        doc.pipe(res);
+        // Finalize the PDF
         doc.end();
+
     } catch (err) {
         console.error("PDF Error:", err);
         res.status(500).send("Error generating PDF");

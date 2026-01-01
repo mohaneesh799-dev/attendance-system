@@ -163,15 +163,22 @@
     }
 
     function submitToWhatsApp() {
-        const date = document.getElementById('currentDate').value;
-        const filter = document.getElementById('reportFilter').value;
-        if (!date) return alert("Select a date");
+    const date = document.getElementById('currentDate').value;
+    const filter = document.getElementById('reportFilter').value;
+    
+    if (!date) return alert("Please select a date first.");
 
-        const baseUrl = window.location.origin;
-        const pdfUrl = `${baseUrl}/generate-day-pdf/${date}?filter=${filter}`;
-        const message = `*Attendance Report: ${date}*\nFilter: ${filter || 'All'}\n\nView PDF:\n${pdfUrl}`;
-        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, '_blank');
-    }
+    const baseUrl = window.location.origin;
+    // This link points to your PDF route
+    const pdfUrl = `${baseUrl}/generate-day-pdf/${date}?filter=${filter}`;
+    
+    const message = `*Attendance Report: ${date}*\n` +
+                    `Status Filter: ${filter || 'All Students'}\n\n` +
+                    `📄 View PDF Report:\n${pdfUrl}`;
+    
+    // Opens WhatsApp contact picker
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, '_blank');
+}
 </script>
 
 </body>
