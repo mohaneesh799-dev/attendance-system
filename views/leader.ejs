@@ -3,151 +3,136 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Attendance Portal</title>
+    <title>Leader Dashboard - Attendance Management</title>
     <link rel="stylesheet" href="/style.css">
     <style>
-        :root { --primary: #34495e; --accent: #3498db; --success: #27ae60; --danger: #e74c3c; }
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f8f9fa; margin: 0; padding: 20px; }
-        .dashboard-container { max-width: 900px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 25px; }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .stat-card { padding: 20px; border-radius: 8px; text-align: center; color: white; }
-        .stat-total { background: var(--primary); }
-        .stat-present { background: var(--success); }
-        .stat-percentage { background: var(--accent); }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
-        th { background-color: #fcfcfc; color: var(--primary); font-weight: 600; }
-        .badge { padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; }
-        .badge-present { background: #d4edda; color: #155724; }
-        .badge-absent { background: #f8d7da; color: #721c24; }
+        :root { --primary: #2c3e50; --accent: #3498db; --whatsapp: #25D366; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; margin: 0; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; margin-bottom: 25px; }
+        .form-section { background: #fff; padding: 20px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 30px; }
+        .grid-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+        label { font-weight: bold; display: block; margin-bottom: 5px; color: var(--primary); }
+        select, input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { padding: 12px; border: 1px solid #eee; text-align: left; }
+        th { background: var(--primary); color: white; }
+        .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; text-decoration: none; display: inline-block; }
+        .btn-lock { background: #e74c3c; color: white; width: 100%; font-size: 16px; }
+        .btn-pdf { background: var(--accent); color: white; font-size: 13px; }
+        .btn-whatsapp { background: var(--whatsapp); color: white; width: 100%; margin-top: 10px; }
+        .history-card { background: #f9f9f9; padding: 20px; border-radius: 8px; border-left: 5px solid var(--accent); }
     </style>
 </head>
 <body>
 
-<div class="dashboard-container">
+<div class="container">
     <div class="header">
+        <h1>Attendance Entry</h1>
         <div>
-            <h1>My Attendance</h1>
-            <p>Student: <strong><%= user.name %></strong> (<%= user.email %>)</p>
-        </div>
-        <div class="nav-links">
-            <a href="/settings" style="text-decoration: none; color: var(--accent); margin-right: 15px;">Settings</a>
-            <a href="/logout" style="text-decoration: none; color: var(--danger);">Logout</a>
+            <span>Leader: <strong><%= user.name %></strong></span> | 
+            <a href="/logout">Logout</a>
         </div>
     </div>
 
-    <% 
-        // Logic to calculate summary stats from attendanceRecords
-        let totalClasses = attendanceRecords.length;
-        let presentCount = 0;
-        attendanceRecords.forEach(record => {
-            const me = record.students.find(s => s.studentName === user.name);
-            if (me && me.status === 'Present') presentCount++;
-        });
-        let percentage = totalClasses > 0 ? ((presentCount / totalClasses) * 100).toFixed(1) : 0;
-    %>
+    <form action="/lock-attendance" method="POST" class="form-section">
+        <div class="grid-inputs">
+            <div>
+                <label>Select Lecturer</label>
+                <select name="lecturerEmail" required>
+                    <option value="">-- Choose Lecturer --</option>
+                    <% allUsers.filter(u => u.role === 'Lecturer').forEach(l => { %>
+                        <option value="<%= l.email %>"><%= l.name %></option>
+                    <% }) %>
+                </select>
+            </div>
+            <div>
+                <label>Manual Time Slot</label>
+                <select name="timeSlot" required>
+                    <option value="09:00 AM - 10:00 AM">09:00 AM - 10:00 AM</option>
+                    <option value="10:00 AM - 11:00 AM">10:00 AM - 11:00 AM</option>
+                    <option value="11:15 AM - 12:15 PM">11:15 AM - 12:15 PM</option>
+                    <option value="12:15 PM - 01:15 PM">12:15 PM - 01:15 PM</option>
+                    <option value="02:00 PM - 03:00 PM">02:00 PM - 03:00 PM</option>
+                    <option value="03:00 PM - 04:00 PM">03:00 PM - 04:00 PM</option>
+                </select>
+            </div>
+        </div>
 
-    <div class="stats-grid">
-        <div class="stat-card stat-total">
-            <h3><%= totalClasses %></h3>
-            <p>Total Classes</p>
+        <div class="grid-inputs">
+            <div>
+                <label>Subject</label>
+                <select name="subject" required>
+                    <% masterSubjects.forEach(sub => { %>
+                        <option value="<%= sub.name %>"><%= sub.name %></option>
+                    <% }) %>
+                </select>
+            </div>
+            <div>
+                <label>Date</label>
+                <input type="date" name="date" id="currentDate" value="<%= new Date().toISOString().split('T')[0] %>" required>
+            </div>
         </div>
-        <div class="stat-card stat-present">
-            <h3><%= presentCount %></h3>
-            <p>Days Present</p>
-        </div>
-        <div class="stat-card stat-percentage">
-            <h3><%= percentage %>%</h3>
-            <p>Attendance Rate</p>
-        </div>
-    </div>
 
-    <h3>Detailed Attendance History</h3>
-    <table>
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>Subject</th>
-                <th>Period</th>
-                <th>Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            <% if (attendanceRecords.length > 0) { %>
-                <% attendanceRecords.forEach(record => { 
-                    // Find the specific entry for this student in the students array
-                    const myEntry = record.students.find(s => s.studentName === user.name);
-                %>
+        <h3>Student List</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Student Name</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% let i = 0; allUsers.filter(u => u.role === 'Student').forEach(student => { %>
                     <tr>
-                        <td><%= record.date %></td>
-                        <td><%= record.subject %></td>
-                        <td>Period <%= record.periodNumber %></td>
                         <td>
-                            <span class="badge <%= (myEntry && myEntry.status === 'Present') ? 'badge-present' : 'badge-absent' %>">
-                                <%= myEntry ? myEntry.status : 'Absent' %>
-                            </span>
+                            <%= student.name %>
+                            <input type="hidden" name="students[<%= i %>][id]" value="<%= student._id %>">
+                            <input type="hidden" name="students[<%= i %>][name]" value="<%= student.name %>">
+                        </td>
+                        <td>
+                            <label><input type="checkbox" name="students[<%= i %>][status]" value="Present"> Mark Present</label>
                         </td>
                     </tr>
-                <% }) %>
-            <% } else { %>
-                <tr>
-                    <td colspan="4" style="text-align: center; color: #888; padding: 40px;">No attendance records found yet.</td>
-                </tr>
-            <% } %>
-        </tbody>
-    </table>
-</div>
-
-
-<div class="form-group">
-    <label for="timeSlot">Manual Time Slot</label>
-    <select name="timeSlot" id="timeSlot" required>
-        <option value="09:00 AM - 10:00 AM">09:00 AM - 10:00 AM</option>
-        <option value="10:00 AM - 11:00 AM">10:00 AM - 11:00 AM</option>
-        <option value="11:15 AM - 12:15 PM">11:15 AM - 12:15 PM</option>
-        <option value="12:15 PM - 01:15 PM">12:15 PM - 01:15 PM</option>
-        <option value="02:00 PM - 03:00 PM">02:00 PM - 03:00 PM</option>
-        <option value="03:00 PM - 04:00 PM">03:00 PM - 04:00 PM</option>
-    </select>
-</div>
-
-<hr>
-<div class="history-section">
-    <h3>Daily Attendance Management</h3>
-    <p>View, Edit, or Share the entire day's reports.</p>
-    
-    <table id="attendanceHistory">
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>Subject</th>
-                <th>Slot</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody id="historyList">
+                <% i++; }) %>
             </tbody>
-    </table>
+        </table>
 
-    <div style="margin-top: 20px; border: 2px solid #25D366; padding: 15px; border-radius: 8px;">
-        <h4>WhatsApp Submission</h4>
-        <button onclick="shareDayPDF()" style="background: #25D366; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">
+        <button type="submit" class="btn btn-lock" onclick="return confirm('Lock attendance for this slot?')">Lock Attendance</button>
+    </form>
+
+    <div class="history-card">
+        <h3>Entire Day Management</h3>
+        <p>Generate a single PDF for all periods of the selected day and share with Master.</p>
+        
+        <div style="display: flex; gap: 10px; margin-top: 15px;">
+            <button class="btn btn-pdf" onclick="generateDailyPDF()">Check & Download Entire Day PDF</button>
+            <button class="btn btn-pdf" style="background: #95a5a6;" onclick="window.location.href='/settings'">Edit Profile</button>
+        </div>
+
+        <button class="btn btn-whatsapp" onclick="shareToWhatsApp()">
             Submit Entire Day Attendance to Master via WhatsApp
         </button>
     </div>
 </div>
 
 <script>
-    // Logic to open WhatsApp with a summary link or message
-    function shareDayPDF() {
-        const date = document.getElementById('date').value;
-        const masterPhone = "919703636298"; // [IMPORTANT] Replace with Master's number
-        const message = `Hello Master, here is the consolidated attendance report for ${date}. You can view the generated PDF on the portal.`;
-        window.open(`https://wa.me/${masterPhone}?text=${encodeURIComponent(message)}`, '_blank');
+    function generateDailyPDF() {
+        const date = document.getElementById('currentDate').value;
+        if(!date) return alert("Please select a date first");
+        // Route to generate consolidated PDF for all slots of that day
+        window.location.href = `/generate-day-pdf/${date}`;
+    }
+
+    function shareToWhatsApp() {
+        const date = document.getElementById('currentDate').value;
+        const masterPhone = "919703636298"; // REPLACE WITH ACTUAL MASTER PHONE NUMBER
+        const message = `Hello Master, I have generated and locked the consolidated attendance for ${date}. The entair day's PDF is ready on the portal for your review.`;
+        
+        const url = `https://wa.me/${masterPhone}?text=${encodeURIComponent(message)}`;
+        window.open(url, '_blank');
     }
 </script>
-
 
 </body>
 </html>

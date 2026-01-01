@@ -598,20 +598,13 @@ app.post('/lecturer/update-attendance/:id', async (req, res) => {
 });
 
 
-// Add this in the POST routes section of app.js
-app.post('/add-subject', async (req, res) => {
-    try {
-        const { name, code } = req.body;
-        const newSubject = new Subject({ name, code });
-        await newSubject.save();
-        console.log("✅ Subject Added:", name);
-        res.redirect('/master'); // Redirect back to master, NOT /master dashboard
-    } catch (err) {
-        console.error("Error adding subject:", err);
-        res.status(500).send("Error adding subject");
-    }
-});
 
+app.post('/add-subject', async (req, res) => {
+    if (!req.body.name || req.body.name.trim() === "") return res.redirect('/master');
+    const newSub = new Subject({ name: req.body.name.trim() });
+    await newSub.save();
+    res.redirect('/master');
+});
 
 
 app.post('/delete-subject/:id', async (req, res) => {

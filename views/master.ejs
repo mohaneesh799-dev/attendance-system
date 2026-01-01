@@ -3,34 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Master Admin Dashboard</title>
+    <title>Master Dashboard - Admin Panel</title>
     <link rel="stylesheet" href="/style.css">
     <style>
-        :root { --primary: #2c3e50; --danger: #e74c3c; --success: #27ae60; --gray: #95a5a6; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; }
-        .sidebar { width: 250px; height: 100vh; background: var(--primary); color: white; position: fixed; padding: 20px; }
-        .main-content { margin-left: 290px; padding: 30px; }
-        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 30px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { padding: 12px; border: 1px solid #eee; text-align: left; }
-        th { background: #f8f9fa; color: var(--primary); }
-        .btn { padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; color: white; text-decoration: none; font-size: 14px; }
-        .btn-approve { background: var(--success); }
-        .btn-delete { background: var(--danger); }
-        .status-badge { padding: 4px 8px; border-radius: 12px; font-size: 12px; }
-        .status-pending { background: #ffeaa7; color: #d63031; }
-        .status-active { background: #55efc4; color: #00b894; }
+        :root { --primary: #2c3e50; --danger: #e74c3c; --success: #2ecc71; --accent: #3498db; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; display: flex; }
+        .sidebar { width: 250px; background-color: var(--primary); color: white; height: 100vh; padding: 20px; position: fixed; }
+        .main-content { margin-left: 290px; padding: 40px; width: calc(100% - 290px); }
+        .card { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 30px; }
+        h2, h3 { color: var(--primary); margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background-color: #f8f9fa; color: #333; }
+        .btn { padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; text-decoration: none; display: inline-block; }
+        .btn-delete { background-color: var(--danger); color: white; }
+        .btn-approve { background-color: var(--success); color: white; }
+        .status-badge { padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+        .status-approved { background: #d4edda; color: #155724; }
+        .status-pending { background: #fff3cd; color: #856404; }
+        input[type="text"], input[type="file"] { padding: 10px; border: 1px solid #ddd; border-radius: 4px; width: 250px; }
     </style>
 </head>
 <body>
 
 <div class="sidebar">
     <h2>Admin Panel</h2>
-    <p>Logged in as: <strong><%= user.name %></strong></p>
+    <p>Logged in as: <br><strong><%= user.name %></strong></p>
     <hr>
     <ul style="list-style: none; padding: 0;">
-        <li style="margin: 15px 0;"><a href="/master" style="color: white; text-decoration: none;">User Management</a></li>
-        <li style="margin: 15px 0;"><a href="/logout" style="color: #ff7675; text-decoration: none;">Logout</a></li>
+        <li style="margin-bottom: 15px;"><a href="/master" style="color: white; text-decoration: none;">User Management</a></li>
+        <li><a href="/logout" style="color: #ff7675; text-decoration: none;">Logout</a></li>
     </ul>
 </div>
 
@@ -57,7 +59,7 @@
                         <td><%= u.email %></td>
                         <td><%= u.role %></td>
                         <td>
-                            <span class="status-badge <%= u.isApproved ? 'status-active' : 'status-pending' %>">
+                            <span class="status-badge <%= u.isApproved ? 'status-approved' : 'status-pending' %>">
                                 <%= u.isApproved ? 'Approved' : 'Pending' %>
                             </span>
                         </td>
@@ -78,21 +80,20 @@
         </table>
     </div>
 
-        <div class="card">
-    <h3>Bulk User Upload (CSV)</h3>
-    <p style="font-size: 13px; color: #666;">Upload a CSV file with headers: <strong>rollno, name, email, role</strong></p>
-    
-    <form action="/upload-users" method="POST" enctype="multipart/form-data">
-        <input type="file" name="csvFile" accept=".csv" required style="padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
-        <button type="submit" class="btn" style="background: var(--accent); margin-left: 10px;">Upload Users</button>
-    </form>
-</div>
+    <div class="card">
+        <h3>Bulk User Upload (CSV)</h3>
+        <p style="font-size: 13px; color: #666;">Format: rollno, name, email, role</p>
+        <form action="/upload-users" method="POST" enctype="multipart/form-data">
+            <input type="file" name="csvFile" accept=".csv" required>
+            <button type="submit" class="btn" style="background-color: var(--accent); color: white;">Upload Users</button>
+        </form>
+    </div>
 
     <div class="card">
         <h3>Subject Management</h3>
-        <form action="/add-subject" method="POST" style="margin-bottom: 20px;">
-            <input type="text" name="subjectName" placeholder="New Subject Name" required style="padding: 10px; width: 250px;">
-            <button type="submit" class="btn" style="background: var(--primary);">Add Subject</button>
+        <form action="/add-subject" method="POST" style="display: flex; gap: 10px; align-items: center;">
+            <input type="text" name="name" placeholder="New Subject Name" required>
+            <button type="submit" class="btn" style="background-color: var(--primary); color: white;">Add Subject</button>
         </form>
 
         <table>
@@ -103,16 +104,23 @@
                 </tr>
             </thead>
             <tbody>
-                <% masterSubjects.forEach(sub => { %>
+                <% if (masterSubjects && masterSubjects.length > 0) { %>
+                    <% masterSubjects.forEach(sub => { %>
+                        <% if (sub.name) { %> <tr>
+                                <td><%= sub.name %></td>
+                                <td>
+                                    <form action="/delete-subject/<%= sub._id %>" method="POST">
+                                        <button type="submit" class="btn btn-delete">Remove</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        <% } %>
+                    <% }) %>
+                <% } else { %>
                     <tr>
-                        <td><%= sub.name %></td>
-                        <td>
-                            <form action="/delete-subject/<%= sub._id %>" method="POST">
-                                <button type="submit" class="btn btn-delete">Remove</button>
-                            </form>
-                        </td>
+                        <td colspan="2" style="text-align: center; color: #999;">No subjects added yet.</td>
                     </tr>
-                <% }) %>
+                <% } %>
             </tbody>
         </table>
     </div>
