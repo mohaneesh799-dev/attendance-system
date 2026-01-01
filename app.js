@@ -534,31 +534,22 @@ app.post('/delete-user/:id', async (req, res) => {
 });
 
 
-// --- BATCH APPROVAL ROUTE ---
-app.post('/approve-multiple', async (req, res) => {
+app.post('/bulk-approve', async (req, res) => {
     try {
-        let { userEmails } = req.body;
-
-        // If only one user is selected, convert string to array
-        if (typeof userEmails === 'string') {
-            userEmails = [userEmails];
-        }
-
-        if (!userEmails || userEmails.length === 0) {
-            return res.redirect('/master');
-        }
+        const { userIds, targetRole } = req.body;
+        if (!userIds || userIds.length === 0) return res.redirect('/master');
 
         // Update all selected users at once
         await User.updateMany(
-            { email: { $in: userEmails } }, 
-            { $set: { approved: true } }
+            { _id: { $in: userIds } },
+            { 
+                role: targetRole, 
+                isApproved: true 
+            }
         );
-
-        console.log(`✅ Batch approval successful for: ${userEmails.length} users`);
         res.redirect('/master');
     } catch (err) {
-        console.error("Batch Approval Error:", err);
-        res.status(500).send("Error processing batch approvals.");
+        res.status(500).send("Error in bulk approval");
     }
 });
 

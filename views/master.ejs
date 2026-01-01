@@ -3,130 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Master Dashboard - Admin Control</title>
+    <title>Master Dashboard - Admin</title>
     <link rel="stylesheet" href="/style.css">
     <style>
-        :root { --primary: #2c3e50; --accent: #3498db; --danger: #e74c3c; --success: #2ecc71; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; display: flex; }
-        .sidebar { width: 250px; background-color: var(--primary); color: white; height: 100vh; padding: 20px; position: fixed; }
-        .main-content { margin-left: 290px; padding: 40px; width: calc(100% - 310px); }
-        .card { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 30px; }
-        h2, h3 { color: var(--primary); margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        :root { --sidebar-width: 260px; --primary: #2c3e50; --danger: #e74c3c; --success: #27ae60; --accent: #3498db; }
+        body { display: flex; font-family: 'Segoe UI', sans-serif; margin: 0; background: #f4f7f6; }
+        
+        .sidebar { width: var(--sidebar-width); background: var(--primary); color: white; height: 100vh; padding: 20px; position: fixed; }
+        .sidebar h2 { border-bottom: 1px solid #34495e; padding-bottom: 10px; margin-bottom: 20px; }
+        .sidebar a { color: #ecf0f1; text-decoration: none; display: block; padding: 12px; border-radius: 5px; margin-bottom: 5px; }
+        .sidebar a:hover { background: #34495e; }
+        
+        .main-content { margin-left: var(--sidebar-width); padding: 40px; width: calc(100% - var(--sidebar-width)); }
+        .card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 30px; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
-        th { background-color: #f8f9fa; color: #333; }
-        .btn { padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; text-decoration: none; display: inline-block; }
-        .btn-delete { background-color: var(--danger); color: white; }
-        .btn-approve { background-color: var(--success); color: white; }
-        .status-badge { padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; }
-        input[type="text"], input[type="file"], select { padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        th { background: #f8f9fa; color: var(--primary); font-weight: 600; }
+        
+        .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; }
+        .Student { background: #e3f2fd; color: #0d47a1; }
+        .Lecturer { background: #e8f5e9; color: #1b5e20; }
+        .Leader { background: #fff3e0; color: #e65100; }
+        
+        .btn { padding: 8px 16px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: white; }
+        .btn-approve { background: var(--success); }
+        .btn-delete { background: var(--danger); }
+        
+        .action-bar { background: #fff; padding: 15px; border-radius: 8px; margin-bottom: 15px; display: flex; gap: 10px; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        select { padding: 8px; border-radius: 4px; border: 1px solid #ddd; }
     </style>
 </head>
 <body>
 
 <div class="sidebar">
-    <h2>Admin Panel</h2>
-    <p>Logged in as: <br><strong><%= user.name %></strong></p>
-    <hr>
-    <ul style="list-style: none; padding: 0;">
-        <li style="margin-bottom: 15px;"><a href="/master" style="color: white; text-decoration: none;">Dashboard</a></li>
-        <li><a href="/logout" style="color: #ff7675; text-decoration: none;">Logout</a></li>
-    </ul>
+    <h2>Master Portal</h2>
+    <p>Admin: <strong><%= user.name %></strong></p>
+    <nav>
+        <a href="/master">Dashboard Overview</a>
+        <a href="/logout" style="color: #ff7675; margin-top: 30px;">Logout</a>
+    </nav>
 </div>
 
 <div class="main-content">
     <h1>Master Dashboard</h1>
 
     <div class="card">
-        <h3>User Management</h3>
+        <h3>Subject Management</h3>
+        <form action="/add-subject" method="POST" style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <input type="text" name="subjectName" placeholder="New Subject Name" required style="flex:1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            <button type="submit" class="btn" style="background: var(--accent);">Add Subject</button>
+        </form>
         <table>
-            <thead>
-                <tr>
-                    <th>Roll No</th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Role Selection</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
+            <thead><tr><th>Subject Name</th><th>Action</th></tr></thead>
             <tbody>
-                <% allUsers.forEach(u => { %>
-                    <% if(u.role !== 'Master') { %>
+                <% masterSubjects.forEach(sub => { %>
                     <tr>
-                        <td><%= u.rollNo || 'N/A' %></td>
-                        <td><%= u.name %></td>
-                        <td><%= u.email %></td>
+                        <td><%= sub.name %></td>
                         <td>
-                            <% if(u.isApproved) { %>
-                                <span class="status-badge" style="background:#d4edda; color:#155724;">
-                                    <%= u.role %> (Approved)
-                                </span>
-                            <% } else { %>
-                                <form action="/approve-user/<%= u._id %>" method="POST" style="display:flex; gap:5px;">
-                                    <select name="role" required>
-                                        <option value="Student">Student</option>
-                                        <option value="Lecturer">Lecturer</option>
-                                        <option value="Leader">Leader</option>
-                                    </select>
-                                    <button type="submit" class="btn btn-approve">Approve</button>
-                                </form>
-                            <% } %>
-                        </td>
-                        <td>
-                            <form action="/delete-user/<%= u._id %>" method="POST" onsubmit="return confirm('Delete user?')">
-                                <button type="submit" class="btn btn-delete">Delete</button>
+                            <form action="/delete-subject/<%= sub._id %>" method="POST">
+                                <button type="submit" class="btn btn-delete" style="font-size: 11px;">Remove</button>
                             </form>
                         </td>
                     </tr>
-                    <% } %>
                 <% }) %>
             </tbody>
         </table>
     </div>
 
     <div class="card">
-        <h3>Bulk User Upload (CSV)</h3>
-        <p style="font-size: 12px; color: #666;">CSV Format: <strong>rollno, name, email</strong> (No headers needed)</p>
-        <form action="/upload-users" method="POST" enctype="multipart/form-data">
-            <input type="file" name="csvFile" accept=".csv" required>
-            <button type="submit" class="btn" style="background-color: var(--accent); color: white;">Upload CSV</button>
+        <h3>User Management & Approvals</h3>
+        
+        <form action="/bulk-approve" method="POST" id="bulkForm">
+            <div class="action-bar">
+                <input type="checkbox" id="selectAll" style="width: 18px; height: 18px; cursor: pointer;">
+                <strong>Select All</strong>
+                <span style="margin-left: 20px;">Change Selected to:</span>
+                <select name="targetRole">
+                    <option value="Student">Student</option>
+                    <option value="Leader">Leader</option>
+                    <option value="Lecturer">Lecturer</option>
+                </select>
+                <button type="submit" class="btn btn-approve">Approve Selected Users</button>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Select</th>
+                        <th>Roll No</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Current Role</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% allUsers.forEach(u => { %>
+                        <tr>
+                            <td>
+                                <input type="checkbox" name="userIds[]" value="<%= u._id %>" class="user-checkbox">
+                            </td>
+                            <td><%= u.rollNo || 'N/A' %></td>
+                            <td><%= u.name %></td>
+                            <td><%= u.email %></td>
+                            <td>
+                                <span class="badge <%= u.role %>">
+                                    <%= u.role %> <%= u.isApproved ? '(Approved)' : '(Pending)' %>
+                                </span>
+                            </td>
+                            <td>
+                                <form action="/delete-user/<%= u._id %>" method="POST" style="display:inline;">
+                                    <button type="submit" class="btn btn-delete" style="padding: 4px 8px; font-size: 11px;" onclick="return confirm('Delete user?')">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
         </form>
     </div>
 
     <div class="card">
-        <h3>Subject Management</h3>
-        <form action="/add-subject" method="POST" style="display: flex; gap: 10px; margin-bottom: 20px;">
-            <input type="text" name="name" placeholder="Enter Subject Name" required style="flex-grow: 1;">
-            <button type="submit" class="btn" style="background-color: var(--primary); color: white;">Add Subject</button>
+        <h3>Bulk User Upload (CSV)</h3>
+        <p style="font-size: 13px; color: #666;">Format: <strong>rollno, name, email</strong></p>
+        <form action="/upload-users" method="POST" enctype="multipart/form-data">
+            <input type="file" name="csvFile" accept=".csv" required>
+            <button type="submit" class="btn" style="background: var(--accent);">Upload CSV</button>
         </form>
-
-        <table>
-            <thead>
-                <tr>
-                    <th>Subject Name</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% if (masterSubjects && masterSubjects.length > 0) { %>
-                    <% masterSubjects.forEach(sub => { %>
-                        <% if (sub.name && sub.name.trim() !== "") { %> <tr>
-                            <td><%= sub.name %></td>
-                            <td>
-                                <form action="/delete-subject/<%= sub._id %>" method="POST">
-                                    <button type="submit" class="btn btn-delete">Remove</button>
-                                </form>
-                            </td>
-                        </tr>
-                        <% } %>
-                    <% }) %>
-                <% } else { %>
-                    <tr><td colspan="2" style="text-align:center;">No subjects available.</td></tr>
-                <% } %>
-            </tbody>
-        </table>
     </div>
 </div>
+
+<script>
+    // SELECT ALL LOGIC
+    document.getElementById('selectAll').addEventListener('change', function() {
+        const checkboxes = document.querySelectorAll('.user-checkbox');
+        checkboxes.forEach(cb => cb.checked = this.checked);
+    });
+</script>
 
 </body>
 </html>
