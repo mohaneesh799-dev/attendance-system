@@ -3,183 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leader Dashboard</title>
-    <link rel="stylesheet" href="/css/style.css">
+    <title>Leader Dashboard - Attendance</title>
+    <link rel="stylesheet" href="/style.css">
     <style>
-        .container { padding: 20px; font-family: 'Segoe UI', sans-serif; max-width: 1100px; margin: auto; }
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #444; padding-bottom: 10px; margin-bottom: 20px; }
-        .panel { background: #fdfdfd; padding: 20px; border-radius: 10px; margin-bottom: 25px; border: 1px solid #ddd; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .logout-btn { background-color: #e74c3c; color: white; padding: 8px 16px; text-decoration: none; border-radius: 5px; font-weight: bold; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; }
-        th, td { border: 1px solid #eee; padding: 12px; text-align: left; }
-        th { background-color: #f8f9fa; color: #333; font-weight: 600; }
-        .btn { padding: 10px 20px; border: none; cursor: pointer; border-radius: 5px; font-weight: bold; transition: 0.3s; color: white; }
-        .btn-lock { background-color: #c0392b; width: 100%; margin-top: 20px; font-size: 1.1em; }
-        .btn-pdf { background-color: #3498db; }
-        .btn-whatsapp { background-color: #27ae60; text-decoration: none; display: inline-block; }
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
-        .input-field { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        .present-row { background-color: #e8f5e9 !important; }
+        .container { padding: 20px; font-family: 'Segoe UI', sans-serif; }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #333; margin-bottom: 20px; }
+        .form-section { background: #f9f9f9; padding: 20px; border-radius: 8px; border: 1px solid #ddd; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; }
+        select, input[type="date"], input[type="text"] { width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #ccc; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #2c3e50; color: white; }
+        .btn-lock { background: #e74c3c; color: white; padding: 15px 30px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; margin-top: 20px; }
+        .btn-lock:hover { background: #c0392b; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
+            <h1>Attendance Entry</h1>
             <div>
-                <h1>Leader Dashboard</h1>
-                <p>Welcome, <strong><%= user.name %></strong></p>
-            </div>
-            <a href="/logout" class="logout-btn">Logout</a>
-        </div>
-
-        <div class="panel">
-            <h3>Quick Attendance Panel</h3>
-            <p>Type Roll Numbers or Names (comma separated) to mark Present:</p>
-            <div style="display: flex; gap: 10px;">
-                <input type="text" id="quickInput" class="input-field" placeholder="e.g. 101, 105, Navaneeth">
-                <button type="button" class="btn btn-pdf" onclick="markQuickAttendance()">Mark Present</button>
+                <span>Leader: <strong><%= user.name %></strong></span> | 
+                <a href="/logout">Logout</a>
             </div>
         </div>
 
-        <form action="/lock-attendance" method="POST">
-            <div class="panel">
-                <h3>Step 1: Select Details</h3>
-                <div class="form-grid">
-                    <div>
-                        <label>Assign to Lecturer:</label>
-                        <select name="lecturerEmail" class="input-field" required>
-                            <option value="">-- Select Lecturer --</option>
-                            <% allUsers.filter(u => u.role === 'Lecturer').forEach(l => { %>
-                                <option value="<%= l.email %>"><%= l.name %></option>
-                            <% }); %>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label>Fixed Subject (Master):</label>
-                        <select name="subject" class="input-field" required>
-                            <option value="">-- Select Subject --</option>
-                            <% masterSubjects.forEach(sub => { %>
-                                <option value="<%= sub.name %>"><%= sub.name %></option>
-                            <% }); %>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label>Period Number:</label>
-                        <input type="number" name="periodNumber" class="input-field" value="1" min="1" max="8" required>
-                    </div>
-
-                    <div>
-                        <label>Time Slot (From - To):</label>
-                        <div style="display: flex; gap: 5px;">
-                            <input type="time" name="startTime" class="input-field" required>
-                            <input type="time" name="endTime" class="input-field" required>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label>Date:</label>
-                        <input type="date" name="date" class="input-field" value="<%= new Date().toISOString().split('T')[0] %>">
-                    </div>
-                </div>
+        <form action="/lock-attendance" method="POST" class="form-section">
+            <div class="form-group">
+                <label for="lecturerEmail">Select Lecturer</label>
+                <select name="lecturerEmail" id="lecturerEmail" required>
+                    <option value="">-- Choose Lecturer --</option>
+                    <% allUsers.filter(u => u.role === 'Lecturer').forEach(lecturer => { %>
+                        <option value="<%= lecturer.email %>"><%= lecturer.name %> (<%= lecturer.email %>)</option>
+                    <% }) %>
+                </select>
             </div>
 
-            <h3>Step 2: Mark Student Attendance</h3>
-            <div class="panel">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Roll No</th>
-                            <th>Student Name</th>
-                            <th style="text-align: center;">Present?</th>
-                        </tr>
-                    </thead>
-                    <tbody id="studentTable">
-                        <% allUsers.filter(u => u.role === 'Student').forEach((student, index) => { %>
-                            <tr>
-                                <td><strong><%= student.rollNo || 'N/A' %></strong></td>
-                                <td>
-                                    <%= student.name %>
-                                    <input type="hidden" name="students[<%= index %>][id]" value="<%= student._id %>">
-                                    <input type="hidden" name="students[<%= index %>][name]" value="<%= student.name %>">
-                                    <input type="checkbox" name="students[<%= index %>][status]" value="Present">
-                                </td>
-                                <td style="text-align: center;">
-                                    <input type="checkbox" name="students[<%= index %>][status]" value="Present" class="att-check">
-                                </td>
-                            </tr>
-                        <% }); %>
-                    </tbody>
-                </table>
-                <button type="submit" class="btn btn-lock">Lock Attendance & Send to Lecturer</button>
-            </div>
-        </form>
-
-        <div class="panel">
-            <h3>Step 3: Daily Summary & Submission</h3>
-            <div style="display: flex; gap: 15px; margin-bottom: 20px;">
-                <form action="/generate-pdf" method="POST" style="margin: 0;">
-                    <button type="submit" class="btn btn-pdf">Generate/Update PDF</button>
-                </form>
-                <a href="/view-pdf" target="_blank" class="btn" style="background-color: #7f8c8d; text-decoration: none;">Check PDF</a>
-                <a id="whatsappBtn" href="#" class="btn btn-whatsapp">Submit to Master (WhatsApp)</a>
+            <div class="form-group">
+                <label for="subject">Subject</label>
+                <select name="subject" id="subject" required>
+                    <% masterSubjects.forEach(sub => { %>
+                        <option value="<%= sub.name %>"><%= sub.name %></option>
+                    <% }) %>
+                </select>
             </div>
 
-            <h4>Locked Periods Today:</h4>
+            <div class="form-group">
+                <label for="date">Date</label>
+                <input type="date" name="date" id="date" value="<%= new Date().toISOString().split('T')[0] %>" required>
+            </div>
+
+            <div class="form-group">
+                <label for="periodNumber">Period</label>
+                <select name="periodNumber" id="periodNumber" required>
+                    <option value="1">Period 1</option>
+                    <option value="2">Period 2</option>
+                    <option value="3">Period 3</option>
+                    <option value="4">Period 4</option>
+                </select>
+            </div>
+
+            <h3>Student List</h3>
             <table>
                 <thead>
                     <tr>
-                        <th>Period</th>
-                        <th>Subject</th>
-                        <th>Lecturer</th>
-                        <th>Time Slot</th>
-                        <th>Status</th>
+                        <th>Student Name</th>
+                        <th>Email</th>
+                        <th>Attendance Status</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <% if (typeof todayRecords !== 'undefined' && todayRecords.length > 0) { %>
-                        <% todayRecords.forEach(record => { %>
-                            <tr>
-                                <td><%= record.periodNumber %></td>
-                                <td><%= record.subject %></td>
-                                <td><%= record.lecturerEmail %></td> <td><%= record.timeSlot || 'N/A' %></td>
-                                <td style="color: #27ae60; font-weight: bold;">Locked</td>
-                            </tr>
-                        <% }) %>
-                    <% } else { %>
-                        <tr><td colspan="5" style="text-align: center;">No subjects locked for today.</td></tr>
-                    <% } %>
+                    <% 
+                    let studentIndex = 0;
+                    allUsers.filter(u => u.role === 'Student').forEach(student => { 
+                    %>
+                        <tr>
+                            <td>
+                                <%= student.name %>
+                                <input type="hidden" name="students[<%= studentIndex %>][id]" value="<%= student._id %>">
+                                <input type="hidden" name="students[<%= studentIndex %>][name]" value="<%= student.name %>">
+                            </td>
+                            <td><%= student.email %></td>
+                            <td>
+                                <label>
+                                    <input type="checkbox" name="students[<%= studentIndex %>][status]" value="Present"> 
+                                    Mark Present
+                                </label>
+                            </td>
+                        </tr>
+                    <% 
+                        studentIndex++;
+                    }) 
+                    %>
                 </tbody>
             </table>
-        </div>
+
+            <button type="submit" class="btn-lock" onclick="return confirm('Are you sure you want to lock this attendance? You cannot edit it later.')">
+                Lock Attendance
+            </button>
+        </form>
     </div>
-
-    <script>
-        // Logic for Quick Panel searching by Roll No or Name
-        function markQuickAttendance() {
-            const input = document.getElementById('quickInput').value.toLowerCase();
-            const terms = input.split(',').map(t => t.trim()).filter(t => t !== "");
-            const rows = document.querySelectorAll('#studentTable tr');
-
-            rows.forEach(row => {
-                const rowContent = row.innerText.toLowerCase();
-                const checkbox = row.querySelector('.att-check');
-                
-                if (terms.some(term => rowContent.includes(term))) {
-                    checkbox.checked = true;
-                    row.classList.add('present-row');
-                }
-            });
-        }
-
-        // WhatsApp Submission to Master
-        document.getElementById('whatsappBtn').addEventListener('click', function(e) {
-            const masterPhone = "919703636298"; // ENTER MASTER'S PHONE WITH COUNTRY CODE
-            const reportUrl = window.location.origin + "/view-pdf";
-            const text = encodeURIComponent(`Attendance Report Ready:\nView at: ${reportUrl}`);
-            this.href = `https://wa.me/${masterPhone}?text=${text}`;
-        });
-    </script>
 </body>
 </html>
