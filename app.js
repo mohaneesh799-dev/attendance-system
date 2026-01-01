@@ -120,7 +120,20 @@ const subjectSchema = new mongoose.Schema({
 });
 const Subject = mongoose.model('Subject', subjectSchema);
 
-// --- Middleware ---
+
+// 3. Define the storage configuration (This is the "mandatory" part for stability)
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, uploadDir); // Uses the absolute path created above
+    },
+    filename: (req, file, cb) => {
+        // Gives each file a unique name to prevent overwriting
+        cb(null, Date.now() + '-' + file.originalname);
+    }
+});
+
+
+
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }));
@@ -416,26 +429,33 @@ app.post('/upload-users', upload.single('csvFile'), (req, res) => {
     fs.createReadStream(req.file.path)
         .pipe(csv())
         .on('data', (row) => {
-            // Ensure CSV headers match: name,email,password,role
-            users.push({
-                name: row.name,
-                email: row.email.toLowerCase().trim(),
-                password: row.password,
-                role: row.role,
-                isApproved: true
-            });
+            // Mapping CSV columns to your UserSchema
+            if (row.email) {
+                users.push({
+                    rollNo: row.rollno ? row.rollno.trim() : '',
+                    name: row.name ? row.name.trim() : 'New User',
+                    email: row.email.toLowerCase().trim(),
+                    role: 'Student', // Default until Master changes it
+                    isApproved: false,
+                    isPreRegistered: true // Match the field in your schema
+                });
+            }
         })
         .on('end', async () => {
             try {
-                await User.insertMany(users, { ordered: false });
-                fs.unlinkSync(req.file.path); // Clean up temp file
-                res.send("<script>alert('Upload Successful'); window.location.href='/master';</script>");
+                if (users.length > 0) {
+                    // ordered: false allows continuing if some emails are duplicates
+                    await User.insertMany(users, { ordered: false });
+                }
+                if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+                res.send("<script>alert('CSV Uploaded! Check approval table.'); window.location.href='/master';</script>");
             } catch (err) {
-                res.status(500).send("Error saving users. Check for duplicate emails.");
+                console.error("Upload Error:", err);
+                if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+                res.status(500).send("Upload failed. Ensure no duplicate emails exist.");
             }
         });
 });
-
 
 app.post('/lock-attendance', async (req, res) => {
     try {
@@ -461,29 +481,18 @@ app.post('/lock-attendance', async (req, res) => {
 
 
 
-// --- KEEP ONLY THIS SINGLE BLOCK ---
 app.post('/approve-user/:id', async (req, res) => {
     try {
-        const userId = req.params.id;
-        
-        // This 'role' name must match the <select name="role"> in master.ejs
-        const assignedRole = req.body.role; 
-
-        // Update the user: Approve them and set their new role simultaneously
-        await User.findByIdAndUpdate(userId, { 
+        const { role } = req.body; // Captured from the <select name="role"> dropdown
+        await User.findByIdAndUpdate(req.params.id, { 
             isApproved: true, 
-            role: assignedRole 
+            role: role 
         });
-
-        console.log(`User ${userId} approved as ${assignedRole}`);
         res.redirect('/master');
-
     } catch (err) {
-        console.error("Approval Error:", err);
-        res.status(500).send("Internal Server Error: Could not approve user.");
+        res.status(500).send("Approval process failed.");
     }
 });
-
 
 // --- DELETE USER ROUTE ---
 app.post('/delete-user/:id', async (req, res) => {
