@@ -219,21 +219,20 @@ app.get('/master', async (req, res) => {
 
 
 app.get('/leader', async (req, res) => {
+    if (!req.session.user || req.session.user.role !== 'Leader') return res.redirect('/login');
+
     try {
-        const allUsers = await User.find({ role: { $in: ['Student', 'Lecturer'] } });
-        const masterSubjects = await Subject.find({}); // Fetch the Master's fixed subjects
-        const todayRecords = await Attendance.find({ 
-            date: new Date().toISOString().split('T')[0] 
-        });
+        // Fetch all users and subjects
+        const allUsers = await User.find({}); 
+        const masterSubjects = await Subject.find({});
 
         res.render('leader', { 
             user: req.session.user, 
-            allUsers, 
-            masterSubjects, // Pass fixed subjects to EJS
-            todayRecords 
+            allUsers: allUsers, 
+            masterSubjects: masterSubjects 
         });
     } catch (err) {
-        res.status(500).send("Error loading dashboard");
+        res.status(500).send("Error loading Leader Dashboard");
     }
 });
 
@@ -260,34 +259,31 @@ app.get('/lecturer', async (req, res) => {
 
 
 app.get('/student', async (req, res) => {
-    if (!req.session.user || req.session.user.role !== 'Student') {
-        return res.redirect('/login');
-    }
+    if (!req.session.user || req.session.user.role !== 'Student') return res.redirect('/login');
 
     try {
-        // Find attendance where the student's rollNo exists in the students array
-        const studentRoll = req.session.user.rollNo;
-        
-        const attendanceRecords = await Attendance.find({
-            "students": { $elemMatch: { studentId: studentRoll } }
+        const userRoll = req.session.user.rollNo;
+
+        // Use $elemMatch to find the student inside the array
+        const records = await Attendance.find({
+            "students": { $elemMatch: { studentId: userRoll } }
         }).sort({ date: -1 });
 
-        // Calculate basic stats for the dashboard
-        let presentCount = 0;
-        attendanceRecords.forEach(rec => {
-            const entry = rec.students.find(s => s.studentId === studentRoll);
-            if (entry && entry.status === 'Present') presentCount++;
+        // Calculate stats for the summary cards
+        let present = 0;
+        records.forEach(rec => {
+            const me = rec.students.find(s => s.studentId === userRoll);
+            if (me && me.status === 'Present') present++;
         });
 
         res.render('student', { 
             user: req.session.user, 
-            records: attendanceRecords,
-            presentCount: presentCount,
-            totalCount: attendanceRecords.length
+            records, 
+            presentCount: present, 
+            totalCount: records.length 
         });
     } catch (err) {
-        console.error("Student Dashboard Error:", err);
-        res.status(500).send("Error loading attendance data.");
+        res.status(500).send("Error loading board.");
     }
 });
 
