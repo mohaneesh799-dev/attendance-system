@@ -675,6 +675,38 @@ app.post('/delete-subject/:id', async (req, res) => {
 });
 
 
+app.get('/fix-database', async (req, res) => {
+    try {
+        const users = await User.find({});
+        let updatedCount = 0;
+
+        for (let user of users) {
+            let needsUpdate = false;
+
+            // 1. Fix Roll Number capitalization if it was uploaded wrong
+            if (user.rollno && !user.rollNo) {
+                user.rollNo = user.rollno;
+                needsUpdate = true;
+            }
+
+            // 2. Ensure everyone has a role (Default to Student if missing)
+            if (!user.role) {
+                user.role = 'Student';
+                needsUpdate = true;
+            }
+
+            if (needsUpdate) {
+                await user.save();
+                updatedCount++;
+            }
+        }
+        res.send(`Database Fixed! Updated ${updatedCount} users. Now check your Leader Board.`);
+    } catch (err) {
+        res.status(500).send("Error fixing database: " + err.message);
+    }
+});
+
+
 // --- Server Startup ---
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
