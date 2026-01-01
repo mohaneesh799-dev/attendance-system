@@ -580,30 +580,38 @@ app.get('/view-pdf', (req, res) => {
 });
 
 
-// NEW REPLACEMENT ROUTE FOR LECTURER CORRECTIONS
+// REPLACE your current route in app.js with this:
 app.post('/update-attendance-status', async (req, res) => {
+    // 1. Check if user is logged in as Lecturer
     if (!req.session.user || req.session.user.role !== 'Lecturer') {
-        return res.status(403).json({ success: false, message: "Unauthorized" });
+        return res.status(403).json({ success: false });
     }
 
     const { attendanceId, studentId, newStatus } = req.body;
 
     try {
-        // Targets specific student status within a locked record
-        await Attendance.updateOne(
+        // 2. Update ONLY the specific student's status in the array
+        const result = await Attendance.updateOne(
             { 
                 _id: attendanceId, 
-                lecturerEmail: req.session.user.email, // Security check
                 "students.studentId": studentId 
             },
             { 
-                $set: { "students.$.status": newStatus },
-                $set: { lastModifiedBy: 'Lecturer', lastModifiedDate: new Date() } 
+                $set: { 
+                    "students.$.status": newStatus,
+                    lastModifiedBy: 'Lecturer',
+                    lastModifiedDate: new Date()
+                } 
             }
         );
-        res.json({ success: true });
+
+        if (result.modifiedCount > 0) {
+            res.json({ success: true });
+        } else {
+            res.status(400).json({ success: false, message: "No changes made" });
+        }
     } catch (err) {
-        console.error("Lecturer Update Error:", err);
+        console.error("Update Error:", err);
         res.status(500).json({ success: false });
     }
 });
