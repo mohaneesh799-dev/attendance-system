@@ -17,7 +17,7 @@
         th { background: var(--primary); color: white; }
         .btn { padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: white; text-decoration: none; display: inline-block; }
         .btn-whatsapp { background: var(--whatsapp); width: 100%; margin-top: 15px; font-size: 16px; }
-        .checkbox-container { display: flex; align-items: center; gap: 10px; }
+        .quick-mark-area { background: #e8f4fd; border-left: 5px solid var(--accent); padding: 15px; margin-bottom: 20px; border-radius: 5px; }
     </style>
 </head>
 <body>
@@ -32,6 +32,15 @@
             <a href="/attendance-history" class="btn" style="background: var(--primary);">View History</a>
             <a href="/logout" style="color: var(--danger); margin-left:15px; font-weight:bold; text-decoration:none;">Logout</a>
         </div>
+    </div>
+
+    <div class="quick-mark-area">
+        <h4 style="margin-top:0;">⚡ Quick Attendance Mark</h4>
+        <div style="display: flex; gap: 10px;">
+            <input type="text" id="quickInput" placeholder="Enter Roll Numbers separated by commas (e.g., 101, 105, 120)">
+            <button type="button" onclick="applyQuickMark()" class="btn" style="background: var(--accent); white-space: nowrap;">Mark Present</button>
+        </div>
+        <small style="color: #666;">Tip: Paste a comma-separated list of roll numbers to mark them all at once.</small>
     </div>
 
     <form action="/lock-attendance" method="POST">
@@ -78,13 +87,13 @@
                     <% allUsers.forEach(u => { %>
                         <% if (u.role !== 'Master' && u.role !== 'Lecturer' && u.role !== 'Admin') { %>
                             <tr>
-                                <td><%= u.rollNo || u.rollno || 'N/A' %></td>
-                                <td><%= u.name %> <%= u.role === 'Leader' ? '(Leader)' : '' %></td>
+                                <td class="roll-col"><%= u.rollNo || u.rollno || 'N/A' %></td>
+                                <td><%= u.name %> <%= u.role === 'Leader' ? '(Leader/You)' : '' %></td>
                                 <td>
-                                    <div class="checkbox-container">
+                                    <div style="display:flex; align-items:center; gap:10px;">
                                         <input type="hidden" name="students[<%=i%>][id]" value="<%= u.rollNo || u.rollno %>">
                                         <input type="hidden" name="students[<%=i%>][name]" value="<%= u.name %>">
-                                        <input type="checkbox" name="students[<%=i%>][status]" value="Present">
+                                        <input type="checkbox" name="students[<%=i%>][status]" value="Present" class="student-checkbox">
                                         <span>Mark Present</span>
                                     </div>
                                 </td>
@@ -111,7 +120,6 @@
             </div>
             <button type="button" class="btn" style="background: var(--accent);" onclick="downloadPDF()">Download PDF</button>
         </div>
-
         <button type="button" class="btn btn-whatsapp" onclick="submitToWhatsApp()">
             Share Report via WhatsApp (Choose Recipient)
         </button>
@@ -119,6 +127,34 @@
 </div>
 
 <script>
+    // QUICK ATTENDANCE LOGIC
+    function applyQuickMark() {
+        const input = document.getElementById('quickInput').value;
+        if (!input.trim()) return alert("Please enter roll numbers.");
+
+        // Clean up input: split by comma, trim spaces, and convert to lowercase
+        const rollsToMark = input.split(',').map(r => r.trim().toLowerCase());
+        const rows = document.querySelectorAll('#studentTable tbody tr');
+        let count = 0;
+
+        rows.forEach(row => {
+            const rollNumberCell = row.querySelector('.roll-col').innerText.trim().toLowerCase();
+            const checkbox = row.querySelector('.student-checkbox');
+            
+            if (rollsToMark.includes(rollNumberCell)) {
+                checkbox.checked = true;
+                count++;
+            }
+        });
+
+        if (count > 0) {
+            alert(`Marked ${count} students as Present.`);
+            document.getElementById('quickInput').value = ""; // Clear for next use
+        } else {
+            alert("No matching roll numbers found in the list below.");
+        }
+    }
+
     function downloadPDF() {
         const date = document.getElementById('currentDate').value;
         const filter = document.getElementById('reportFilter').value;
@@ -134,8 +170,6 @@
         const baseUrl = window.location.origin;
         const pdfUrl = `${baseUrl}/generate-day-pdf/${date}?filter=${filter}`;
         const message = `*Attendance Report: ${date}*\nFilter: ${filter || 'All'}\n\nView PDF:\n${pdfUrl}`;
-        
-        // No fixed phone number - opens contact picker
         window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, '_blank');
     }
 </script>
