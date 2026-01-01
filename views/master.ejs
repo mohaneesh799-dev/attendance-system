@@ -78,6 +78,16 @@
         </table>
     </div>
 
+        <div class="card">
+    <h3>Bulk User Upload (CSV)</h3>
+    <p style="font-size: 13px; color: #666;">Upload a CSV file with headers: <strong>name, email, password, role</strong></p>
+    
+    <form action="/upload-users" method="POST" enctype="multipart/form-data">
+        <input type="file" name="csvFile" accept=".csv" required style="padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+        <button type="submit" class="btn" style="background: var(--accent); margin-left: 10px;">Upload Users</button>
+    </form>
+</div>
+
     <div class="card">
         <h3>Subject Management</h3>
         <form action="/add-subject" method="POST" style="margin-bottom: 20px;">

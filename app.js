@@ -401,33 +401,35 @@ app.post('/register', async (req, res) => {
 
 
 
-app.post('/upload-students', upload.single('studentFile'), async (req, res) => {
-    const studentsToUpload = [];
-    if (!req.file) return res.status(400).send("No file uploaded.");
+// --- BULK CSV UPLOAD ROUTE ---
+app.post('/upload-users', upload.single('csvFile'), (req, res) => {
+    if (!req.file) return res.send("<script>alert('Please select a file'); window.history.back();</script>");
 
-    fs.createReadStream(req.file.path)
+    const users = [];
+    const filePath = path.join(__dirname, req.file.path);
+
+    fs.createReadStream(filePath)
         .pipe(csv())
-        .on('data', (data) => studentsToUpload.push(data))
+        .on('data', (data) => {
+            // Push formatted user data from CSV rows
+            users.push({
+                name: data.name,
+                email: data.email.toLowerCase().trim(),
+                password: data.password,
+                role: data.role || 'Student',
+                isApproved: true // Auto-approve bulk uploads
+            });
+        })
         .on('end', async () => {
             try {
-                for (let student of studentsToUpload) {
-                   // Inside your csv().on('end') loop
-await User.findOneAndUpdate(
-    { email: student.email.toLowerCase().trim() }, 
-    { 
-        rollNo: student.rollNo, 
-        name: student.name, 
-        role: 'Student',
-        isPreRegistered: true, // Mark as coming from the official file
-        isApproved: false      // Must wait for Master's approval
-    },
-    { upsert: true }
-);
-                }
-                fs.unlinkSync(req.file.path); // Deletes the temporary file
-                res.send("<script>alert('Master student list updated!'); window.location.href='/master';</script>");
+                // Insert all users at once, ignoring duplicates
+                await User.insertMany(users, { ordered: false });
+                fs.unlinkSync(filePath); // Delete temp file after upload
+                res.send("<script>alert('Bulk upload successful!'); window.location.href='/master';</script>");
             } catch (err) {
-                res.status(500).send("Upload Error: " + err.message);
+                console.error("CSV Upload Error:", err);
+                fs.unlinkSync(filePath);
+                res.send("<script>alert('Some users already exist or CSV format is wrong.'); window.location.href='/master';</script>");
             }
         });
 });
@@ -526,54 +528,33 @@ app.post('/approve-multiple', async (req, res) => {
 });
 
 
-// 1. ROUTE TO GENERATE/RE-GENERATE THE PDF
-app.post('/generate-pdf', async (req, res) => {
+// PDF Generation Route
+app.get('/generate-pdf/:id', async (req, res) => {
     try {
-        const today = new Date().toISOString().split('T')[0];
-        // Fetch all periods locked for today, sorted by time/period
-        const allPeriods = await Attendance.find({ date: today }).sort({ periodNumber: 1 });
-
-        if (allPeriods.length === 0) {
-            return res.send("<script>alert('No periods locked today. Cannot generate PDF.'); window.location.href='/leader';</script>");
-        }
-
-
+        const attendance = await Attendance.findById(req.params.id);
+        if (!attendance) return res.status(404).send("Record not found");
 
         const doc = new PDFDocument();
-        const filePath = path.join(__dirname, 'daily_attendance.pdf');
-        
-        // Save file to server so it can be viewed/checked
-        const stream = fs.createWriteStream(filePath);
-        doc.pipe(stream);
+        res.setHeader('Content-disposition', `attachment; filename=Attendance_${attendance.date}.pdf`);
+        res.setHeader('Content-type', 'application/pdf');
 
-        // PDF Header
-        doc.fontSize(20).text(`Daily Attendance Report - ${today}`, { align: 'center' });
+        doc.fontSize(20).text('Attendance Report', { align: 'center' });
+        doc.fontSize(12).text(`Date: ${attendance.date} | Subject: ${attendance.subject} | Period: ${attendance.periodNumber}`);
         doc.moveDown();
-
-        // Loop through each period locked by the leader
-        allPeriods.forEach(p => {
-            doc.fontSize(14).fillColor('blue').text(`Subject: ${p.subject} (Period: ${p.periodNumber || 'N/A'})`);
-            doc.fontSize(10).fillColor('black').text(`Lecturer: ${p.lecturerEmail}`);
-            
-            // List students for this specific period
-            p.students.forEach(s => {
-                const statusColor = s.status === 'Present' ? 'green' : 'red';
-                doc.fontSize(11).fillColor(statusColor).text(`  - ${s.studentId}: ${s.status}`);
-            });
-            doc.moveDown();
+        attendance.students.forEach(s => {
+            doc.text(`${s.studentName}: ${s.status}`);
         });
 
+        doc.pipe(res);
         doc.end();
+    } catch (err) { res.status(500).send("Error generating PDF"); }
+});
 
-        // Wait for the file to finish writing before redirecting
-        stream.on('finish', () => {
-            res.send("<script>alert('PDF Generated Successfully! You can now check it.'); window.location.href='/leader';</script>");
-        });
-
-    } catch (err) {
-        console.error("PDF Generation Error:", err);
-        res.status(500).send("Error generating PDF: " + err.message);
-    }
+// History Route for Leader Dashboard
+app.get('/leader-history', async (req, res) => {
+    if (!req.session.user) return res.json([]);
+    const records = await Attendance.find({ leaderEmail: req.session.user.email }).sort({ date: -1 });
+    res.json(records);
 });
 
 // 2. ROUTE TO VIEW THE PDF (FOR THE "CHECK PDF" BUTTON)

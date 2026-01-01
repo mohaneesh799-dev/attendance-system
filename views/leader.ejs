@@ -21,88 +21,70 @@
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>Attendance Entry</h1>
-            <div>
-                <span>Leader: <strong><%= user.name %></strong></span> | 
-                <a href="/logout">Logout</a>
-            </div>
+    <h2>Attendance Entry</h2>
+    
+    <form action="/lock-attendance" method="POST" class="form-section">
+        <div class="form-group">
+            <label>Time Slot / Period</label>
+            <select name="periodNumber" required>
+                <option value="1">09:00 - 10:00 (P1)</option>
+                <option value="2">10:00 - 11:00 (P2)</option>
+                <option value="3">11:15 - 12:15 (P3)</option>
+                <option value="4">12:15 - 01:15 (P4)</option>
+            </select>
         </div>
 
-        <form action="/lock-attendance" method="POST" class="form-section">
-            <div class="form-group">
-                <label for="lecturerEmail">Select Lecturer</label>
-                <select name="lecturerEmail" id="lecturerEmail" required>
-                    <option value="">-- Choose Lecturer --</option>
-                    <% allUsers.filter(u => u.role === 'Lecturer').forEach(lecturer => { %>
-                        <option value="<%= lecturer.email %>"><%= lecturer.name %> (<%= lecturer.email %>)</option>
-                    <% }) %>
-                </select>
-            </div>
+        <button type="submit" class="btn-lock">Lock & Generate Record</button>
+    </form>
 
-            <div class="form-group">
-                <label for="subject">Subject</label>
-                <select name="subject" id="subject" required>
-                    <% masterSubjects.forEach(sub => { %>
-                        <option value="<%= sub.name %>"><%= sub.name %></option>
-                    <% }) %>
-                </select>
-            </div>
+    <hr>
 
-            <div class="form-group">
-                <label for="date">Date</label>
-                <input type="date" name="date" id="date" value="<%= new Date().toISOString().split('T')[0] %>" required>
-            </div>
+    <h3>Attendance History & PDF Management</h3>
+    <table id="historyTable">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Subject</th>
+                <th>Period</th>
+                <th>Actions</th>
+                <th>Share</th>
+            </tr>
+        </thead>
+        <tbody id="historyBody">
+            </tbody>
+    </table>
+</div>
 
-            <div class="form-group">
-                <label for="periodNumber">Period</label>
-                <select name="periodNumber" id="periodNumber" required>
-                    <option value="1">Period 1</option>
-                    <option value="2">Period 2</option>
-                    <option value="3">Period 3</option>
-                    <option value="4">Period 4</option>
-                </select>
-            </div>
+<script>
+    // 3. WHATSAPP & HISTORY LOGIC
+    async function loadHistory() {
+        const res = await fetch('/leader-history');
+        const data = await res.json();
+        const body = document.getElementById('historyBody');
+        
+        data.forEach(record => {
+            const row = `<tr>
+                <td>${record.date}</td>
+                <td>${record.subject}</td>
+                <td>P${record.periodNumber}</td>
+                <td>
+                    <a href="/generate-pdf/${record._id}" class="btn">Download PDF</a>
+                </td>
+                <td>
+                    <button onclick="shareToWhatsApp('${record.date}', '${record.subject}', '${record.periodNumber}')" style="background:#25D366; color:white; border:none; padding:5px; border-radius:4px;">
+                        WhatsApp Master
+                    </button>
+                </td>
+            </tr>`;
+            body.innerHTML += row;
+        });
+    }
 
-            <h3>Student List</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Student Name</th>
-                        <th>Email</th>
-                        <th>Attendance Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% 
-                    let studentIndex = 0;
-                    allUsers.filter(u => u.role === 'Student').forEach(student => { 
-                    %>
-                        <tr>
-                            <td>
-                                <%= student.name %>
-                                <input type="hidden" name="students[<%= studentIndex %>][id]" value="<%= student._id %>">
-                                <input type="hidden" name="students[<%= studentIndex %>][name]" value="<%= student.name %>">
-                            </td>
-                            <td><%= student.email %></td>
-                            <td>
-                                <label>
-                                    <input type="checkbox" name="students[<%= studentIndex %>][status]" value="Present"> 
-                                    Mark Present
-                                </label>
-                            </td>
-                        </tr>
-                    <% 
-                        studentIndex++;
-                    }) 
-                    %>
-                </tbody>
-            </table>
+    function shareToWhatsApp(date, sub, p) {
+        const masterPhone = "919703636298"; // Replace with actual Master's number
+        const text = `Hello Master, I have generated the attendance PDF for ${sub} on ${date} (Period ${p}). It is ready for your review.`;
+        window.open(`https://wa.me/${masterPhone}?text=${encodeURIComponent(text)}`, '_blank');
+    }
 
-            <button type="submit" class="btn-lock" onclick="return confirm('Are you sure you want to lock this attendance? You cannot edit it later.')">
-                Lock Attendance
-            </button>
-        </form>
-    </div>
-</body>
-</html>
+    loadHistory();
+</script>
