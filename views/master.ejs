@@ -3,40 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Master Dashboard - Admin Panel</title>
+    <title>Master Dashboard - Attendance System</title>
     <link rel="stylesheet" href="/style.css">
     <style>
-        :root { --primary: #2c3e50; --danger: #e74c3c; --success: #2ecc71; --accent: #3498db; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; display: flex; }
-        .sidebar { width: 250px; background-color: var(--primary); color: white; height: 100vh; padding: 20px; position: fixed; }
-        .main-content { margin-left: 290px; padding: 40px; width: calc(100% - 290px); }
-        .card { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 30px; }
-        h2, h3 { color: var(--primary); margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        :root { --primary: #2c3e50; --accent: #3498db; --danger: #e74c3c; --success: #2ecc71; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; margin: 0; display: flex; }
+        .sidebar { width: 260px; background: var(--primary); color: white; height: 100vh; padding: 20px; position: fixed; }
+        .main { margin-left: 300px; padding: 40px; width: calc(100% - 340px); }
+        .card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 30px; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
-        th { background-color: #f8f9fa; color: #333; }
-        .btn { padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; text-decoration: none; display: inline-block; }
-        .btn-delete { background-color: var(--danger); color: white; }
-        .btn-approve { background-color: var(--success); color: white; }
-        .status-badge { padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; }
-        .status-approved { background: #d4edda; color: #155724; }
-        .status-pending { background: #fff3cd; color: #856404; }
-        input[type="text"], input[type="file"] { padding: 10px; border: 1px solid #ddd; border-radius: 4px; width: 250px; }
+        .btn { padding: 8px 15px; border-radius: 5px; border: none; cursor: pointer; color: white; font-weight: bold; }
+        .status-badge { padding: 5px 10px; border-radius: 20px; font-size: 12px; }
     </style>
 </head>
 <body>
 
 <div class="sidebar">
     <h2>Admin Panel</h2>
-    <p>Logged in as: <br><strong><%= user.name %></strong></p>
+    <p>Welcome, <strong><%= user.name %></strong></p>
     <hr>
-    <ul style="list-style: none; padding: 0;">
-        <li style="margin-bottom: 15px;"><a href="/master" style="color: white; text-decoration: none;">User Management</a></li>
-        <li><a href="/logout" style="color: #ff7675; text-decoration: none;">Logout</a></li>
-    </ul>
+    <a href="/logout" style="color: #ff7675; text-decoration: none;">Logout</a>
 </div>
 
-<div class="main-content">
+<div class="main">
     <h1>Master Dashboard</h1>
 
     <div class="card">
@@ -52,48 +42,36 @@
                 </tr>
             </thead>
             <tbody>
-                <% allUsers.forEach(u => { %>
-                    <% if(u.role !== 'Master') { %>
-                    <tr>
-                        <td><%= u.name %></td>
-                        <td><%= u.email %></td>
-                        <td><%= u.role %></td>
-                        <td>
-                            <span class="status-badge <%= u.isApproved ? 'status-approved' : 'status-pending' %>">
-                                <%= u.isApproved ? 'Approved' : 'Pending' %>
-                            </span>
-                        </td>
-                        <td>
-                            <% if(!u.isApproved) { %>
-                                <form action="/approve-user/<%= u._id %>" method="POST" style="display:inline;">
-                                    <button type="submit" class="btn btn-approve">Approve</button>
-                                </form>
-                            <% } %>
-                            <form action="/delete-user/<%= u._id %>" method="POST" style="display:inline;" onsubmit="return confirm('Delete this user?')">
-                                <button type="submit" class="btn btn-delete">Delete</button>
-                            </form>
-                        </td>
-                    </tr>
-                    <% } %>
-                <% }) %>
+                <% allUsers.forEach(u => { if(u.role !== 'Master') { %>
+                <tr>
+                    <td><%= u.name %></td>
+                    <td><%= u.email %></td>
+                    <td><%= u.role %></td>
+                    <td><span class="status-badge" style="background:#d4edda; color:#155724;"><%= u.isApproved ? 'Approved' : 'Pending' %></span></td>
+                    <td>
+                        <form action="/delete-user/<%= u._id %>" method="POST" onsubmit="return confirm('Delete user?')">
+                            <button class="btn" style="background: var(--danger);">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                <% } }) %>
             </tbody>
         </table>
     </div>
 
     <div class="card">
         <h3>Bulk User Upload (CSV)</h3>
-        <p style="font-size: 13px; color: #666;">Format: rollno, name, email, role</p>
         <form action="/upload-users" method="POST" enctype="multipart/form-data">
-            <input type="file" name="csvFile" accept=".csv" required>
-            <button type="submit" class="btn" style="background-color: var(--accent); color: white;">Upload Users</button>
+            <input type="file" name="csvFile" accept=".csv" required style="margin-bottom: 10px;">
+            <button type="submit" class="btn" style="background: var(--accent);">Upload CSV File</button>
         </form>
     </div>
 
     <div class="card">
         <h3>Subject Management</h3>
-        <form action="/add-subject" method="POST" style="display: flex; gap: 10px; align-items: center;">
-            <input type="text" name="name" placeholder="New Subject Name" required>
-            <button type="submit" class="btn" style="background-color: var(--primary); color: white;">Add Subject</button>
+        <form action="/add-subject" method="POST" style="display:flex; gap:10px;">
+            <input type="text" name="name" placeholder="New Subject Name" required style="flex:1; padding:10px; border:1px solid #ddd;">
+            <button type="submit" class="btn" style="background: var(--primary);">Add Subject</button>
         </form>
 
         <table>
@@ -104,23 +82,16 @@
                 </tr>
             </thead>
             <tbody>
-                <% if (masterSubjects && masterSubjects.length > 0) { %>
-                    <% masterSubjects.forEach(sub => { %>
-                        <% if (sub.name) { %> <tr>
-                                <td><%= sub.name %></td>
-                                <td>
-                                    <form action="/delete-subject/<%= sub._id %>" method="POST">
-                                        <button type="submit" class="btn btn-delete">Remove</button>
-                                    </form>
-                                </td>
-                            </tr>
-                        <% } %>
-                    <% }) %>
-                <% } else { %>
-                    <tr>
-                        <td colspan="2" style="text-align: center; color: #999;">No subjects added yet.</td>
-                    </tr>
-                <% } %>
+                <% masterSubjects.forEach(sub => { if(sub.name && sub.name.trim() !== "") { %>
+                <tr>
+                    <td><%= sub.name %></td>
+                    <td>
+                        <form action="/delete-subject/<%= sub._id %>" method="POST">
+                            <button class="btn" style="background: var(--danger);">Remove</button>
+                        </form>
+                    </td>
+                </tr>
+                <% } }) %>
             </tbody>
         </table>
     </div>

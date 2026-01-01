@@ -10,6 +10,14 @@ const csv = require('csv-parser');
 const upload = multer({ dest: 'uploads/' });
 const session = require('express-session'); 
 
+
+// --- ADD THIS CODE HERE ---
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+
 const app = express();
 
 // 2. PASTE THIS CONFIGURATION HERE (Before your routes)
@@ -400,35 +408,30 @@ app.post('/register', async (req, res) => {
 
 
 
-// --- BULK CSV UPLOAD ROUTE ---
+
 app.post('/upload-users', upload.single('csvFile'), (req, res) => {
-    if (!req.file) return res.send("<script>alert('Please select a file'); window.history.back();</script>");
+    if (!req.file) return res.status(400).send("No file uploaded.");
 
     const users = [];
-    const filePath = path.join(__dirname, req.file.path);
-
-    fs.createReadStream(filePath)
+    fs.createReadStream(req.file.path)
         .pipe(csv())
-        .on('data', (data) => {
-            // Push formatted user data from CSV rows
+        .on('data', (row) => {
+            // Ensure CSV headers match: name,email,password,role
             users.push({
-                name: data.name,
-                email: data.email.toLowerCase().trim(),
-                password: data.password,
-                role: data.role || 'Student',
-                isApproved: true // Auto-approve bulk uploads
+                name: row.name,
+                email: row.email.toLowerCase().trim(),
+                password: row.password,
+                role: row.role,
+                isApproved: true
             });
         })
         .on('end', async () => {
             try {
-                // Insert all users at once, ignoring duplicates
                 await User.insertMany(users, { ordered: false });
-                fs.unlinkSync(filePath); // Delete temp file after upload
-                res.send("<script>alert('Bulk upload successful!'); window.location.href='/master';</script>");
+                fs.unlinkSync(req.file.path); // Clean up temp file
+                res.send("<script>alert('Upload Successful'); window.location.href='/master';</script>");
             } catch (err) {
-                console.error("CSV Upload Error:", err);
-                fs.unlinkSync(filePath);
-                res.send("<script>alert('Some users already exist or CSV format is wrong.'); window.location.href='/master';</script>");
+                res.status(500).send("Error saving users. Check for duplicate emails.");
             }
         });
 });
