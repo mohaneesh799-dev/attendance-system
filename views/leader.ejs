@@ -3,22 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leader Dashboard - Attendance</title>
+    <title>Leader Dashboard - Attendance Entry</title>
     <link rel="stylesheet" href="/style.css">
     <style>
-        :root { --primary: #2c3e50; --accent: #3498db; --whatsapp: #25D366; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 20px; }
+        :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --whatsapp: #25D366; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; padding: 20px; }
         .container { max-width: 1100px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         .card { background: #fff; padding: 20px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 20px; }
         .grid-inputs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 15px; }
-        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { padding: 12px; border: 1px solid #eee; text-align: left; }
         th { background: var(--primary); color: white; }
-        .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: white; text-align: center; }
-        .btn-lock { background: #e74c3c; width: 100%; margin-top: 10px; }
-        .btn-whatsapp { background: var(--whatsapp); width: 100%; margin-top: 15px; font-size: 16px; }
+        .btn { padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: white; display: inline-block; text-align: center; }
+        .btn-lock { background: #e74c3c; width: 100%; margin-top: 10px; font-size: 16px; }
+        .btn-whatsapp { background: var(--whatsapp); width: 100%; margin-top: 15px; }
         .quick-panel { background: #eef2f3; border-left: 5px solid var(--primary); }
+        .checkbox-container { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        .student-check { width: 20px; height: 20px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -26,13 +28,14 @@
 <div class="container">
     <div class="header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
         <h1>Leader Attendance Entry</h1>
-        <div><strong><%= user.name %></strong> | <a href="/logout">Logout</a></div>
+        <div>Welcome, <strong><%= user.name %></strong> | <a href="/logout">Logout</a></div>
     </div>
 
     <div class="card quick-panel">
         <h3>Quick Mark Panel</h3>
+        <p style="font-size: 13px; color: #666; margin-bottom: 10px;">Type names or Roll Nos (comma separated) to mark present instantly.</p>
         <div style="display: flex; gap: 10px;">
-            <input type="text" id="quickInput" placeholder="Enter Roll Nos or Names (comma separated)">
+            <input type="text" id="quickInput" placeholder="e.g. 972, Lachi, Navaneeth">
             <button type="button" onclick="applyQuickMark()" class="btn" style="background: var(--primary);">Mark Present</button>
         </div>
     </div>
@@ -41,8 +44,9 @@
         <div class="card">
             <div class="grid-inputs">
                 <div>
-                    <label>Lecturer</label>
+                    <label>Select Lecturer</label>
                     <select name="lecturerEmail" required>
+                        <option value="">-- Choose Lecturer --</option>
                         <% allUsers.filter(u => u.role === 'Lecturer').forEach(l => { %>
                             <option value="<%= l.email %>"><%= l.name %></option>
                         <% }) %>
@@ -60,6 +64,7 @@
 
             <label>Subject</label>
             <select name="subject" required style="margin-bottom:15px;">
+                <option value="">-- Choose Subject --</option>
                 <% masterSubjects.forEach(sub => { %>
                     <option value="<%= sub.name %>"><%= sub.name %></option>
                 <% }) %>
@@ -75,46 +80,52 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <% let i = 0; allUsers.filter(u => u.role === 'Student' || u.isPreRegistered).forEach(student => { %>
-                        <tr>
-                            <td><%= student.rollNo || 'N/A' %></td>
-                            <td><%= student.name %></td>
-                            <td>
-                                <input type="checkbox" name="students[<%=i%>][status]" value="Present" class="student-check">
-                                <input type="hidden" name="students[<%=i%>][id]" value="<%= student.rollNo %>">
-                                <input type="hidden" name="students[<%=i%>][name]" value="<%= student.name %>">
-                                <span style="margin-left:8px;">Mark Present</span>
-                            </td>
-                        </tr>
-                    <% i++; }) %>
+                    <% let i = 0; %>
+                    <% allUsers.forEach(student => { %>
+                        <% if (student.role === 'Student' || student.isPreRegistered) { %>
+                            <tr>
+                                <td><%= student.rollNo || 'N/A' %></td>
+                                <td><%= student.name %></td>
+                                <td>
+                                    <div class="checkbox-container">
+                                        <span>Mark Present</span>
+                                        <input type="hidden" name="students[<%=i%>][id]" value="<%= student.rollNo %>">
+                                        <input type="hidden" name="students[<%=i%>][name]" value="<%= student.name %>">
+                                        <input type="checkbox" name="students[<%=i%>][status]" value="Present" class="student-check">
+                                    </div>
+                                </td>
+                            </tr>
+                            <% i++; %>
+                        <% } %>
+                    <% }) %>
                 </tbody>
             </table>
-            <button type="submit" class="btn btn-lock">Lock Attendance</button>
+            <button type="submit" class="btn btn-lock">Lock Period Attendance</button>
         </div>
     </form>
 
     <div class="card">
-        <h3>Daily Report Management</h3>
+        <h3>Entire Day Report Management</h3>
         <div style="display: flex; gap: 15px; align-items: flex-end;">
             <div style="flex: 1;">
                 <label>Filter PDF By:</label>
                 <select id="reportFilter">
                     <option value="">All Students</option>
-                    <option value="Present">Present Only</option>
-                    <option value="Absent">Absent Only</option>
+                    <option value="Present">Present Students Only</option>
+                    <option value="Absent">Absent Students Only</option>
                 </select>
             </div>
-            <button type="button" class="btn" style="background: var(--accent);" onclick="generatePDF()">Download PDF</button>
+            <button type="button" class="btn" style="background: var(--accent);" onclick="downloadPDF()">Download PDF</button>
         </div>
 
         <button type="button" class="btn btn-whatsapp" onclick="submitToWhatsApp()">
-            Submit Report to Master via WhatsApp
+            Submit Entire Day Report to Master via WhatsApp
         </button>
     </div>
 </div>
 
 <script>
-    // Handles Quick Mark Logic
+    // Quick Mark Logic
     function applyQuickMark() {
         const input = document.getElementById('quickInput').value.toLowerCase();
         const targets = input.split(',').map(t => t.trim());
@@ -124,35 +135,36 @@
             const rollNo = row.cells[0].innerText.toLowerCase();
             const name = row.cells[1].innerText.toLowerCase();
             const checkbox = row.querySelector('.student-check');
+            
             if (targets.some(t => (name.includes(t) || rollNo.includes(t)) && t !== "")) {
                 checkbox.checked = true;
             }
         });
     }
 
-    // PDF Generation Logic
-    function generatePDF() {
-        const date = document.getElementById('currentDate').value;
+    // PDF Download Fix
+    function downloadPDF() {
+        const dateInput = document.getElementById('currentDate').value;
         const filter = document.getElementById('reportFilter').value;
-        if(!date) return alert("Select a date");
-        window.open(`/generate-day-pdf/${date}?filter=${filter}`, '_blank');
+        if (!dateInput) return alert("Select a date");
+        window.open(`/generate-day-pdf/${dateInput}?filter=${filter}`, '_blank');
     }
 
-    // FIXES THE WHATSAPP 404 ERROR
+    // WHATSAPP 404 FIX
     function submitToWhatsApp() {
-        const date = document.getElementById('currentDate').value;
+        const dateInput = document.getElementById('currentDate').value;
         const filter = document.getElementById('reportFilter').value;
-        if (!date) return alert("Please select a date first");
+        if (!dateInput) return alert("Select a date first");
 
-        const masterPhone = "916281173870"; // Replace with real number
+        const masterPhone = "916281173870"; // REPLACE with actual number
         const baseUrl = window.location.origin;
-        const pdfUrl = `${baseUrl}/generate-day-pdf/${date}?filter=${filter}`;
+        const pdfUrl = `${baseUrl}/generate-day-pdf/${dateInput}?filter=${filter}`;
         
-        const message = `Hello Master,\n\nAttendance locked for ${date}.\n\nView ${filter || 'full'} report:\n${pdfUrl}`;
+        const message = `Hello Master,\n\nAttendance locked for ${dateInput}.\n\nView ${filter || 'full'} report here:\n${pdfUrl}`;
         
-        // Use api.whatsapp.com and encodeURIComponent to prevent 404s
-        const finalUrl = `https://api.whatsapp.com/send?phone=${masterPhone}&text=${encodeURIComponent(message)}`;
-        window.open(finalUrl, '_blank');
+        // Correct API and Encoding
+        const finalWhatsAppUrl = `https://api.whatsapp.com/send?phone=${masterPhone}&text=${encodeURIComponent(message)}`;
+        window.open(finalWhatsAppUrl, '_blank');
     }
 </script>
 
