@@ -437,14 +437,14 @@ app.post('/upload-users', upload.single('csvFile'), (req, res) => {
 
 app.post('/lock-attendance', async (req, res) => {
     try {
-        const { lecturerEmail, subject, date, students, periodNumber } = req.body;
-
+        const { lecturerEmail, subject, date, students, periodNumber, timeSlot } = req.body;
         const newAttendance = new Attendance({
-            date: date || new Date().toISOString().split('T')[0],
-            periodNumber: periodNumber || "1",
-            subject: subject,
+            date,
+            periodNumber,
+            timeSlot, // Saving the manual time slot
+            subject,
+            lecturerEmail,
             leaderEmail: req.session.user.email,
-            lecturerEmail: lecturerEmail, // CRITICAL: Fixes blank Lecturer Dashboard
             students: Object.values(students).map(s => ({
                 studentId: s.id,
                 studentName: s.name,
@@ -452,12 +452,9 @@ app.post('/lock-attendance', async (req, res) => {
             })),
             isLockedByLeader: true
         });
-
         await newAttendance.save();
-        res.send("<script>alert('Locked!'); window.location.href='/leader';</script>");
-    } catch (err) {
-        res.status(500).send("Error: " + err.message);
-    }
+        res.send("<script>alert('Locked Successfully!'); window.location.href='/leader';</script>");
+    } catch (err) { res.status(500).send(err.message); }
 });
 
 // --- KEEP ONLY THIS SINGLE BLOCK ---
@@ -528,26 +525,29 @@ app.post('/approve-multiple', async (req, res) => {
 });
 
 
-// PDF Generation Route
-app.get('/generate-pdf/:id', async (req, res) => {
-    try {
-        const attendance = await Attendance.findById(req.params.id);
-        if (!attendance) return res.status(404).send("Record not found");
+// 2. GENERATE PDF FOR ENTIRE DAY
+app.get('/generate-day-pdf/:date', async (req, res) => {
+    const { date } = req.params;
+    const records = await Attendance.find({ date: date }).sort({ timeSlot: 1 });
 
-        const doc = new PDFDocument();
-        res.setHeader('Content-disposition', `attachment; filename=Attendance_${attendance.date}.pdf`);
-        res.setHeader('Content-type', 'application/pdf');
+    const PDFDocument = require('pdfkit');
+    const doc = new PDFDocument();
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=Daily_Report_${date}.pdf`);
 
-        doc.fontSize(20).text('Attendance Report', { align: 'center' });
-        doc.fontSize(12).text(`Date: ${attendance.date} | Subject: ${attendance.subject} | Period: ${attendance.periodNumber}`);
-        doc.moveDown();
-        attendance.students.forEach(s => {
-            doc.text(`${s.studentName}: ${s.status}`);
+    doc.fontSize(20).text(`Consolidated Attendance: ${date}`, { align: 'center' });
+    doc.moveDown();
+
+    records.forEach(rec => {
+        doc.fontSize(14).text(`Slot: ${rec.timeSlot} | Subject: ${rec.subject}`, { underline: true });
+        rec.students.forEach(s => {
+            doc.fontSize(10).text(`${s.studentName}: ${s.status}`);
         });
+        doc.moveDown();
+    });
 
-        doc.pipe(res);
-        doc.end();
-    } catch (err) { res.status(500).send("Error generating PDF"); }
+    doc.pipe(res);
+    doc.end();
 });
 
 // History Route for Leader Dashboard
