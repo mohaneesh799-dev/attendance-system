@@ -1,94 +1,14 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register - Attendance System</title>
-    <link rel="stylesheet" href="/style.css">
-    <style>
-        :root { --primary: #2c3e50; --accent: #3498db; }
-        body { 
-            font-family: 'Segoe UI', sans-serif; 
-            background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0;
-        }
-        .register-card {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-            width: 100%;
-            max-width: 450px;
-        }
-        .register-card h2 { text-align: center; color: var(--primary); margin-bottom: 20px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: 600; color: #555; }
-        input, select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            box-sizing: border-box;
-            font-size: 15px;
-        }
-        .btn-register {
-            width: 100%;
-            padding: 12px;
-            background: var(--accent);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-        .btn-register:hover { background: #2980b9; }
-        .footer-links { text-align: center; margin-top: 15px; font-size: 14px; color: #777; }
-        .footer-links a { color: var(--accent); text-decoration: none; }
-    </style>
-</head>
-<body>
 
-<div class="register-card">
-    <h2>Create Account</h2>
+<form action="/register" method="POST">
+    <input type="email" name="email" placeholder="Enter Email" required>
+    <input type="password" name="password" placeholder="Enter Password" required>
     
-    <form action="/register" method="POST">
-        <div class="form-group">
-            <label for="name">Full Name</label>
-            <input type="text" id="name" name="name" placeholder="Enter your full name" required>
-        </div>
-
-        <div class="form-group">
-            <label for="email">Email Address</label>
-            <input type="email" id="email" name="email" placeholder="Use your institutional email" required>
-        </div>
-
-        <div class="form-group">
-            <label for="password">Password</label>
-            <input type="password" id="password" name="password" placeholder="Min. 6 characters" minlength="6" required>
-        </div>
-
-        <div class="form-group">
-            <label for="role">Register As</label>
-            <select id="role" name="role" required>
-                <option value="Student">Student</option>
-                <option value="Leader">Class Leader</option>
-                <option value="Lecturer">Lecturer</option>
-            </select>
-        </div>
-
-        <button type="submit" class="btn-register">Sign Up</button>
-    </form>
-
-    <div class="footer-links">
-        <p>Already have an account? <a href="/login">Login here</a></p>
-    </div>
-</div>
-
-</body>
-</html>
+    <select name="role">
+        <option value="Master">Master</option>
+        <option value="Lecturer">Lecturer</option>
+        <option value="Leader">Leader</option>
+        <option value="Student">Student</option>
+    </select>
+    
+    <button type="submit">Create Account</button>
+</form>
