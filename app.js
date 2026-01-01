@@ -238,25 +238,25 @@ app.get('/leader', async (req, res) => {
 });
 
 
+// --- Get Lecturer's Locked Records ---
 app.get('/lecturer', async (req, res) => {
-    if (!req.session.user || req.session.user.role !== 'Lecturer') {
-        return res.redirect('/login');
-    }
+    if (!req.session.user || req.session.user.role !== 'Lecturer') return res.redirect('/login');
+
     try {
-        // Use regex for case-insensitive email matching
-        const records = await Attendance.find({ 
-            lecturerEmail: { $regex: new RegExp("^" + req.session.user.email + "$", "i") } 
+        // Filter by Lecturer Email AND ensure it is locked by the Leader
+        const assignedRecords = await Attendance.find({ 
+            lecturerEmail: req.session.user.email,
+            isLockedByLeader: true 
         }).sort({ date: -1 });
 
         res.render('lecturer', { 
             user: req.session.user, 
-            attendanceRecords: records || [] 
+            records: assignedRecords 
         });
     } catch (err) {
-        res.status(500).send("Internal Server Error: Could not load dashboard.");
+        res.status(500).send("Error loading dashboard.");
     }
 });
-
 
 
 app.get('/student', async (req, res) => {
@@ -581,33 +581,32 @@ app.get('/view-pdf', (req, res) => {
 
 
 // NEW REPLACEMENT ROUTE FOR LECTURER CORRECTIONS
-app.post('/lecturer/update-attendance/:id', async (req, res) => {
+app.post('/update-attendance-status', async (req, res) => {
     if (!req.session.user || req.session.user.role !== 'Lecturer') {
-        return res.redirect('/login');
+        return res.status(403).json({ success: false, message: "Unauthorized" });
     }
+
+    const { attendanceId, studentId, newStatus } = req.body;
 
     try {
-        const attendanceId = req.params.id;
-        const updatedRecords = req.body.attendance; // From the lecturer.ejs form
-
-        // Find the specific attendance document and update the records array
-        await Attendance.findByIdAndUpdate(attendanceId, {
-            records: updatedRecords.map(s => ({
-                studentId: s.studentId,
-                studentName: s.studentName,
-                status: s.status
-            })),
-            lastModifiedBy: 'Lecturer',
-            lastModifiedDate: new Date()
-        });
-
-        res.send("<script>alert('Attendance Updated Successfully!'); window.location.href='/lecturer';</script>");
+        // Targets specific student status within a locked record
+        await Attendance.updateOne(
+            { 
+                _id: attendanceId, 
+                lecturerEmail: req.session.user.email, // Security check
+                "students.studentId": studentId 
+            },
+            { 
+                $set: { "students.$.status": newStatus },
+                $set: { lastModifiedBy: 'Lecturer', lastModifiedDate: new Date() } 
+            }
+        );
+        res.json({ success: true });
     } catch (err) {
         console.error("Lecturer Update Error:", err);
-        res.status(500).send("Error updating record: " + err.message);
+        res.status(500).json({ success: false });
     }
 });
-
 
 
 app.post('/add-subject', async (req, res) => {
