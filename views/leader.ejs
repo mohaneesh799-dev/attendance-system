@@ -3,38 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leader Dashboard - Attendance Management</title>
+    <title>Leader Dashboard - Attendance</title>
     <link rel="stylesheet" href="/style.css">
     <style>
-        :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --whatsapp: #25D366; }
+        :root { --primary: #2c3e50; --accent: #3498db; --whatsapp: #25D366; }
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 20px; }
         .container { max-width: 1100px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         .card { background: #fff; padding: 20px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 20px; }
-        .quick-panel { background: #eef2f3; border-left: 5px solid var(--primary); }
         .grid-inputs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 15px; }
-        input[type="text"], input[type="date"], select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { padding: 12px; border: 1px solid #eee; text-align: left; }
         th { background: var(--primary); color: white; }
-        .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; text-decoration: none; display: inline-block; color: white; }
+        .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: white; text-align: center; }
         .btn-lock { background: #e74c3c; width: 100%; margin-top: 10px; }
         .btn-whatsapp { background: var(--whatsapp); width: 100%; margin-top: 15px; font-size: 16px; }
-        .btn-pdf { background: var(--accent); }
+        .quick-panel { background: #eef2f3; border-left: 5px solid var(--primary); }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="header" style="display:flex; justify-content:space-between; margin-bottom:20px;">
+    <div class="header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
         <h1>Leader Attendance Entry</h1>
-        <div>Leader: <strong><%= user.name %></strong> | <a href="/logout">Logout</a></div>
+        <div><strong><%= user.name %></strong> | <a href="/logout">Logout</a></div>
     </div>
 
     <div class="card quick-panel">
         <h3>Quick Mark Panel</h3>
-        <p style="font-size: 13px; color: #666;">Enter Roll Numbers or Names (comma separated) to mark present instantly.</p>
         <div style="display: flex; gap: 10px;">
-            <input type="text" id="quickInput" placeholder="e.g. 972, Lachi, Navaneeth">
+            <input type="text" id="quickInput" placeholder="Enter Roll Nos or Names (comma separated)">
             <button type="button" onclick="applyQuickMark()" class="btn" style="background: var(--primary);">Mark Present</button>
         </div>
     </div>
@@ -43,7 +41,7 @@
         <div class="card">
             <div class="grid-inputs">
                 <div>
-                    <label>Select Lecturer</label>
+                    <label>Lecturer</label>
                     <select name="lecturerEmail" required>
                         <% allUsers.filter(u => u.role === 'Lecturer').forEach(l => { %>
                             <option value="<%= l.email %>"><%= l.name %></option>
@@ -51,7 +49,7 @@
                     </select>
                 </div>
                 <div>
-                    <label>Manual Time Slot</label>
+                    <label>Time Slot</label>
                     <input type="text" name="manualTime" placeholder="e.g. 09:15 AM - 10:05 AM" required>
                 </div>
                 <div>
@@ -73,7 +71,7 @@
                     <tr>
                         <th>Roll No</th>
                         <th>Student Name</th>
-                        <th>Status</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -83,7 +81,7 @@
                             <td><%= student.name %></td>
                             <td>
                                 <input type="checkbox" name="students[<%=i%>][status]" value="Present" class="student-check">
-                                <input type="hidden" name="students[<%=i%>][id]" value="<%= student.rollNo || student._id %>">
+                                <input type="hidden" name="students[<%=i%>][id]" value="<%= student.rollNo %>">
                                 <input type="hidden" name="students[<%=i%>][name]" value="<%= student.name %>">
                                 <span style="margin-left:8px;">Mark Present</span>
                             </td>
@@ -91,36 +89,32 @@
                     <% i++; }) %>
                 </tbody>
             </table>
-            <button type="submit" class="btn btn-lock">Lock Period Attendance</button>
+            <button type="submit" class="btn btn-lock">Lock Attendance</button>
         </div>
     </form>
 
     <div class="card">
-        <h3>Entire Day Report Management</h3>
-        <div class="grid-inputs" style="grid-template-columns: 1fr 2fr;">
-            <div>
+        <h3>Daily Report Management</h3>
+        <div style="display: flex; gap: 15px; align-items: flex-end;">
+            <div style="flex: 1;">
                 <label>Filter PDF By:</label>
                 <select id="reportFilter">
                     <option value="">All Students</option>
-                    <option value="Present">Present Students Only</option>
-                    <option value="Absent">Absent Students Only</option>
+                    <option value="Present">Present Only</option>
+                    <option value="Absent">Absent Only</option>
                 </select>
             </div>
-            <div style="display:flex; align-items:flex-end; gap:10px;">
-                <button type="button" class="btn btn-pdf" onclick="generateAndCheckPDF()">Check & Download PDF</button>
-            </div>
+            <button type="button" class="btn" style="background: var(--accent);" onclick="generatePDF()">Download PDF</button>
         </div>
 
         <button type="button" class="btn btn-whatsapp" onclick="submitToWhatsApp()">
-            Submit Entire Day Report to Master via WhatsApp
+            Submit Report to Master via WhatsApp
         </button>
     </div>
 </div>
 
-
-
 <script>
-    // Quick Mark Functionality: Matches name or Roll No
+    // Handles Quick Mark Logic
     function applyQuickMark() {
         const input = document.getElementById('quickInput').value.toLowerCase();
         const targets = input.split(',').map(t => t.trim());
@@ -130,37 +124,35 @@
             const rollNo = row.cells[0].innerText.toLowerCase();
             const name = row.cells[1].innerText.toLowerCase();
             const checkbox = row.querySelector('.student-check');
-            
             if (targets.some(t => (name.includes(t) || rollNo.includes(t)) && t !== "")) {
                 checkbox.checked = true;
             }
         });
     }
 
-    // PDF Filtering & Checking
-    function generateAndCheckPDF() {
+    // PDF Generation Logic
+    function generatePDF() {
         const date = document.getElementById('currentDate').value;
         const filter = document.getElementById('reportFilter').value;
-        
-        if(!date) {
-            alert("Please select a date first");
-            return;
-        }
-        
-        // Matches the updated route: /generate-day-pdf/:date?filter=...
+        if(!date) return alert("Select a date");
         window.open(`/generate-day-pdf/${date}?filter=${filter}`, '_blank');
     }
 
-    // WhatsApp Direct Submit
+    // FIXES THE WHATSAPP 404 ERROR
     function submitToWhatsApp() {
         const date = document.getElementById('currentDate').value;
         const filter = document.getElementById('reportFilter').value;
-        const masterPhone = "91XXXXXXXXXX"; // Replace with actual Master's phone number
+        if (!date) return alert("Please select a date first");
+
+        const masterPhone = "916281173870"; // Replace with real number
+        const baseUrl = window.location.origin;
+        const pdfUrl = `${baseUrl}/generate-day-pdf/${date}?filter=${filter}`;
         
-        const pdfUrl = window.location.origin + `/generate-day-pdf/${date}?filter=${filter}`;
-        const message = `Hello Master, here is the ${filter || 'full'} attendance report for ${date}.\n\nView Report: ${pdfUrl}`;
+        const message = `Hello Master,\n\nAttendance locked for ${date}.\n\nView ${filter || 'full'} report:\n${pdfUrl}`;
         
-        window.open(`https://wa.me/${masterPhone}?text=${encodeURIComponent(message)}`, '_blank');
+        // Use api.whatsapp.com and encodeURIComponent to prevent 404s
+        const finalUrl = `https://api.whatsapp.com/send?phone=${masterPhone}&text=${encodeURIComponent(message)}`;
+        window.open(finalUrl, '_blank');
     }
 </script>
 
