@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Master Dashboard - Control Panel</title>
+    <title><%= user.section %> - Master Dashboard</title>
     <link rel="stylesheet" href="/style.css">
     <style>
         :root { --sidebar-width: 260px; --primary: #2c3e50; --danger: #e74c3c; --success: #27ae60; --accent: #3498db; }
@@ -29,30 +29,36 @@
         .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: white; text-decoration: none; display: inline-block; }
         .btn-approve { background: var(--success); }
         .btn-delete { background: var(--danger); font-size: 11px; }
+        .btn-upload { background: var(--accent); margin-top: 10px; width: 100%; }
         
         .action-bar { background: #fff; padding: 15px; border-radius: 8px; margin-bottom: 15px; display: flex; gap: 15px; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 5px solid var(--success); }
-        input[type="text"], select { padding: 10px; border-radius: 4px; border: 1px solid #ddd; }
+        input[type="text"], select, input[type="file"] { padding: 10px; border-radius: 4px; border: 1px solid #ddd; margin-bottom: 5px; }
+        .section-badge { background: #9b59b6; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; margin-left: 10px; }
+        .upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: end; }
     </style>
 </head>
 <body>
 
 <div class="sidebar">
-    <h2>Master Portal</h2>
+    <h2><%= user.section %> Portal</h2>
     <p>Admin: <strong><%= user.name %></strong></p>
     <nav>
         <a href="/master">🏠 Dashboard Overview</a>
-        <a href="/attendance-history">📅 Attendance History</a> <a href="/logout" style="color: #ff7675; margin-top: 50px;">🚪 Logout</a>
+        <a href="/attendance-history">📅 Attendance History</a> 
+        <a href="/logout" style="color: #ff7675; margin-top: 50px;">🚪 Logout</a>
     </nav>
 </div>
 
 <div class="main-content">
-    <h1>Administration Control Panel</h1>
+    <h1>Administration Control Panel <span class="section-badge"><%= user.section %></span></h1>
 
     <div class="card">
         <h3>Subject Management</h3>
-        <p style="color: #666; font-size: 14px;">Add subjects that Leaders will select for attendance marking.</p>
+        <p style="color: #666; font-size: 14px;">Add subjects specific to <strong><%= user.section %></strong>.</p>
         <form action="/add-subject" method="POST" style="display: flex; gap: 10px; margin-bottom: 20px;">
-            <input type="text" name="subjectName" placeholder="Enter New Subject Name" required style="flex:1;">
+            <input type="hidden" name="section" value="<%= user.section %>">
+            
+            <input type="text" name="subjectName" placeholder="Enter New Subject Name (e.g. Data Structures)" required style="flex:1;">
             <button type="submit" class="btn" style="background: var(--accent);">Add Subject</button>
         </form>
         <table>
@@ -61,7 +67,8 @@
                 <% if (masterSubjects && masterSubjects.length > 0) { %>
                     <% masterSubjects.forEach(sub => { %>
                         <tr>
-                            <td><strong><%= sub.name %></strong></td> <td>
+                            <td><strong><%= sub.name %></strong></td> 
+                            <td>
                                 <form action="/delete-subject/<%= sub._id %>" method="POST">
                                     <button type="submit" class="btn btn-delete" onclick="return confirm('Delete this subject?')">Remove</button>
                                 </form>
@@ -69,16 +76,18 @@
                         </tr>
                     <% }) %>
                 <% } else { %>
-                    <tr><td colspan="2" style="text-align: center;">No subjects found.</td></tr>
+                    <tr><td colspan="2" style="text-align: center;">No subjects found for <%= user.section %>.</td></tr>
                 <% } %>
             </tbody>
         </table>
     </div>
 
     <div class="card">
-        <h3>User Management</h3>
+        <h3>User Management (<%= user.section %>)</h3>
         
         <form action="/bulk-approve" method="POST" id="bulkForm">
+            <input type="hidden" name="section" value="<%= user.section %>">
+
             <div class="action-bar">
                 <input type="checkbox" id="selectAll" style="width: 20px; height: 20px; cursor: pointer;">
                 <label for="selectAll" style="font-weight: bold; cursor: pointer;">Select All</label>
@@ -130,13 +139,28 @@
     </div>
 
     <div class="card">
-        <h3>Bulk Registration (CSV)</h3>
+        <h3>Bulk Registration (Excel/CSV)</h3>
         <p style="font-size: 13px; color: #666; margin-bottom: 15px;">
-            Columns required: <strong>rollno, name, email</strong>
+            Upload student lists for any section. Headers required: <strong>rollno, name, email</strong>.
         </p>
+        
         <form action="/upload-users" method="POST" enctype="multipart/form-data">
-            <input type="file" name="csvFile" accept=".csv" required>
-            <button type="submit" class="btn" style="background: var(--accent);">Upload & Sync Users</button>
+            <div class="upload-grid">
+                <div>
+                    <label style="display:block; font-weight:bold; margin-bottom:5px;">Target Section:</label>
+                    <select name="section" required style="width:100%;">
+                        <option value="">-- Select Section --</option>
+                        <option value="CSE-A">CSE-A</option>
+                        <option value="CSE-B">CSE-B</option>
+                        <option value="ECE">ECE</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="display:block; font-weight:bold; margin-bottom:5px;">Choose File (.xlsx or .csv):</label>
+                    <input type="file" name="csvFile" accept=".csv, .xlsx, .xls" required style="width:100%;">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-upload">🚀 Start Bulk Upload</button>
         </form>
     </div>
 </div>

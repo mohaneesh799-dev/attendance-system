@@ -9,7 +9,7 @@ const multer = require('multer');
 const csv = require('csv-parser');
 const upload = multer({ dest: 'uploads/' });
 const session = require('express-session'); 
-
+const ExcelJS = require('exceljs'); 
 
 // --- ADD THIS CODE HERE ---
 const uploadDir = path.join(__dirname, 'uploads');
@@ -88,6 +88,7 @@ const userSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true },
     password: { type: String }, // Optional for pre-registered students until they sign up
     role: { type: String, default: 'Student' },
+    section: { type: String, required: true }, // Added for multi-section
     isApproved: { type: Boolean, default: false }, // Master must toggle this
     isPreRegistered: { type: Boolean, default: false }, // True if added via CSV
     name: String,
@@ -104,6 +105,7 @@ const attendanceSchema = new mongoose.Schema({
     subject: String,
     lecturerEmail: String,
     leaderEmail: String,
+    section: { type: String, required: true }, // Crucial for filtering
     students: [{
         studentId: String,
         studentName: String,
@@ -202,9 +204,9 @@ app.get('/master', async (req, res) => {
         return res.redirect('/login');
     }
     try {
-        // Fetch ALL data required by the master.ejs template
-        const users = await User.find({});
-        const subjects = await Subject.find({}); 
+        // Replace your existing lines with these:
+        const users = await User.find({ section: req.session.user.section }); //
+        const subjects = await Subject.find({ section: req.session.user.section }); //
 
         res.render('master', { 
             user: req.session.user,
@@ -218,20 +220,24 @@ app.get('/master', async (req, res) => {
 });
 
 
+
 app.get('/leader', async (req, res) => {
     if (!req.session.user || req.session.user.role !== 'Leader') return res.redirect('/login');
 
     try {
         // Fetch only students and pre-registered users to exclude Master/Lecturer from the list
-        const studentsOnly = await User.find({ 
-            $or: [
-                { role: 'Student' }, 
-                { isPreRegistered: true }
-            ] 
-        }).sort({ rollNo: 1 }); // Sort by rollNo to keep the list organized
+     // Replace your existing studentsOnly query with this:
+const studentsOnly = await User.find({
+    section: req.session.user.section, // Filter by the Leader's section
+    $or: [
+        { role: 'Student' },
+        { role: 'Leader' }, // Ensure the Leader is included in the list
+        { isPreRegistered: true }
+    ]
+}).sort({ rollNo: 1 });
 
-        const masterSubjects = await Subject.find({});
-
+// Modify your subject query as well:
+const masterSubjects = await Subject.find({ section: req.session.user.section });
         res.render('leader', { 
             user: req.session.user, 
             allUsers: studentsOnly, // Only contains students now
@@ -248,11 +254,12 @@ app.get('/lecturer', async (req, res) => {
         // 1. Get Today's Date in YYYY-MM-DD format to match your DB strings
         const today = new Date().toISOString().split('T')[0];
 
-        // 2. Fetch records where this lecturer is assigned for TODAY
-        const todayRecords = await Attendance.find({
-            lecturerEmail: req.session.user.email,
-            date: today
-        });
+       // Replace your existing todayRecords query with this:
+    const todayRecords = await Attendance.find({
+    section: req.session.user.section, // Added: Only show records for the lecturer's section
+    lecturerEmail: req.session.user.email,
+    date: today
+});
 
         // 3. Render the page (Crucial: pass todayRecords so it's not undefined)
         res.render('lecturer', { 
@@ -272,10 +279,11 @@ app.get('/student', async (req, res) => {
     try {
         const userRoll = req.session.user.rollNo;
 
-        // Use $elemMatch to find the student inside the array
+       // Add the section filter to ensure data isolation
         const records = await Attendance.find({
-            "students": { $elemMatch: { studentId: userRoll } }
-        }).sort({ date: -1 });
+        section: req.session.user.section, // NEW: Filter by student's current section
+         "students": { $elemMatch: { studentId: userRoll } }
+    }).sort({ date: -1 });
 
         // Calculate stats for the summary cards
         let present = 0;
@@ -318,7 +326,9 @@ app.post('/login', async (req, res) => {
             id: user._id,
             email: user.email.toLowerCase(),
             role: user.role, // This will now be 'Lecturer' if updated by Master
-            name: user.name
+            name: user.name,
+            section: user.section, // NEW: Crucial for multi-section filtering
+            rollNo: user.rollNo    // NEW: Needed for student dashboard stats
         };
 
      // Replace lines 299-307 in your app.js
@@ -445,49 +455,74 @@ app.post('/register', async (req, res) => {
 
 
 
-
-app.post('/upload-users', upload.single('csvFile'), (req, res) => {
+app.post('/upload-users', upload.single('csvFile'), async (req, res) => {
     if (!req.file) return res.status(400).send("No file uploaded.");
-
+    
+    const targetSection = req.body.section; // From hidden input in master.ejs
     const users = [];
-    fs.createReadStream(req.file.path)
-        .pipe(csv())
-        // image_38fb48 updated for better compatibility
-        .on('data', (row) => {
-            if (row.email) {
-        // Look for common variations of the roll number header
-           const csvRoll = row.rollno || row.RollNo || row['Roll No'] || row.roll_no;
-        
-        users.push({
-            rollNo: csvRoll ? csvRoll.trim() : '', // Always save as rollNo
-            name: row.name ? row.name.trim() : 'New User',
-            email: row.email.toLowerCase().trim(),
-            role: 'Student',
-            isApproved: true, // Auto-approve if uploaded by Master
-            isPreRegistered: true
-            });
+
+    try {
+        const workbook = new ExcelJS.Workbook();
+        const filePath = req.file.path;
+
+        // Load file based on extension
+        if (req.file.originalname.endsWith('.csv')) {
+            await workbook.csv.readFile(filePath);
+        } else {
+            await workbook.xlsx.readFile(filePath);
         }
-    })
-        .on('end', async () => {
-            try {
-                if (users.length > 0) {
-                    // ordered: false allows continuing if some emails are duplicates
-                    await User.insertMany(users, { ordered: false });
+
+        const worksheet = workbook.getWorksheet(1); // Get the first sheet
+
+        // Loop through rows (starting from row 2 to skip headers)
+        worksheet.eachRow((row, rowNumber) => {
+            if (rowNumber > 1) {
+                // Mapping columns: 1=RollNo, 2=Name, 3=Email
+                // You can adjust these indices if your Excel structure is different
+                const rollNo = row.getCell(1).value;
+                const name = row.getCell(2).value;
+                const email = row.getCell(3).value;
+
+                if (email) {
+                    users.push({
+                        rollNo: rollNo ? rollNo.toString().trim() : '',
+                        name: name ? name.toString().trim() : 'New User',
+                        email: email.toString().toLowerCase().trim(),
+                        role: 'Student',
+                        section: targetSection, // Link to Master's section
+                        isApproved: true,
+                        isPreRegistered: true
+                    });
                 }
-                if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-                res.send("<script>alert('CSV Uploaded! Check approval table.'); window.location.href='/master';</script>");
-            } catch (err) {
-                console.error("Upload Error:", err);
-                if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-                res.status(500).send("Upload failed. Ensure no duplicate emails exist.");
             }
         });
+
+        // Save to Database
+        if (users.length > 0) {
+            // ordered: false ensures one duplicate email doesn't stop the whole upload
+            await User.insertMany(users, { ordered: false });
+        }
+
+        // Clean up: delete file after processing
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+        
+        res.send("<script>alert('Upload Successful!'); window.location.href='/master';</script>");
+
+    } catch (err) {
+        console.error("Upload Error:", err);
+        // Clean up even if it fails
+        if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+        res.status(500).send("Failed to process file. Check column order: RollNo, Name, Email.");
+    }
 });
+
+
 
 app.post('/lock-attendance', async (req, res) => {
     try {
-        const { lecturerEmail, manualTime, subject, date, students } = req.body;
+        const { section, lecturerEmail, manualTime, subject, date, students } = req.body;
         const newAttendance = new Attendance({
+            section: section, // NEW: Save the section tag
             date,
             manualTime, // Save the manual text string
             subject,
@@ -559,46 +594,54 @@ app.post('/bulk-approve', async (req, res) => {
 // UPDATED PDF GENERATION ROUTE
 app.get('/generate-day-pdf/:date', async (req, res) => {
     try {
+        // 1. Security check: Ensure user is logged in
+        if (!req.session.user) return res.redirect('/login');
+
         const { date } = req.params;
         const { filter } = req.query;
+        const userSection = req.session.user.section; // NEW: Get user's section
 
-        const records = await Attendance.find({ date: date }).sort({ manualTime: 1 });
+        // 2. Fetch records ONLY for this section on this date
+        const records = await Attendance.find({ 
+            date: date, 
+            section: userSection // CRUCIAL: Add this filter
+        }).sort({ manualTime: 1 });
 
         const PDFDocument = require('pdfkit');
         const doc = new PDFDocument({ margin: 30 });
 
-        // FIX 1: Change Content-Type to application/pdf
         res.setHeader('Content-Type', 'application/pdf');
-        
-        // FIX 2: Ensure the filename ends in .pdf and set to 'inline' so it opens in the browser/app
-        res.setHeader('Content-Disposition', `inline; filename=Attendance_Report_${date}.pdf`);
+        res.setHeader('Content-Disposition', `inline; filename=Attendance_Report_${date}_${userSection}.pdf`);
 
-        // FIX 3: Pipe the document to the response BEFORE ending the doc
         doc.pipe(res);
 
-        // PDF Content Construction
+        // 3. Update Title to include Section
         doc.fontSize(20).text(`Attendance Report: ${date}`, { align: 'center' });
+        doc.fontSize(16).text(`Section: ${userSection}`, { align: 'center' }); // NEW
+        
         if (filter) doc.fontSize(12).text(`Filter Applied: ${filter}`, { align: 'center' });
         doc.moveDown();
 
-        records.forEach(rec => {
-            doc.fontSize(14).text(`Slot: ${rec.manualTime} | Subject: ${rec.subject}`, { underline: true });
-            
-            rec.students.forEach(s => {
-                // Apply the filter logic
-                if (!filter || s.status === filter) {
-                    doc.fontSize(10).text(`${s.name || s.studentName} (${s.studentId}): ${s.status}`);
-                }
+        if (records.length === 0) {
+            doc.fontSize(14).text("No records found for this section on this date.", { align: 'center' });
+        } else {
+            records.forEach(rec => {
+                doc.fontSize(14).text(`Slot: ${rec.manualTime} | Subject: ${rec.subject}`, { underline: true });
+                doc.moveDown(0.5);
+
+                rec.students.forEach(s => {
+                    if (!filter || s.status === filter) {
+                        doc.fontSize(10).text(`${s.name || s.studentName} (${s.studentId}): ${s.status}`);
+                    }
+                });
+                doc.moveDown();
             });
-            doc.moveDown();
-        });
+        }
 
-        // Finalize the PDF
         doc.end();
-
     } catch (err) {
         console.error("PDF Error:", err);
-        res.status(500).send("Error generating PDF");
+        res.status(500).send("Error generating PDF.");
     }
 });
 
@@ -621,35 +664,33 @@ app.get('/view-pdf', (req, res) => {
 });
 
 
-// REPLACE your current route in app.js with this:
 app.post('/update-attendance-status', async (req, res) => {
-    // 1. Check if user is logged in as Lecturer
     if (!req.session.user || req.session.user.role !== 'Lecturer') {
-        return res.status(403).json({ success: false });
+        return res.status(403).json({ success: false, message: "Unauthorized" });
     }
 
     const { attendanceId, studentId, newStatus } = req.body;
 
     try {
-        // 2. Update ONLY the specific student's status in the array
         const result = await Attendance.updateOne(
             { 
                 _id: attendanceId, 
-                "students.studentId": studentId 
+                "students.studentId": studentId,
+                section: req.session.user.section // Section security
             },
-            { 
-                $set: { 
+            {
+                $set: {
                     "students.$.status": newStatus,
-                    lastModifiedBy: 'Lecturer',
+                    lastModifiedBy: req.session.user.email, // Better tracking
                     lastModifiedDate: new Date()
-                } 
+                }
             }
         );
 
         if (result.modifiedCount > 0) {
             res.json({ success: true });
         } else {
-            res.status(400).json({ success: false, message: "No changes made" });
+            res.status(400).json({ success: false, message: "Record not found or no change made." });
         }
     } catch (err) {
         console.error("Update Error:", err);
@@ -660,18 +701,20 @@ app.post('/update-attendance-status', async (req, res) => {
 
 app.post('/add-subject', async (req, res) => {
     try {
-        const { subjectName } = req.body;
-        
-        // Validation: Prevent adding empty subjects
-        if (!subjectName || subjectName.trim() === "") {
-            return res.status(400).send("Subject name cannot be empty");
+        // 1. Capture both the Name and the Section from the request body
+        const { subjectName, section } = req.body;
+
+        // 2. Validation: Ensure both fields are provided
+        if (!subjectName || subjectName.trim() === "" || !section) {
+            return res.status(400).send("Subject name and section are required.");
         }
 
-        // Create new subject using the 'name' field
-        const newSubject = new Subject({ 
-            name: subjectName.trim() 
+        // 3. Save the new subject with the section tag
+        const newSubject = new Subject({
+            name: subjectName.trim(),
+            section: section // NEW: Crucial for filtering on Leader Dashboard
         });
-        
+
         await newSubject.save();
         res.redirect('/master');
     } catch (err) {
@@ -740,14 +783,16 @@ app.get('/attendance-history', async (req, res) => {
             query.date = { $gte: startDate, $lte: endDate };
         }
 
-        // Role-based data scoping
-        if (user.role === 'Student') {
-            query["students.studentId"] = user.rollNo;
-        } else if (user.role === 'Lecturer') {
-            query.lecturerEmail = user.email;
-        } 
-        // Leaders and Masters see all records within the date range by default
-
+        // Updated Role-based data scoping
+if (user.role === 'Student') {
+    query["students.studentId"] = user.rollNo;
+} else if (user.role === 'Lecturer') {
+    query.lecturerEmail = user.email;
+} else if (user.role === 'Leader') {
+    // NEW: Ensure Leaders are restricted to their own section
+    query.section = user.section; 
+}
+// Masters continue to see all records by default if no section is added to their query
         const history = await Attendance.find(query).sort({ date: -1 });
         
         res.render('history', { 
