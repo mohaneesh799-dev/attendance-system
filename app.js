@@ -845,10 +845,13 @@ if (user.role === 'Student') {
 
 
 
-// Add this to show the page
+
 app.get('/request-super-admin', (req, res) => {
-    // This looks for 'super-admin.ejs' in your 'views' folder
-    res.render('super-admin'); 
+    // Check if user is logged in
+    if (!req.session.user) return res.redirect('/login');
+    
+    // Pass the user object so the dashboard/header can see the email
+    res.render('super-admin', { user: req.session.user }); 
 });
 
 
