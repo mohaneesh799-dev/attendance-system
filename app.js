@@ -10,6 +10,9 @@ const csv = require('csv-parser');
 const upload = multer({ dest: 'uploads/' });
 const session = require('express-session'); 
 const ExcelJS = require('exceljs'); 
+const helmet = require('helmet');
+app.use(helmet());
+
 
 // --- ADD THIS CODE HERE ---
 const uploadDir = path.join(__dirname, 'uploads');
@@ -20,12 +23,25 @@ if (!fs.existsSync(uploadDir)) {
 
 const app = express();
 
-// 2. PASTE THIS CONFIGURATION HERE (Before your routes)
+const MongoStore = require('connect-mongo');
+
+// Session configuration for Production
 app.use(session({
-    secret: 'attendance_system_secret',
+    // Use the secret from environment variables or a fallback for local testing
+    secret: process.env.SESSION_SECRET || 'attendance_system_secret', 
     resave: false,
-    saveUninitialized: true,
-    cookie: { secure: false } 
+    saveUninitialized: false, 
+    store: MongoStore.create({
+        // THIS MUST MATCH YOUR RENDER KEY EXACTLY
+        mongoUrl: process.env.MONGO_URI, 
+        ttl: 14 * 24 * 60 * 60 // Sessions expire after 14 days
+    }),
+    cookie: { 
+        // Ensures cookies are only sent over HTTPS on Render
+        secure: process.env.NODE_ENV === 'production', 
+        httpOnly: true, // Prevents client-side scripts from reading the cookie
+        maxAge: 14 * 24 * 60 * 60 * 1000 // Cookie life matches session life
+    }
 }));
 
 // Your existing lines 13 and 14 follow
@@ -85,14 +101,16 @@ passport.deserializeUser(async (id, done) => {
 
 // Line 37 in app.js
 const userSchema = new mongoose.Schema({
-    email: { type: String, required: true, unique: true },
-    password: { type: String }, // Optional for pre-registered students until they sign up
-    role: { type: String, default: 'Student' },
-    section: { type: String, required: true }, // Added for multi-section
-    isApproved: { type: Boolean, default: false }, // Master must toggle this
-    isPreRegistered: { type: Boolean, default: false }, // True if added via CSV
-    name: String,
-    rollNo: String
+    name: { type: String, required: true },
+    // Update these two lines specifically:
+    email: { type: String, required: true, unique: true, index: true }, 
+    rollNo: { type: String, index: true }, 
+    
+    password: { type: String, required: true },
+    role: { type: String, default: 'Student' }, // Student, Master, SuperAdmin
+    section: { type: String, default: '' },
+    isApproved: { type: Boolean, default: false },
+    isPreRegistered: { type: Boolean, default: false }
 });
 
 const User = mongoose.model('User', userSchema);
@@ -140,14 +158,14 @@ app.set('view engine', 'ejs');
 app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }));
 
-// --- Nodemailer Setup ---
+const nodemailer = require('nodemailer');
+
+// 1. Configure Email Transporter
 const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true, // true for port 465, false for other ports
+    service: 'gmail',
     auth: {
-        user: 'mohaneesh799@gmail.com',
-        pass: 'nebwuplytzeecwcy' // NO SPACES HERE
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
     }
 });
 
@@ -304,6 +322,26 @@ app.get('/student', async (req, res) => {
 });
 
 
+
+app.get('/super-admin', async (req, res) => {
+    if (!req.session.user || req.session.user.role !== 'SuperAdmin') return res.redirect('/login');
+
+    try {
+        const allUsers = await User.find({}).sort({ section: 1, role: 1 });
+        const allSubjects = await Subject.find({});
+        
+        res.render('super-admin', { 
+            user: req.session.user, 
+            allUsers, 
+            allSubjects 
+        });
+    } catch (err) {
+        res.status(500).send("Error loading Super Admin dashboard");
+    }
+});
+
+
+
 app.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -350,15 +388,14 @@ if (userRole === 'master') {
 });
 
 
-app.get('/logout', (req, res, next) => {
-    req.logout((err) => {
-        if (err) { 
-            return next(err); 
+app.get('/logout', (req, res) => {
+    req.session.destroy((err) => {
+        if (err) {
+            console.log("Logout error:", err);
+            return res.redirect('/dashboard');
         }
-        req.session.destroy(() => {
-            res.clearCookie('connect.sid'); 
-            res.redirect('/'); 
-        });
+        res.clearCookie('connect.sid'); // Clears the browser cookie
+        res.redirect('/login');
     });
 });
 
@@ -804,6 +841,91 @@ if (user.role === 'Student') {
     } catch (err) {
         res.status(500).send("Error fetching history");
     }
+});
+
+
+app.post('/submit-super-admin-request', async (req, res) => {
+    // 1. Safety Check: Ensure a user is logged in
+    if (!req.session.user) return res.status(401).send("Please login first.");
+
+    // 2. Dynamic Variables from Session & Form
+    const requesterEmail = req.session.user.email; // Who is logged in
+    const requesterName = req.session.user.name;   // Their name
+    const myDeveloperEmail = process.env.DEVELOPER_EMAIL;
+    const secretKey = process.env.ADMIN_APPROVAL_SECRET;
+    const appUrl = "https://attendance-system-g6f8.onrender.com";
+
+    try {
+        const approvalLink = `${appUrl}/approve-super-admin?email=${requesterEmail}&secret=${secretKey}`;
+
+        const mailOptions = {
+            // "from" stays your auth email (Gmail requirement)
+            // but "replyTo" lets you hit 'Reply' to talk to the requester
+            from: `"System Alert" <${process.env.EMAIL_USER}>`, 
+            to: myDeveloperEmail,
+            replyTo: requesterEmail, 
+            subject: `🚨 Super Admin Request from ${requesterName}`,
+            html: `
+                <div style="font-family: Arial; border: 2px solid #007bff; padding: 20px; border-radius: 10px;">
+                    <h2 style="color: #007bff;">Access Elevation Request</h2>
+                    <p><strong>User:</strong> ${requesterName}</p>
+                    <p><strong>Email:</strong> ${requesterEmail}</p>
+                    <p>This user is requesting <b>Super Admin</b> privileges for the system.</p>
+                    <div style="margin-top: 25px;">
+                        <a href="${approvalLink}" 
+                           style="background: #28a745; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                           Confirm & Approve
+                        </a>
+                    </div>
+                </div>
+            `
+        };
+
+        await transporter.sendMail(mailOptions);
+        res.send("<script>alert('Your request has been sent to the Developer.'); window.location.href='/dashboard';</script>");
+    } catch (err) {
+        console.error("Email Error:", err);
+        res.status(500).send("System failed to send the request email.");
+    }
+});
+
+
+app.get('/approve-super-admin', async (req, res) => {
+    const { email, secret } = req.query;
+
+    // Security check
+    if (secret !== process.env.ADMIN_APPROVAL_SECRET) return res.status(403).send("Unauthorized.");
+
+    try {
+        const user = await User.findOneAndUpdate(
+            { email: email.toLowerCase().trim() },
+            { 
+                role: 'SuperAdmin', 
+                isApproved: true,
+                section: 'Global' // Super Admins handle all sections
+            },
+            { new: true }
+        );
+
+        if (user) {
+            res.send(`<h3>Success!</h3><p>${email} has been promoted to Super Admin.</p>`);
+        } else {
+            res.status(404).send("User not found. Ensure they have registered an account first.");
+        }
+    } catch (err) {
+        res.status(500).send("Database error.");
+    }
+});
+
+
+
+// Add this after all your routes
+app.use((err, req, res, next) => {
+    console.error(err.stack); // Log the error for you to see
+    res.status(500).render('error', { 
+        message: "Something went wrong! Our team has been notified.",
+        user: req.session.user || null 
+    });
 });
 
 
