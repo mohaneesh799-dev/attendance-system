@@ -11,7 +11,7 @@ const upload = multer({ dest: 'uploads/' });
 const session = require('express-session'); 
 const ExcelJS = require('exceljs'); 
 const helmet = require('helmet');
-app.use(helmet());
+
 
 
 // --- ADD THIS CODE HERE ---
@@ -22,6 +22,9 @@ if (!fs.existsSync(uploadDir)) {
 
 
 const app = express();
+
+app.use(helmet());
+
 
 const MongoStore = require('connect-mongo');
 
