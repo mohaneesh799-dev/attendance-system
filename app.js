@@ -29,22 +29,19 @@ app.use(helmet());
 
 
 
-// Session configuration for Production
+// --- UPDATED SESSION FOR VERSION 6.0.0 ---
 app.use(session({
-    // Use the secret from environment variables or a fallback for local testing
-    secret: process.env.SESSION_SECRET || 'attendance_system_secret', 
+    secret: process.env.SESSION_SECRET || 'attendance_system_secret',
     resave: false,
-    saveUninitialized: false, 
-    store: MongoStore.create({
-        // THIS MUST MATCH YOUR RENDER KEY EXACTLY
-        mongoUrl: process.env.MONGO_URI, 
-        ttl: 14 * 24 * 60 * 60 // Sessions expire after 14 days
+    saveUninitialized: false,
+    store: new MongoStore({ // Use "new MongoStore" instead of "MongoStore.create"
+        mongoUrl: process.env.MONGO_URI,
+        collectionName: 'sessions'
     }),
     cookie: { 
-        // Ensures cookies are only sent over HTTPS on Render
         secure: process.env.NODE_ENV === 'production', 
-        httpOnly: true, // Prevents client-side scripts from reading the cookie
-        maxAge: 14 * 24 * 60 * 60 * 1000 // Cookie life matches session life
+        httpOnly: true,
+        maxAge: 24 * 60 * 60 * 1000 
     }
 }));
 
