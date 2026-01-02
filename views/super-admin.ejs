@@ -36,20 +36,20 @@
     <div class="main-content">
         <header class="mb-5">
             <h2 class="fw-bold m-0">System Overview</h2>
-            <small class="text-muted">Admin: <%= user.email %></small>
+            <small class="text-muted">Admin: <%= (typeof user !== 'undefined') ? user.email : 'Not Logged In' %></small>
         </header>
 
         <div class="row g-4 mb-5">
             <div class="col-md-4">
                 <div class="card stat-card bg-primary text-white p-4">
                     <p class="mb-0 opacity-75">Total Users</p>
-                    <h3><%= (allUsers || []).length %></h3>
+                    <h3><%= (typeof allUsers !== 'undefined') ? allUsers.length : 0 %></h3>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="card stat-card bg-success text-white p-4">
                     <p class="mb-0 opacity-75">Active Subjects</p>
-                    <h3><%= (allSubjects || []).length %></h3>
+                    <h3><%= (typeof allSubjects !== 'undefined') ? allSubjects.length : 0 %></h3>
                 </div>
             </div>
         </div>
@@ -67,27 +67,29 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <% (allUsers || []).forEach(u => { %>
-                        <tr>
-                            <td>
-                                <strong><%= u.name %></strong><br>
-                                <small><%= u.email %></small>
-                            </td>
-                            <td><%= u.role %></td>
-                            <td>
-                                <% if(u.isApproved) { %>
-                                    <span class="badge bg-success">Approved</span>
-                                <% } else { %>
-                                    <span class="badge bg-danger">Pending</span>
-                                <% } %>
-                            </td>
-                            <td>
-                                <form action="/delete-user/<%= u._id %>" method="POST" style="display:inline;">
-                                    <button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
-                                </form>
-                            </td>
-                        </tr>
-                        <% }) %>
+                        <% if (typeof allUsers !== 'undefined' && allUsers.length > 0) { %>
+                            <% allUsers.forEach(u => { %>
+                            <tr>
+                                <td>
+                                    <strong><%= u.name %></strong><br>
+                                    <small><%= u.email %></small>
+                                </td>
+                                <td><%= u.role %></td>
+                                <td>
+                                    <span class="badge <%= u.isApproved ? 'bg-success' : 'bg-danger' %>">
+                                        <%= u.isApproved ? 'Approved' : 'Pending' %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <form action="/delete-user/<%= u._id %>" method="POST" style="display:inline;" onsubmit="return confirm('Delete user?')">
+                                        <button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
+                            <% }) %>
+                        <% } else { %>
+                            <tr><td colspan="4" class="text-center">No users found.</td></tr>
+                        <% } %>
                     </tbody>
                 </table>
             </div>

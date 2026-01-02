@@ -325,24 +325,24 @@ app.get('/student', async (req, res) => {
 
 app.get('/super-admin-dashboard', async (req, res) => {
     try {
+        // 1. Check Login
         if (!req.session.user) return res.redirect('/login');
 
-        // Fetch data from your database
-        const allUsers = await User.find({}); 
-        const allSubjects = await Subject.find({}); 
+        // 2. Fetch Data (Replace 'User' and 'Subject' with your actual Model names)
+        const allUsers = await mongoose.model('User').find({}); 
+        const allSubjects = await mongoose.model('Subject').find({}); 
 
-        // CRUCIAL: Point to 'super-admin' (the file you actually have)
+        // 3. Render the file you actually have
         res.render('super-admin', { 
             user: req.session.user, 
             allUsers: allUsers, 
             allSubjects: allSubjects 
         });
     } catch (err) {
-        console.error("Dashboard error:", err);
-        res.status(500).send("Internal Server Error");
+        console.error("Dashboard Error:", err);
+        res.status(500).send("Error loading admin data. Check your Model names in app.js.");
     }
 });
-
 
 
 app.post('/login', async (req, res) => {
