@@ -12,7 +12,7 @@ const mongoose = require('mongoose');
 const helmet = require('helmet');
 const nodemailer = require('nodemailer');
 const ExcelJS = require('exceljs'); 
-const User = require('./models/User'); 
+
 const Subject = require('./models/Subject');
 
 
@@ -851,12 +851,28 @@ if (user.role === 'Student') {
 
 
 
-app.get('/request-super-admin', (req, res) => {
-    // Check if user is logged in
-    if (!req.session.user) return res.redirect('/login');
-    
-    // Pass the user object so the dashboard/header can see the email
-    res.render('super-admin', { user: req.session.user }); 
+app.get('/request-super-admin', async (req, res) => {
+    try {
+        // 1. Safety Check: Is the user logged in?
+        if (!req.session.user) {
+            return res.redirect('/login');
+        }
+
+        // 2. Fetch data (Only if you want the dashboard view)
+        // Note: Use the 'User' that is already declared at line 119
+        const allUsers = await User.find({}); 
+        const allSubjects = await mongoose.model('Subject').find({}); 
+
+        // 3. Render the file shown in your views folder
+        res.render('super-admin', { 
+            user: req.session.user,
+            allUsers: allUsers,
+            allSubjects: allSubjects
+        });
+    } catch (error) {
+        console.error("Route Error:", error);
+        res.status(500).send("Internal Server Error: " + error.message);
+    }
 });
 
 
