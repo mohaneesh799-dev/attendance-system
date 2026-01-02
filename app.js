@@ -323,20 +323,24 @@ app.get('/student', async (req, res) => {
 
 
 
-app.get('/super-admin', async (req, res) => {
-    if (!req.session.user || req.session.user.role !== 'SuperAdmin') return res.redirect('/login');
-
+app.get('/super-admin-dashboard', async (req, res) => {
     try {
-        const allUsers = await User.find({}).sort({ section: 1, role: 1 });
-        const allSubjects = await Subject.find({});
-        
-        res.render('super-admin', { 
+        // Safety Check: Ensure only logged-in users access this
+        if (!req.session.user) return res.redirect('/login');
+
+        // Fetch data from MongoDB
+        const allUsers = await User.find({}); 
+        const allSubjects = await Subject.find({}); 
+
+        // Render the page with ALL required variables
+        res.render('super-admin-dashboard', { 
             user: req.session.user, 
-            allUsers, 
-            allSubjects 
+            allUsers: allUsers, 
+            allSubjects: allSubjects 
         });
     } catch (err) {
-        res.status(500).send("Error loading Super Admin dashboard");
+        console.error("Dashboard Error:", err);
+        res.status(500).send("Internal Server Error: Data could not be fetched.");
     }
 });
 
