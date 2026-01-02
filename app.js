@@ -7,7 +7,7 @@ const multer = require('multer');
 const csv = require('csv-parser');
 const upload = multer({ dest: 'uploads/' });
 const session = require('express-session'); 
-const MongoStore = require('connect-mongo');
+const MongoStore = require('connect-mongo').default;
 const mongoose = require('mongoose');
 const helmet = require('helmet');
 const nodemailer = require('nodemailer');
@@ -34,9 +34,9 @@ app.use(session({
     secret: process.env.SESSION_SECRET || 'attendance_system_secret',
     resave: false,
     saveUninitialized: false,
-    store: new MongoStore({ // Use "new MongoStore" instead of "MongoStore.create"
-        mongoUrl: process.env.MONGO_URI,
-        collectionName: 'sessions'
+    store: MongoStore.create({
+         mongoUrl: process.env.MONGO_URI,
+         collectionName: 'sessions'
     }),
     cookie: { 
         secure: process.env.NODE_ENV === 'production', 
