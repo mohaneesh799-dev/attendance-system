@@ -844,6 +844,15 @@ if (user.role === 'Student') {
 });
 
 
+
+// Add this to show the page
+app.get('/request-super-admin', (req, res) => {
+    // This looks for 'super-admin.ejs' in your 'views' folder
+    res.render('super-admin'); 
+});
+
+
+
 app.post('/submit-super-admin-request', async (req, res) => {
     // 1. Safety Check: Ensure a user is logged in
     if (!req.session.user) return res.status(401).send("Please login first.");
