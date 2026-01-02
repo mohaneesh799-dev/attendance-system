@@ -158,7 +158,6 @@ app.set('view engine', 'ejs');
 app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }));
 
-const nodemailer = require('nodemailer');
 
 // 1. Configure Email Transporter
 const transporter = nodemailer.createTransport({
