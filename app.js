@@ -12,6 +12,8 @@ const mongoose = require('mongoose');
 const helmet = require('helmet');
 const nodemailer = require('nodemailer');
 const ExcelJS = require('exceljs'); 
+const User = require('./models/User'); 
+const Subject = require('./models/Subject');
 
 
 
@@ -325,14 +327,13 @@ app.get('/student', async (req, res) => {
 
 app.get('/super-admin-dashboard', async (req, res) => {
     try {
-        // 1. Check Login
         if (!req.session.user) return res.redirect('/login');
 
-        // 2. Fetch Data (Replace 'User' and 'Subject' with your actual Model names)
-        const allUsers = await mongoose.model('User').find({}); 
-        const allSubjects = await mongoose.model('Subject').find({}); 
+        // Fetch the actual data now that 'User' is defined
+        const allUsers = await User.find({}); 
+        const allSubjects = await Subject.find({}); 
 
-        // 3. Render the file you actually have
+        // Send the data to your 'super-admin.ejs' file
         res.render('super-admin', { 
             user: req.session.user, 
             allUsers: allUsers, 
@@ -340,9 +341,10 @@ app.get('/super-admin-dashboard', async (req, res) => {
         });
     } catch (err) {
         console.error("Dashboard Error:", err);
-        res.status(500).send("Error loading admin data. Check your Model names in app.js.");
+        res.status(500).send("Database Error: Make sure User and Subject models are imported.");
     }
 });
+
 
 
 app.post('/login', async (req, res) => {
