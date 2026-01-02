@@ -325,22 +325,21 @@ app.get('/student', async (req, res) => {
 
 app.get('/super-admin-dashboard', async (req, res) => {
     try {
-        // Safety Check: Ensure only logged-in users access this
         if (!req.session.user) return res.redirect('/login');
 
-        // Fetch data from MongoDB
+        // Fetch data from your database
         const allUsers = await User.find({}); 
         const allSubjects = await Subject.find({}); 
 
-        // Render the page with ALL required variables
-        res.render('super-admin-dashboard', { 
+        // CRUCIAL: Point to 'super-admin' (the file you actually have)
+        res.render('super-admin', { 
             user: req.session.user, 
             allUsers: allUsers, 
             allSubjects: allSubjects 
         });
     } catch (err) {
-        console.error("Dashboard Error:", err);
-        res.status(500).send("Internal Server Error: Data could not be fetched.");
+        console.error("Dashboard error:", err);
+        res.status(500).send("Internal Server Error");
     }
 });
 

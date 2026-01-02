@@ -8,16 +8,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root { --sidebar-width: 260px; }
-        body { background-color: #f4f7f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f4f7f6; font-family: 'Segoe UI', sans-serif; }
         .sidebar { width: var(--sidebar-width); height: 100vh; position: fixed; background: #2c3e50; color: white; padding: 20px; }
         .main-content { margin-left: var(--sidebar-width); padding: 30px; }
         .nav-link { color: rgba(255,255,255,0.7); border-radius: 5px; margin: 5px 0; }
-        .nav-link:hover, .nav-link.active { background: #34495e; color: white; }
-        .stat-card { border: none; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.3s; }
-        .stat-card:hover { transform: translateY(-5px); }
+        .nav-link:hover, .nav-link.active { background: #34495e; color: white !important; }
+        .stat-card { border: none; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         .table-container { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
-        .badge-master { background-color: #e67e22; }
-        .badge-student { background-color: #3498db; }
     </style>
 </head>
 <body>
@@ -26,89 +23,68 @@
         <h4 class="text-center mb-4"><i class="fas fa-user-shield me-2 text-warning"></i> Control Panel</h4>
         <hr>
         <ul class="nav nav-pills flex-column mb-auto">
-            <li class="nav-item"><a href="/super-admin-dashboard" class="nav-link active"><i class="fas fa-chart-line me-2"></i> Overview</a></li>
-            <li><a href="/attendance-history" class="nav-link text-white"><i class="fas fa-history me-2"></i> History</a></li>
+            <li class="nav-item"><a href="/super-admin-dashboard" class="nav-link active">Overview</a></li>
+            <li><a href="/attendance-history" class="nav-link text-white">Global History</a></li>
         </ul>
         <hr>
-        <a href="/logout" class="nav-link text-danger border border-danger text-center"><i class="fas fa-sign-out-alt me-2"></i> Logout</a>
+        <form action="/submit-super-admin-request" method="POST" class="px-2 mb-3">
+             <button type="submit" class="btn btn-sm btn-outline-warning w-100">Request elevation</button>
+        </form>
+        <a href="/logout" class="nav-link text-danger border border-danger text-center">Logout</a>
     </div>
 
     <div class="main-content">
-        <header class="d-flex justify-content-between align-items-center mb-5">
-            <div>
-                <h2 class="fw-bold m-0">System Overview</h2>
-                <small class="text-muted">Logged in as: <%= user ? user.email : 'Admin' %></small>
-            </div>
+        <header class="mb-5">
+            <h2 class="fw-bold m-0">System Overview</h2>
+            <small class="text-muted">Admin: <%= user.email %></small>
         </header>
 
         <div class="row g-4 mb-5">
             <div class="col-md-4">
                 <div class="card stat-card bg-primary text-white p-4">
-                    <div class="d-flex justify-content-between">
-                        <div><p class="mb-0 opacity-75">Total Users</p><h3><%= (allUsers || []).length %></h3></div>
-                        <i class="fas fa-users fa-3x opacity-25"></i>
-                    </div>
+                    <p class="mb-0 opacity-75">Total Users</p>
+                    <h3><%= (allUsers || []).length %></h3>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="card stat-card bg-success text-white p-4">
-                    <div class="d-flex justify-content-between">
-                        <div><p class="mb-0 opacity-75">Active Subjects</p><h3><%= (allSubjects || []).length %></h3></div>
-                        <i class="fas fa-book-open fa-3x opacity-25"></i>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card stat-card bg-info text-white p-4">
-                    <div class="d-flex justify-content-between">
-                        <div><p class="mb-0 opacity-75">Active Sections</p>
-                        <h3><%= [...new Set((allUsers || []).map(u => u.section).filter(s => s))].length %></h3></div>
-                        <i class="fas fa-layer-group fa-3x opacity-25"></i>
-                    </div>
+                    <p class="mb-0 opacity-75">Active Subjects</p>
+                    <h3><%= (allSubjects || []).length %></h3>
                 </div>
             </div>
         </div>
 
         <div class="table-container">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h4 class="fw-bold">User Directory</h4>
-                <input type="text" id="userSearch" class="form-control w-25" placeholder="Search users...">
-            </div>
-            
+            <h4 class="fw-bold mb-4">User Directory</h4>
             <div class="table-responsive">
                 <table class="table table-hover align-middle">
                     <thead class="table-light">
                         <tr>
-                            <th>User Profile</th>
+                            <th>User</th>
                             <th>Role</th>
-                            <th>Section</th>
                             <th>Status</th>
-                            <th class="text-center">Actions</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody id="userTableBody">
+                    <tbody>
                         <% (allUsers || []).forEach(u => { %>
                         <tr>
                             <td>
-                                <div class="fw-bold"><%= u.name %></div>
-                                <small class="text-muted"><%= u.email %></small>
+                                <strong><%= u.name %></strong><br>
+                                <small><%= u.email %></small>
                             </td>
-                            <td><span class="badge <%= u.role === 'Master' ? 'badge-master' : 'badge-student' %>"><%= u.role %></span></td>
-                            <td><%= u.section || 'N/A' %></td>
+                            <td><%= u.role %></td>
                             <td>
                                 <% if(u.isApproved) { %>
-                                    <span class="text-success"><i class="fas fa-check-circle"></i> Approved</span>
+                                    <span class="badge bg-success">Approved</span>
                                 <% } else { %>
-                                    <span class="text-danger"><i class="fas fa-clock"></i> Pending</span>
+                                    <span class="badge bg-danger">Pending</span>
                                 <% } %>
                             </td>
-                            <td class="text-center">
-                                <div class="d-flex justify-content-center gap-2">
-                                    <a href="/edit-user/<%= u._id %>" class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i></a>
-                                    <form action="/delete-user/<%= u._id %>" method="POST" onsubmit="return confirm('Delete this user?')">
-                                        <button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
-                                    </form>
-                                </div>
+                            <td>
+                                <form action="/delete-user/<%= u._id %>" method="POST" style="display:inline;">
+                                    <button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
+                                </form>
                             </td>
                         </tr>
                         <% }) %>
@@ -117,15 +93,5 @@
             </div>
         </div>
     </div>
-
-    <script>
-        document.getElementById('userSearch').addEventListener('keyup', function() {
-            const filter = this.value.toLowerCase();
-            const rows = document.querySelectorAll('#userTableBody tr');
-            rows.forEach(row => {
-                row.style.display = row.innerText.toLowerCase().includes(filter) ? '' : 'none';
-            });
-        });
-    </script>
 </body>
 </html>
