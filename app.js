@@ -222,25 +222,35 @@ app.get('/auth/google/callback',
 
 
 app.get('/master', async (req, res) => {
-    if (!req.session.user || req.session.user.role !== 'Master') {
+    // 1. Better session check with logging to see what is failing
+    if (!req.session.user) {
+        console.log("No session found, redirecting to login");
         return res.redirect('/login');
     }
-    try {
-        // Replace your existing lines with these:
-        const users = await User.find({ section: req.session.user.section }); //
-        const subjects = await Subject.find({ section: req.session.user.section }); //
 
-        res.render('master', { 
+    if (req.session.user.role !== 'Master') {
+        console.log(`Access denied for role: ${req.session.user.role}`);
+        return res.redirect('/login');
+    }
+
+    try {
+        // 2. Add fallback for section to prevent crashes if section is undefined
+        const userSection = req.session.user.section || "";
+
+        // 3. Fetch data specifically for this Master's section
+        const users = await User.find({ section: userSection });
+        const subjects = await Subject.find({ section: userSection });
+
+        res.render('master', {
             user: req.session.user,
-            allUsers: users,          // MUST match the loop in master.ejs
-            masterSubjects: subjects  // MUST match the loop in master.ejs
+            allUsers: users,        // Matches the loop in master.ejs
+            masterSubjects: subjects // Matches the loop in master.ejs
         });
     } catch (err) {
         console.error("Master Route Error:", err);
         res.status(500).send("Internal Server Error: Missing data for Master Dashboard.");
     }
 });
-
 
 
 app.get('/leader', async (req, res) => {
