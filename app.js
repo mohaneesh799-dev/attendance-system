@@ -467,7 +467,7 @@ app.post('/register', async (req, res) => {
         console.log("✅ User saved to DB");
 
         // 3. Setup the approval link (This uses your Ngrok URL or Render URL)
-        const approvalLink = `https://unwashable-giana-better.ngrok-free.dev/approve-user/${newUser._id}`;
+        const approvalLink = `${req.protocol}://${req.get('host')}/approve-user/${newUser._id}`;
 
         // 4. Send the notification email
         const mailOptions = {
@@ -484,7 +484,7 @@ app.post('/register', async (req, res) => {
         console.log("📧 Approval email sent");
 
         // 5. Tell the user it worked
-        res.send("Registration successful! Please wait for admin approval.");
+        res.redirect('/login?message=Registration%20successful!%20Please%20wait%20for%20approval.');
 
     } catch (err) {
         console.error("❌ Registration Error:", err);
