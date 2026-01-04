@@ -246,26 +246,46 @@ app.get('/super-admin-dashboard', async (req, res) => {
     } catch (err) { res.status(500).send("Database Error."); }
 });
 
-// --- POST ROUTES ---
+// --- UPDATED LOGIN ROUTE FOR CLARITY ---
 app.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
         const user = await User.findOne({ email: email.toLowerCase().trim() });
-        if (!user) return res.send("<script>alert('User not found.'); window.location.href='/login';</script>");
-        if (user.role !== 'Master' && !user.isApproved) {
-            return res.send("<script>alert('Approval Pending.'); window.location.href='/login';</script>");
+
+        if (!user) {
+            return res.send("<script>alert('User not found.'); window.location.href='/login';</script>");
         }
-        if (user.password !== password) return res.send("<script>alert('Invalid Password'); window.location.href='/login';</script>");
 
-        req.session.user = { id: user._id, email: user.email, role: user.role, name: user.name, section: user.section, rollNo: user.rollNo };
-        const role = user.role.toLowerCase();
-        if (role === 'master') res.redirect('/master');
-        else if (role === 'lecturer') res.redirect('/lecturer');
-        else if (role === 'leader') res.redirect('/leader');
-        else res.redirect('/student');
-    } catch (err) { res.status(500).send("Login error"); }
+        // Check isApproved field based on your MongoDB screenshot
+        if (user.isApproved === false) {
+            return res.send("<script>alert('Your account is pending approval by the owner.'); window.location.href='/login';</script>");
+        }
+
+        if (user.password !== password) {
+            return res.send("<script>alert('Invalid Password'); window.location.href='/login';</script>");
+        }
+
+        // Create session
+        req.session.user = { 
+            id: user._id, 
+            email: user.email, 
+            role: user.role, 
+            section: user.section, 
+            rollNo: user.rollNo 
+        };
+
+        // Redirect based on role
+        if (user.role === 'SuperAdmin') return res.redirect('/super-admin-dashboard');
+        if (user.role === 'Master') return res.redirect('/master');
+        if (user.role === 'Lecturer') return res.redirect('/lecturer');
+        if (user.role === 'Leader') return res.redirect('/leader');
+        res.redirect('/student');
+
+    } catch (err) {
+        console.error("Login Error:", err);
+        res.status(500).send("Login error occurred.");
+    }
 });
-
 app.post('/register', async (req, res) => {
     const { email, password, role } = req.body;
     try {
