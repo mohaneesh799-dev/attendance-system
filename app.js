@@ -176,14 +176,19 @@ app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'em
 app.get('/auth/google/callback', 
     passport.authenticate('google', { failureRedirect: '/login' }),
     (req, res) => {
+        // Ensure the user object is assigned to the session
         req.session.user = req.user; 
+        
         req.session.save((err) => {
             if (err) return res.redirect('/login');
-            const role = req.user.role;
-            if (role === 'Master') res.redirect('/master');
-            else if (role === 'Lecturer') res.redirect('/lecturer');
-            else if (role === 'Leader') res.redirect('/leader');
-            else res.redirect('/student');
+            
+            // Case-insensitive role check
+            const role = req.user.role.toLowerCase();
+            if (role === 'superadmin') return res.redirect('/super-admin-dashboard');
+            if (role === 'master') return res.redirect('/master');
+            if (role === 'lecturer') return res.redirect('/lecturer');
+            if (role === 'leader') return res.redirect('/leader');
+            res.redirect('/student');
         });
     }
 );
