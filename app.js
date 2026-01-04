@@ -195,10 +195,21 @@ app.use(express.urlencoded({ extended: true }));
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
+        user: process.env.EMAIL_USER, // Should be mohaneesh799@gmail.com
+        pass: process.env.EMAIL_PASS  // Must be a 16-character App Password
     }
 });
+
+// Verify connection configuration on startup
+transporter.verify((error, success) => {
+    if (error) {
+        console.log("❌ Mail Server Error: " + error.message);
+    } else {
+        console.log("✅ Mail Server is ready to send approval links");
+    }
+});
+
+
 
 // --- GET ROUTES (To show pages) ---
 app.get('/', (req, res) => {
@@ -945,7 +956,7 @@ app.post('/submit-super-admin-request', async (req, res) => {
     } catch (err) {
         res.status(500).send("Mail error: " + err.message);
     }
-});S
+});
 
 
 app.get('/approve-super-admin', async (req, res) => {
