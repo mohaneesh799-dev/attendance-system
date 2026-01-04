@@ -76,13 +76,13 @@ app.use(express.static('public'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// --- UPDATED SESSION FOR VERSION 6.0.0 ---
+// --- SESSION CONFIGURATION ---
 app.use(session({
     secret: process.env.SESSION_SECRET || 'attendance_system_secret',
     resave: false,
     saveUninitialized: false,
-    store: new MongoStore({ // Change 'MongoStore.create({' to 'new MongoStore({'
-        mongoUrl: process.env.MONGO_URI,
+    store: MongoStore.create({
+        mongoUrl: process.env.MONGO_URI, // Ensure this matches your Render Env Var name
         collectionName: 'sessions'
     }),
     cookie: { 
