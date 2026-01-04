@@ -9,21 +9,17 @@
     <style>
         body { background-color: #f4f7f6; height: 100vh; display: flex; align-items: center; justify-content: center; font-family: 'Segoe UI', sans-serif; }
         .login-card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); width: 100%; max-width: 450px; text-align: center; }
-        .google-btn { display: flex; align-items: center; justify-content: center; background-color: #4285F4; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; transition: background 0.3s; margin-bottom: 15px; border: none; width: 100%; }
-        .google-btn:hover { background-color: #357ae8; color: white; }
-        .admin-btn { display: flex; align-items: center; justify-content: center; background-color: #212529; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; transition: opacity 0.3s; width: 100%; border: none; }
-        .admin-btn:hover { opacity: 0.9; color: #ffc107; }
+        .google-btn { display: flex; align-items: center; justify-content: center; background-color: #4285F4; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; margin-bottom: 15px; width: 100%; }
+        .admin-btn { display: flex; align-items: center; justify-content: center; background-color: #212529; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; width: 100%; }
+        .admin-btn:hover { color: #ffc107; }
     </style>
 </head>
 <body>
-
     <div class="login-card">
         <h2 class="fw-bold mb-3">Attendance Portal</h2>
         
         <% if (typeof error !== 'undefined' && error) { %>
-            <div class="alert alert-danger small py-2 mb-4">
-                <i class="fas fa-exclamation-circle me-1"></i> <%= error %>
-            </div>
+            <div class="alert alert-danger small py-2 mb-4"><%= error %></div>
         <% } %>
 
         <p class="text-muted mb-4">Select your login role below:</p>
@@ -36,15 +32,7 @@
             <i class="fas fa-user-shield me-2 text-warning"></i> Super Admin Login
         </a>
 
-        <p class="small text-secondary mt-4">Only official RKU emails are permitted.</p>
-
-        <hr class="my-4">
-
-        <div class="login-footer">
-            <p class="mb-1 text-muted small">Need specialized access?</p>
-            <a href="/register" class="text-primary fw-bold text-decoration-none">Request Super Admin Role</a>
-        </div>
+        <p class="small text-secondary mt-4 mb-0">Only official RKU emails are permitted.</p>
     </div>
-
 </body>
 </html>

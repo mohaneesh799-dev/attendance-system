@@ -383,28 +383,29 @@ app.get('/super-admin-dashboard', async (req, res) => {
     // 1. Get user from either Passport (req.user) or custom session
     const user = req.user || req.session.user;
 
-    // 2. Security Check
+    // 2. Strict Security Check: Logged in + SuperAdmin Role + Approved
+    // Note: Use 'approved' to match your schema
     if (!user || user.role !== 'SuperAdmin' || user.approved === false) {
+        console.log("Unauthorized SuperAdmin access attempt by: " + (user ? user.email : "Unknown"));
         return res.redirect('/login?error=Access Denied: Pending Developer Approval');
     }
 
     try {
-        // 3. Fetch all data for the global overview
+        // 3. Fetch ALL data since this is the global dashboard
         const allUsers = await User.find({});
         const allSubjects = await Subject.find({});
 
-        // 4. Render with all required variables
+        // 4. Render the dashboard with full system data
         res.render('super-admin', {
             user: user,
             allUsers: allUsers,
             allSubjects: allSubjects
         });
     } catch (err) {
-        console.error("Dashboard Error:", err);
-        res.status(500).send("Database Error.");
+        console.error("SuperAdmin Dashboard Error:", err);
+        res.status(500).send("Database Error: Could not load administrative data.");
     }
 });
-
 
 
 app.post('/login', async (req, res) => {
