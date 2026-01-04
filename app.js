@@ -470,68 +470,41 @@ app.post('/update-settings', async (req, res) => {
 
 
 app.post('/register', async (req, res) => {
-    // 1. Capture email, password, and role from the form
     const { email, password, role } = req.body;
-
     try {
-        // 2. Hash the password for security
         const hashedPassword = await bcrypt.hash(password, 10);
-
-        // 3. Create the new user
-        // Note: Name and rollNo are empty strings to satisfy schema
         const newUser = new User({
             email,
             password: hashedPassword,
-            role, // This will be 'SuperAdmin' if you updated your register.ejs
+            role, 
             isApproved: false,
-            name: "", 
-            rollNo: ""
+            name: "", // Initialized to prevent validation errors
+            rollNo: "" 
         });
 
-        // 4. Save to MongoDB
         await newUser.save();
-        console.log("✅ User saved to DB: " + email);
+        console.log("✅ User saved to DB");
 
-        // 5. Generate the approval link
-        const approvalLink = `${req.protocol}://${req.get('host')}/approve-user/${newUser._id}`;
-
-        // 6. Send the notification email
-        // We put this in a separate try-catch so an email timeout doesn't break the app
+        // Use a separate try-catch so email failure doesn't crash the registration
         try {
+            const approvalLink = `${req.protocol}://${req.get('host')}/approve-user/${newUser._id}`;
             const mailOptions = {
                 from: 'mohaneesh799@gmail.com',
-                to: 'mohaneesh799@gmail.com', // Notification goes to you
+                to: 'mohaneesh799@gmail.com',
                 subject: 'New User Registration Request',
-                html: `
-                    <h3>New Registration</h3>
-                    <p><strong>Email:</strong> ${email}</p>
-                    <p><strong>Role Requested:</strong> ${role}</p>
-                    <p>Click the link below to approve this account:</p>
-                    <a href="${approvalLink}" style="padding:10px; background:blue; color:white; text-decoration:none;">Approve User</a>
-                `
+                html: `<p>New User: ${email}</p><p>Role: ${role}</p><a href="${approvalLink}">Approve</a>`
             };
             await transporter.sendMail(mailOptions);
-            console.log("📧 Approval email sent to admin");
         } catch (mailErr) {
-            console.error("⚠️ User saved, but email failed to send:", mailErr.message);
-            // We do NOT throw this error, so the user still gets redirected below
+            console.error("⚠️ Email timeout, but user was saved successfully.");
         }
 
-        // 7. Success Redirect
-        res.redirect('/login?message=Registration successful! Please wait for approval.');
-
+        res.redirect('/login?message=Registration successful! Waiting for approval.');
     } catch (err) {
-        console.error("❌ Registration Database Error:", err);
-        
-        // Handle the duplicate email error specifically
-        if (err.code === 11000) {
-            return res.status(400).send("This email is already registered. Please go back and login.");
-        }
-        
-        res.status(500).send("Registration failed. Please try again later.");
+        if (err.code === 11000) return res.status(400).send("Email already exists.");
+        res.status(500).send("Registration error.");
     }
 });
-
 
 
 
