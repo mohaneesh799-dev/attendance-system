@@ -266,8 +266,8 @@ app.get('/auth/google/callback',
       }
 
       const user = req.session.user;
-      if (user.role === 'Master') res.redirect('/master');
-      else if (user.role === 'Lecturer') res.redirect('/lecturer');
+      if (role === 'superadmin')res.redirect('/super-admin-dashboard');
+      else if (role === 'master')res.redirect('/master');
       else if (user.role === 'Leader') res.redirect('/leader');
       else res.redirect('/student');
     });
@@ -381,20 +381,26 @@ app.get('/student', async (req, res) => {
 
 
 app.get('/super-admin-dashboard', async (req, res) => {
-    const user = req.user || req.session.user;
+    // 1. Get the user from Passport (req.user) or fallback to manual session
+    const user = req.user || req.session.user;
 
-    // Changed 'approved' to 'isApproved' to match your DB
-    if (!user || user.role !== 'SuperAdmin' || user.isApproved === false) { 
-        return res.redirect('/login?error=Access Denied: Pending Approval');
-    }
+    // 2. Debugging: This will show up in your Render Logs
+    console.log("Current User in Session:", user ? user.email : "No User Found");
 
-    try {
-        const allUsers = await User.find({});
-        const allSubjects = await Subject.find({});
-        res.render('super-admin', { user, allUsers, allSubjects });
-    } catch (err) {
-        res.status(500).send("Database Error.");
-    }
+    // 3. Updated check to handle potential undefined fields
+    if (!user || user.role !== 'SuperAdmin' || user.isApproved !== true) {
+        console.log("Access Denied: Redirecting to login...");
+        return res.redirect('/login?error=Access Denied: Pending Approval');
+    }
+
+    try {
+        const allUsers = await User.find({});
+        const allSubjects = await Subject.find({});
+        res.render('super-admin', { user, allUsers, allSubjects });
+    } catch (err) {
+        console.error("Dashboard DB Error:", err);
+        res.status(500).send("Database Error.");
+    }
 });
 
 
