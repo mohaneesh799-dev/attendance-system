@@ -1,4 +1,3 @@
-const fs = require('fs'); 
 const PDFDocument = require('pdfkit');
 const express = require('express');
 const path = require('path');
@@ -6,7 +5,7 @@ const bcrypt = require('bcrypt');
 const multer = require('multer');
 const csv = require('csv-parser');
 const session = require('express-session'); 
-const MongoStore = require('connect-mongo').default;
+const MongoStore = require('connect-mongo').default; // Fixed for v6.0.0
 const mongoose = require('mongoose');
 const helmet = require('helmet');
 const nodemailer = require('nodemailer');
@@ -15,7 +14,7 @@ const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 require('dotenv').config();
 
-const app = express();
+const app = express();;
 
 // --- DIRECTORY SETUP ---
 const uploadDir = path.join(__dirname, 'uploads');
@@ -24,24 +23,24 @@ if (!fs.existsSync(uploadDir)) {
 }
 
 // --- DATABASE CONNECTION ---
-const mongoURI = "mongodb+srv://mohaneesh799:Mohan0354@cluster0.0jkiiez.mongodb.net/attendanceDB"; 
+const mongoURI = process.env.MONGO_URI || "mongodb+srv://mohaneesh799:Mohan0354@cluster0.0jkiiez.mongodb.net/attendanceDB"; 
 mongoose.connect(mongoURI)
     .then(() => console.log('✅ Connected to MongoDB'))
     .catch(err => console.error('❌ Connection error:', err));
 
-// --- SCHEMAS & MODELS ---
+// --- SCHEMAS --- (Keep your existing schemas here)
 const userSchema = new mongoose.Schema({
-    name: { type: String, required: false, default: '' }, 
-    email: { type: String, required: true, unique: true, index: true },
-    rollNo: { type: String, index: true, default: '' },
-    password: { type: String, required: false }, 
+    name: { type: String, default: '' }, 
+    email: { type: String, required: true, unique: true },
+    rollNo: { type: String, default: '' },
+    password: { type: String }, 
     role: { type: String, default: 'Student' }, 
     section: { type: String, default: '' },
-    isApproved: { type: Boolean, default: false },
-    isPreRegistered: { type: Boolean, default: false },
+    isApproved: { type: Boolean, default: false }, // Matches your DB field
     theme: { type: String, default: '#007bff' }
 });
 const User = mongoose.model('User', userSchema);
+
 
 const attendanceSchema = new mongoose.Schema({
     date: String,
@@ -70,33 +69,34 @@ const subjectSchema = new mongoose.Schema({
 const Subject = mongoose.model('Subject', subjectSchema);
 
 // --- MIDDLEWARE ---
-app.use(helmet());
+app.use(helmet({ contentSecurityPolicy: false })); // Helmet can sometimes block redirects
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// --- SESSION CONFIGURATION ---
+
+// --- SESSION CONFIGURATION (The fix for redirects) ---
+app.set('trust proxy', 1); // Required for Render/Heroku
 app.use(session({
-    secret: process.env.SESSION_SECRET || 'attendance_system_secret',
+    secret: process.env.SESSION_SECRET || 'fallback_secret_for_dev',
     resave: false,
     saveUninitialized: false,
     store: MongoStore.create({
-        mongoUrl: process.env.MONGO_URI, // Ensure this matches your Render Env Var name
+        mongoUrl: mongoURI,
         collectionName: 'sessions'
     }),
     cookie: { 
-        secure: process.env.NODE_ENV === 'production', 
+        secure: true, // Set to true because Render uses HTTPS
         httpOnly: true, 
-        maxAge: 24 * 60 * 60 * 1000 
+        maxAge: 24 * 60 * 60 * 1000,
+        sameSite: 'lax' // Helps with Google Auth redirects
     }
 }));
 
-
-
-
 app.use(passport.initialize());
 app.use(passport.session());
+
 
 // --- PASSPORT SERIALIZATION (The Bridge) ---
 passport.serializeUser((user, done) => {
@@ -166,32 +166,39 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-// --- GET ROUTES ---
+
+
+// --- ROUTES ---
 app.get('/', (req, res) => res.render('login'));
 app.get('/login', (req, res) => res.render('login'));
-app.get('/register', (req, res) => res.render('register'));
 
-app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'], prompt: 'select_account' }));
-
-app.get('/auth/google/callback', 
-    passport.authenticate('google', { failureRedirect: '/login' }),
-    (req, res) => {
-        // Ensure the user object is assigned to the session
-        req.session.user = req.user; 
+app.post('/login', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        const user = await User.findOne({ email: email.toLowerCase().trim() });
         
+        if (!user) return res.send("<script>alert('User not found'); window.location='/login';</script>");
+        
+        // Critical Check
+        if (user.isApproved === false) {
+            return res.send("<script>alert('Approval Pending'); window.location='/login';</script>");
+        }
+
+        if (user.password !== password) return res.send("<script>alert('Wrong password'); window.location='/login';</script>");
+
+        req.session.user = user; // Manual session assignment
         req.session.save((err) => {
             if (err) return res.redirect('/login');
-            
-            // Case-insensitive role check
-            const role = req.user.role.toLowerCase();
+            const role = user.role.toLowerCase();
             if (role === 'superadmin') return res.redirect('/super-admin-dashboard');
             if (role === 'master') return res.redirect('/master');
-            if (role === 'lecturer') return res.redirect('/lecturer');
-            if (role === 'leader') return res.redirect('/leader');
             res.redirect('/student');
         });
-    }
-);
+    } catch (err) { res.status(500).send("Login error"); }
+});
+
+
+
 
 app.get('/master', async (req, res) => {
     const user = req.session.user || req.user;
@@ -489,5 +496,5 @@ app.use((err, req, res, next) => {
     res.status(500).render('error', { message: "Something went wrong!", user: req.session.user || null });
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Server: http://localhost:${PORT}`));
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
