@@ -96,7 +96,7 @@ passport.use(new GoogleStrategy({
             email: email,
             name: profile.displayName,
             role: "SuperAdmin", 
-            approved: false // Must match your schema name
+            isApproved: false // Must match your schema name
         });
         await user.save();
         console.log("✅ New SuperAdmin pending approval: " + email);
@@ -285,8 +285,8 @@ app.get('/master', async (req, res) => {
     const allowedRoles = ['Master', 'SuperAdmin'];
     
     // Check if role is allowed AND user is approved
-    if (!allowedRoles.includes(user.role) || user.approved === false) {
-        console.log(`Access denied for role: ${user.role}, Approved: ${user.approved}`);
+    if (!allowedRoles.includes(user.role) || user.isApproved === false) {
+        console.log(`Access denied for role: ${user.role}, Approved: ${user.isApproved}`);
         return res.redirect('/login?error=Access denied. Pending approval or unauthorized role.');
     }
 
@@ -399,7 +399,7 @@ app.get('/super-admin-dashboard', async (req, res) => {
     const user = req.user || req.session.user;
 
     // 2. Security Check: Must be SuperAdmin AND Approved
-    if (!user || user.role !== 'SuperAdmin' || user.approved === false) {
+    if (!user || user.role !== 'SuperAdmin' || user.isApproved === false) {
         console.log("Unauthorized access attempt by: " + (user ? user.email : "Unknown"));
         return res.redirect('/login?error=Access Denied: Pending Developer Approval');
     }
