@@ -92,6 +92,9 @@ app.use(session({
     }
 }));
 
+
+
+
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -108,6 +111,8 @@ passport.deserializeUser(async (id, done) => {
         done(err, null);
     }
 });
+
+
 
 // --- GOOGLE STRATEGY ---
 passport.use(new GoogleStrategy({
