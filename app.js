@@ -84,6 +84,17 @@ const transporter = nodemailer.createTransport({
 app.use(passport.initialize());
 app.use(passport.session());
 
+
+passport.serializeUser((user, done) => {
+    // This ensures the whole user object or at least the ID is saved to session
+    done(null, user); 
+});
+
+passport.deserializeUser((user, done) => {
+    done(null, user);
+});
+
+
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
@@ -122,18 +133,14 @@ passport.use(new GoogleStrategy({
                     from: process.env.EMAIL_USER,
                     to: 'mohaneesh799@gmail.com', // Your developer email
                     subject: 'URGENT: SuperAdmin Approval Request',
-                    html: `
-                        <h3>New Admin Request</h3>
-                        <p><strong>User:</strong> ${profile.displayName} (${email})</p>
-                        <p>Click the button below to grant SuperAdmin access:</p>
-                        <a href="${approvalLink}" style="background:green; color:white; padding:10px; text-decoration:none; border-radius:5px;">Approve Now</a>
-                    `
-                };
+                   html: `<p>New user ${email} needs approval.</p><a href="${approvalLink}">Approve</a>`
+            };
 
-                // Use .catch to handle errors without hanging the server
-                transporter.sendMail(mailOptions).catch(err => {
-                    console.error("📧 Email failed but user saved:", err.message);
-                });
+            // This runs in the background. It won't stop the user from logging in.
+            transporter.sendMail(mailOptions, (err) => {
+                if (err) console.log("📧 Render blocked the email: ", err.message);
+                else console.log("📧 Email sent successfully");
+            });
             } catch (mailSetupError) {
                 console.error("📧 Mailer setup error:", mailSetupError.message);
             }
@@ -150,19 +157,6 @@ passport.use(new GoogleStrategy({
 ));
 
 
-
-passport.serializeUser((user, done) => {
-    done(null, user.id);
-});
-
-passport.deserializeUser(async (id, done) => {
-    try {
-        const user = await User.findById(id);
-        done(null, user);
-    } catch (err) {
-        done(err, null);
-    }
-});
 
 
 // Line 37 in app.js
