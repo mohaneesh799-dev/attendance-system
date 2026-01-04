@@ -84,42 +84,45 @@ passport.use(new GoogleStrategy({
     }
 
     try {
-        let user = await User.findOne({ email: email });
+    let user = await User.findOne({ email: email });
 
-        if (!user) {
-            // 1. Create the new PENDING SuperAdmin
-            user = new User({
-                googleId: profile.id,
-                email: email,
-                name: profile.displayName,
-                role: "SuperAdmin", // Explicitly set as SuperAdmin
-                approved: false     // Set to false for manual approval
-            });
-            await user.save();
-            console.log("✅ New SuperAdmin pending approval: " + email);
+    if (!user) {
+        // 1. Create the new PENDING SuperAdmin
+        user = new User({
+            googleId: profile.id,
+            email: email,
+            name: profile.displayName,
+            role: "SuperAdmin", 
+            approved: false // Must match your schema name
+        });
+        await user.save();
+        console.log("✅ New SuperAdmin pending approval: " + email);
 
-            // 2. Setup and Send the Approval Email to yourself
-            const approvalLink = `https://attendance-system-g6f8.onrender.com/approve-user/${user._id}`;
-            const mailOptions = {
-                from: 'mohaneesh799@gmail.com',
-                to: 'mohaneesh799@gmail.com', // Your email
-                subject: 'URGENT: SuperAdmin Approval Request',
-                html: `
-                    <h3>New Admin Request</h3>
-                    <p><strong>User:</strong> ${profile.displayName} (${email})</p>
-                    <p>Click below to grant SuperAdmin access to this user:</p>
-                    <a href="${approvalLink}" style="background:green; color:white; padding:10px; text-decoration:none;">Approve Now</a>
-                `
-            };
+        // 2. Setup the CORRECT Approval Link
+        // This link matches the secret security check in your backend
+        const approvalLink = `https://attendance-system-g6f8.onrender.com/approve-super-admin?email=${email}&secret=${process.env.ADMIN_APPROVAL_SECRET}`;
 
-            // Use non-blocking mail send
-            transporter.sendMail(mailOptions).catch(err => console.error("📧 Mail error:", err));
-        }
-        
-        return done(null, user);
-    } catch (err) {
-        return done(err, null);
+        const mailOptions = {
+            from: 'mohaneesh799@gmail.com',
+            to: 'mohaneesh799@gmail.com', // Your developer email
+            subject: 'URGENT: SuperAdmin Approval Request',
+            html: `
+                <h3>New Admin Request</h3>
+                <p><strong>User:</strong> ${profile.displayName} (${email})</p>
+                <p>Click the button below to grant SuperAdmin access:</p>
+                <a href="${approvalLink}" style="background:green; color:white; padding:10px; text-decoration:none; border-radius:5px;">Approve Now</a>
+            `
+        };
+
+        // 3. Use non-blocking mail send to prevent timeouts
+        transporter.sendMail(mailOptions).catch(err => {
+            console.error("📧 Email failed but user saved:", err.message);
+        });
     }
+    return done(null, user); // Continue to login (security check will handle redirect)
+} catch (err) {
+    return done(err, null);
+}
 }));
 
 passport.serializeUser((user, done) => done(null, user.id));
@@ -260,33 +263,35 @@ app.get('/auth/google/callback',
 
 
 app.get('/master', async (req, res) => {
-    // 1. Check if the user is logged in
-    const user = req.session.user || req.user; // Support both session and passport
+    // 1. Get user from either Passport (req.user) or custom session
+    const user = req.user || req.session.user;
 
     if (!user) {
         console.log("No session found, redirecting to login");
         return res.redirect('/login');
     }
 
-    // 2. Allow 'Master' OR 'SuperAdmin' roles, but ONLY if approved
+    // 2. Security Check: Allow 'Master' OR 'SuperAdmin', but ONLY if approved
     const allowedRoles = ['Master', 'SuperAdmin'];
+    
+    // Check if role is allowed AND user is approved
     if (!allowedRoles.includes(user.role) || user.approved === false) {
         console.log(`Access denied for role: ${user.role}, Approved: ${user.approved}`);
-        return res.redirect('/login?error=Access denied. Pending approval.');
+        return res.redirect('/login?error=Access denied. Pending approval or unauthorized role.');
     }
 
     try {
-        // 3. Fallback for section to prevent crashes if undefined
+        // 3. Section fallback to prevent crashes if undefined
         const userSection = user.section || "";
 
-        // 4. Fetch data specifically for this section
+        // 4. Fetch data specifically for this user's section
         const users = await User.find({ section: userSection });
         const subjects = await Subject.find({ section: userSection });
 
         res.render('master', {
             user: user,
-            allUsers: users,        // Matches loop in master.ejs
-            masterSubjects: subjects // Matches loop in master.ejs
+            allUsers: users,           // Matches loop in master.ejs
+            masterSubjects: subjects   // Matches loop in master.ejs
         });
     } catch (err) {
         console.error("Master Route Error:", err);
@@ -380,30 +385,29 @@ app.get('/student', async (req, res) => {
 
 
 app.get('/super-admin-dashboard', async (req, res) => {
-    // 1. Get user from either Passport (req.user) or custom session
+    // 1. Get user from either Passport or custom session
     const user = req.user || req.session.user;
 
-    // 2. Strict Security Check: Logged in + SuperAdmin Role + Approved
-    // Note: Use 'approved' to match your schema
+    // 2. Security Check: Must be SuperAdmin AND Approved
     if (!user || user.role !== 'SuperAdmin' || user.approved === false) {
-        console.log("Unauthorized SuperAdmin access attempt by: " + (user ? user.email : "Unknown"));
+        console.log("Unauthorized access attempt by: " + (user ? user.email : "Unknown"));
         return res.redirect('/login?error=Access Denied: Pending Developer Approval');
     }
 
     try {
-        // 3. Fetch ALL data since this is the global dashboard
+        // 3. Fetch all administrative data
         const allUsers = await User.find({});
         const allSubjects = await Subject.find({});
 
-        // 4. Render the dashboard with full system data
+        // 4. Render with correct user object
         res.render('super-admin', {
             user: user,
             allUsers: allUsers,
             allSubjects: allSubjects
         });
     } catch (err) {
-        console.error("SuperAdmin Dashboard Error:", err);
-        res.status(500).send("Database Error: Could not load administrative data.");
+        console.error("Dashboard Error:", err);
+        res.status(500).send("Database Error.");
     }
 });
 
