@@ -97,6 +97,7 @@ passport.deserializeUser((user, done) => {
 });
 
 
+
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
@@ -104,12 +105,10 @@ passport.use(new GoogleStrategy({
   },
   async (accessToken, refreshToken, profile, done) => {
     const email = profile.emails[0].value;
-    if (!email.endsWith('@rku.ac.in')) {
-        return done(null, false, { message: 'Use official @rku.ac.in email' });
-    }
 
     try {
         let user = await User.findOne({ email: email });
+
         if (!user) {
             user = new User({
                 googleId: profile.id,
@@ -120,24 +119,24 @@ passport.use(new GoogleStrategy({
             });
             await user.save();
 
-            const approvalLink = `https://attendance-system-g6f8.onrender.com/approve-super-admin?email=${email}&secret=${process.env.ADMIN_APPROVAL_SECRET}`;
-
+            // DO NOT USE AWAIT HERE. This prevents the "Bad Request" timeout.
             const mailOptions = {
                 from: process.env.EMAIL_USER,
                 to: 'mohaneesh799@gmail.com',
-                subject: 'URGENT: SuperAdmin Approval Request',
-                html: `<h3>New Admin Request</h3><p>${email}</p><a href="${approvalLink}">Approve Now</a>`
+                subject: 'New Admin Request',
+                text: `Approve user: ${email}`
             };
 
-            // REMOVED 'await' here. This stops the white page.
             transporter.sendMail(mailOptions, (err) => {
-                if (err) console.log("📧 Mail Error (Expected on Render Free):", err.message);
-                else console.log("📧 Email sent!");
+                if (err) console.log("📧 Email blocked by Render Free Tier (Expected).");
             });
         }
-        // This ensures the user is logged in even if the email fails
+        
+        // IMMEDIATELY finish the login process
         return done(null, user); 
+
     } catch (err) {
+        console.error("Google Auth Error:", err);
         return done(err, null);
     }
 }));
@@ -956,15 +955,11 @@ app.get('/approve-super-admin', async (req, res) => {
 
 
 
-// Add this after all your routes
+// Add this at the very bottom of app.js
 app.use((err, req, res, next) => {
-    console.error(err.stack); // Log the error for you to see
-    res.status(500).render('error', { 
-        message: "Something went wrong! Our team has been notified.",
-        user: req.session.user || null 
-    });
+    console.error("🔥 Server Error:", err.stack);
+    res.status(500).send(`<h2>Internal Server Error</h2><p>${err.message}</p><a href="/login">Back to Login</a>`);
 });
-
 
 // --- Server Startup ---
 const PORT = process.env.PORT || 3000;
