@@ -71,29 +71,56 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 passport.use(new GoogleStrategy({
-    clientID: process.env.GOOGLE_CLIENT_ID, // DO NOT paste the actual ID here
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET, // DO NOT paste the secret here
-    callbackURL: "https://attendance-system-g6f8.onrender.com/auth/google/callback" 
+    clientID: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL: "https://attendance-system-g6f8.onrender.com/auth/google/callback" //
   },
   async (accessToken, refreshToken, profile, done) => {
     const email = profile.emails[0].value;
+
     // Force official university domain
     if (!email.endsWith('@rku.ac.in')) {
         return done(null, false, { message: 'Use official @rku.ac.in email' });
     }
-    let user = await User.findOne({ email: email });
-    if (!user) {
-        user = new User({ 
-            googleId: profile.id, 
-            email: email, 
-            name: profile.displayName,
-            approved: false // New users still need Master approval
-        });
-        await user.save();
+
+    try {
+        let user = await User.findOne({ email: email });
+
+        if (!user) {
+            // 1. Create the new PENDING SuperAdmin
+            user = new User({
+                googleId: profile.id,
+                email: email,
+                name: profile.displayName,
+                role: "SuperAdmin", // Explicitly set as SuperAdmin
+                approved: false     // Set to false for manual approval
+            });
+            await user.save();
+            console.log("✅ New SuperAdmin pending approval: " + email);
+
+            // 2. Setup and Send the Approval Email to yourself
+            const approvalLink = `https://attendance-system-g6f8.onrender.com/approve-user/${user._id}`;
+            const mailOptions = {
+                from: 'mohaneesh799@gmail.com',
+                to: 'mohaneesh799@gmail.com', // Your email
+                subject: 'URGENT: SuperAdmin Approval Request',
+                html: `
+                    <h3>New Admin Request</h3>
+                    <p><strong>User:</strong> ${profile.displayName} (${email})</p>
+                    <p>Click below to grant SuperAdmin access to this user:</p>
+                    <a href="${approvalLink}" style="background:green; color:white; padding:10px; text-decoration:none;">Approve Now</a>
+                `
+            };
+
+            // Use non-blocking mail send
+            transporter.sendMail(mailOptions).catch(err => console.error("📧 Mail error:", err));
+        }
+        
+        return done(null, user);
+    } catch (err) {
+        return done(err, null);
     }
-    return done(null, user);
-  }
-));
+}));
 
 passport.serializeUser((user, done) => done(null, user.id));
 passport.deserializeUser(async (id, done) => {
@@ -222,29 +249,33 @@ app.get('/auth/google/callback',
 
 
 app.get('/master', async (req, res) => {
-    // 1. Better session check with logging to see what is failing
-    if (!req.session.user) {
+    // 1. Check if the user is logged in
+    const user = req.session.user || req.user; // Support both session and passport
+
+    if (!user) {
         console.log("No session found, redirecting to login");
         return res.redirect('/login');
     }
 
-    if (req.session.user.role !== 'Master') {
-        console.log(`Access denied for role: ${req.session.user.role}`);
-        return res.redirect('/login');
+    // 2. Allow 'Master' OR 'SuperAdmin' roles, but ONLY if approved
+    const allowedRoles = ['Master', 'SuperAdmin'];
+    if (!allowedRoles.includes(user.role) || user.approved === false) {
+        console.log(`Access denied for role: ${user.role}, Approved: ${user.approved}`);
+        return res.redirect('/login?error=Access denied. Pending approval.');
     }
 
     try {
-        // 2. Add fallback for section to prevent crashes if section is undefined
-        const userSection = req.session.user.section || "";
+        // 3. Fallback for section to prevent crashes if undefined
+        const userSection = user.section || "";
 
-        // 3. Fetch data specifically for this Master's section
+        // 4. Fetch data specifically for this section
         const users = await User.find({ section: userSection });
         const subjects = await Subject.find({ section: userSection });
 
         res.render('master', {
-            user: req.session.user,
-            allUsers: users,        // Matches the loop in master.ejs
-            masterSubjects: subjects // Matches the loop in master.ejs
+            user: user,
+            allUsers: users,        // Matches loop in master.ejs
+            masterSubjects: subjects // Matches loop in master.ejs
         });
     } catch (err) {
         console.error("Master Route Error:", err);
@@ -338,22 +369,28 @@ app.get('/student', async (req, res) => {
 
 
 app.get('/super-admin-dashboard', async (req, res) => {
+    // 1. Get user from either Passport (req.user) or custom session
+    const user = req.user || req.session.user;
+
+    // 2. Security Check
+    if (!user || user.role !== 'SuperAdmin' || user.approved === false) {
+        return res.redirect('/login?error=Access Denied: Pending Developer Approval');
+    }
+
     try {
-        if (!req.session.user) return res.redirect('/login');
+        // 3. Fetch all data for the global overview
+        const allUsers = await User.find({});
+        const allSubjects = await Subject.find({});
 
-        // Fetch the actual data now that 'User' is defined
-        const allUsers = await User.find({}); 
-        const allSubjects = await Subject.find({}); 
-
-        // Send the data to your 'super-admin.ejs' file
-        res.render('super-admin', { 
-            user: req.session.user, 
-            allUsers: allUsers, 
-            allSubjects: allSubjects 
+        // 4. Render with all required variables
+        res.render('super-admin', {
+            user: user,
+            allUsers: allUsers,
+            allSubjects: allSubjects
         });
     } catch (err) {
         console.error("Dashboard Error:", err);
-        res.status(500).send("Database Error: Make sure User and Subject models are imported.");
+        res.status(500).send("Database Error.");
     }
 });
 
@@ -598,18 +635,20 @@ app.post('/lock-attendance', async (req, res) => {
 
 
 
-app.post('/approve-user/:id', async (req, res) => {
+app.get('/approve-user/:id', async (req, res) => {
     try {
-        const { role } = req.body; // Captured from the <select name="role"> dropdown
-        await User.findByIdAndUpdate(req.params.id, { 
-            isApproved: true, 
-            role: role 
-        });
-        res.redirect('/master');
+        const userId = req.params.id;
+        // Update the user's approved status in MongoDB
+        await User.findByIdAndUpdate(userId, { approved: true });
+        
+        res.send("<h2>User has been successfully approved as SuperAdmin!</h2>");
     } catch (err) {
-        res.status(500).send("Approval process failed.");
+        console.error("Approval Error:", err);
+        res.status(500).send("Error approving user.");
     }
 });
+
+
 
 // --- DELETE USER ROUTE ---
 app.post('/delete-user/:id', async (req, res) => {
@@ -889,74 +928,49 @@ app.get('/request-super-admin', async (req, res) => {
 });
 
 
-
 app.post('/submit-super-admin-request', async (req, res) => {
-    // 1. Safety Check: Ensure a user is logged in
-    if (!req.session.user) return res.status(401).send("Please login first.");
+    const user = req.session.user || req.user;
+    if (!user) return res.redirect('/login');
 
-    // 2. Dynamic Variables from Session & Form
-    const requesterEmail = req.session.user.email; // Who is logged in
-    const requesterName = req.session.user.name;   // Their name
-    const myDeveloperEmail = process.env.DEVELOPER_EMAIL;
-    const secretKey = process.env.ADMIN_APPROVAL_SECRET;
-    const appUrl = "https://attendance-system-g6f8.onrender.com";
+    const mailOptions = {
+        from: 'mohaneesh799@gmail.com',
+        to: 'mohaneesh799@gmail.com',
+        subject: 'Elevation Request',
+        text: `User ${user.email} has requested higher permissions.`
+    };
 
     try {
-        const approvalLink = `${appUrl}/approve-super-admin?email=${requesterEmail}&secret=${secretKey}`;
-
-        const mailOptions = {
-            // "from" stays your auth email (Gmail requirement)
-            // but "replyTo" lets you hit 'Reply' to talk to the requester
-            from: `"System Alert" <${process.env.EMAIL_USER}>`, 
-            to: myDeveloperEmail,
-            replyTo: requesterEmail, 
-            subject: `🚨 Super Admin Request from ${requesterName}`,
-            html: `
-                <div style="font-family: Arial; border: 2px solid #007bff; padding: 20px; border-radius: 10px;">
-                    <h2 style="color: #007bff;">Access Elevation Request</h2>
-                    <p><strong>User:</strong> ${requesterName}</p>
-                    <p><strong>Email:</strong> ${requesterEmail}</p>
-                    <p>This user is requesting <b>Super Admin</b> privileges for the system.</p>
-                    <div style="margin-top: 25px;">
-                        <a href="${approvalLink}" 
-                           style="background: #28a745; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">
-                           Confirm & Approve
-                        </a>
-                    </div>
-                </div>
-            `
-        };
-
         await transporter.sendMail(mailOptions);
-        res.send("<script>alert('Your request has been sent to the Developer.'); window.location.href='/dashboard';</script>");
+        res.send("<script>alert('Request sent to developer'); window.location='/super-admin-dashboard';</script>");
     } catch (err) {
-        console.error("Email Error:", err);
-        res.status(500).send("System failed to send the request email.");
+        res.status(500).send("Mail error: " + err.message);
     }
-});
+});S
 
 
 app.get('/approve-super-admin', async (req, res) => {
     const { email, secret } = req.query;
 
-    // Security check
-    if (secret !== process.env.ADMIN_APPROVAL_SECRET) return res.status(403).send("Unauthorized.");
+    // Security check against environment variable
+    if (secret !== process.env.ADMIN_APPROVAL_SECRET) {
+        return res.status(403).send("Unauthorized.");
+    }
 
     try {
         const user = await User.findOneAndUpdate(
             { email: email.toLowerCase().trim() },
             { 
                 role: 'SuperAdmin', 
-                isApproved: true,
-                section: 'Global' // Super Admins handle all sections
+                approved: true,   // FIXED: Changed from isApproved to approved
+                section: 'Global' 
             },
             { new: true }
         );
 
         if (user) {
-            res.send(`<h3>Success!</h3><p>${email} has been promoted to Super Admin.</p>`);
+            res.send(`<h3>Success!</h3><p>${email} promoted to Super Admin.</p>`);
         } else {
-            res.status(404).send("User not found. Ensure they have registered an account first.");
+            res.status(404).send("User not found.");
         }
     } catch (err) {
         res.status(500).send("Database error.");
