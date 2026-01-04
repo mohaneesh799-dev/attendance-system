@@ -76,13 +76,13 @@ app.use(express.static('public'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// --- SESSION CONFIGURATION ---
+// --- UPDATED SESSION FOR VERSION 6.0.0 ---
 app.use(session({
     secret: process.env.SESSION_SECRET || 'attendance_system_secret',
     resave: false,
-    saveUninitialized: false, 
-    store: MongoStore.create({
-        mongoUrl: mongoURI,
+    saveUninitialized: false,
+    store: new MongoStore({ // Change 'MongoStore.create({' to 'new MongoStore({'
+        mongoUrl: process.env.MONGO_URI,
         collectionName: 'sessions'
     }),
     cookie: { 
@@ -152,7 +152,13 @@ const upload = multer({ storage: multer.diskStorage({
 
 const transporter = nodemailer.createTransport({
     service: 'gmail',
-    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true, // use SSL
+    auth: { 
+        user: process.env.EMAIL_USER, 
+        pass: process.env.EMAIL_PASS 
+    }
 });
 
 // --- GET ROUTES ---
