@@ -1,32 +1,42 @@
-
 <!DOCTYPE html>
-<html>
-<head><title>College Login</title></head>
-<body style="font-family: Arial; text-align: center; padding-top: 100px;">
-    <h2>Attendance Portal</h2>
-    <p>Please log in using your official university account</p>
-    
-    <a href="/auth/google" style="
-        display: inline-block;
-        background-color: #4285F4;
-        color: white;
-        padding: 12px 24px;
-        text-decoration: none;
-        border-radius: 5px;
-        font-weight: bold;
-        font-size: 16px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    ">
-        Login with Google (@rku.ac.in)
-    </a>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>College Login</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background-color: #f4f7f6; height: 100vh; display: flex; align-items: center; justify-content: center; font-family: 'Segoe UI', sans-serif; }
+        .login-card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); width: 100%; max-width: 450px; text-align: center; }
+        .google-btn { display: inline-flex; align-items: center; background-color: #4285F4; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; transition: background 0.3s; }
+        .google-btn:hover { background-color: #357ae8; color: white; }
+    </style>
+</head>
+<body>
 
-    <p style="margin-top: 20px; color: #666; font-size: 0.9em;">
-        Only official RKU emails are permitted to access this system.
-    </p>
+    <div class="login-card">
+        <h2 class="fw-bold mb-3">Attendance Portal</h2>
+        
+        <% if (typeof message !== 'undefined') { %>
+            <div class="alert alert-success small"><%= message %></div>
+        <% } %>
 
-<div class="login-footer">
-    <p>Need specialized access? <a href="/request-super-admin">Request Super Admin Role</a></p>
-</div>
+        <p class="text-muted mb-4">Please log in using your official university account</p>
+        
+        <a href="/auth/google" class="google-btn mb-4">
+            <i class="fab fa-google me-2"></i> Login with Google (@rku.ac.in)
+        </a>
+
+        <p class="small text-secondary">Only official RKU emails are permitted.</p>
+
+        <hr class="my-4">
+
+        <div class="login-footer">
+            <p class="mb-1 text-muted small">Need specialized access?</p>
+            <a href="/register" class="text-primary fw-bold text-decoration-none">Request Super Admin Role</a>
+        </div>
+    </div>
 
 </body>
 </html>

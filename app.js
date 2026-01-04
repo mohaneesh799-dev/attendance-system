@@ -104,13 +104,15 @@ passport.deserializeUser(async (id, done) => {
 
 // Line 37 in app.js
 const userSchema = new mongoose.Schema({
-    name: { type: String, required: true },
-    // Update these two lines specifically:
-    email: { type: String, required: true, unique: true, index: true }, 
-    rollNo: { type: String, index: true }, 
+    // Change 'required' to false or provide a default
+    name: { type: String, required: false, default: '' }, 
+    email: { type: String, required: true, unique: true, index: true },
+    rollNo: { type: String, index: true, default: '' },
     
-    password: { type: String, required: true },
-    role: { type: String, default: 'Student' }, // Student, Master, SuperAdmin
+    // This is correct: required: false allows Google Login to work
+    password: { type: String, required: false }, 
+    
+    role: { type: String, default: 'Student' }, 
     section: { type: String, default: '' },
     isApproved: { type: Boolean, default: false },
     isPreRegistered: { type: Boolean, default: false }
@@ -402,6 +404,18 @@ app.get('/logout', (req, res) => {
         res.clearCookie('connect.sid'); // Clears the browser cookie
         res.redirect('/login');
     });
+});
+
+
+// This tells the server to actually OPEN the register.ejs file
+app.get('/register', (req, res) => {
+    try {
+        // This looks inside your 'views' folder for 'register.ejs'
+        res.render('register'); 
+    } catch (err) {
+        console.error("View Error:", err);
+        res.status(500).send("Could not find register.ejs in views folder.");
+    }
 });
 
 
