@@ -9,96 +9,103 @@
     <style>
         :root { --sidebar-width: 260px; }
         body { background-color: #f4f7f6; font-family: 'Segoe UI', sans-serif; }
-        .sidebar { width: var(--sidebar-width); height: 100vh; position: fixed; background: #2c3e50; color: white; padding: 20px; }
+        .sidebar { width: var(--sidebar-width); height: 100vh; position: fixed; background: #2c3e50; color: white; padding: 20px; z-index: 1000; }
         .main-content { margin-left: var(--sidebar-width); padding: 30px; }
-        .nav-link { color: rgba(255,255,255,0.7); border-radius: 5px; margin: 5px 0; }
+        .nav-link { color: rgba(255,255,255,0.7); border-radius: 5px; margin: 5px 0; transition: 0.3s; }
         .nav-link:hover, .nav-link.active { background: #34495e; color: white !important; }
-        .stat-card { border: none; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .stat-card { border: none; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.3s; }
+        .stat-card:hover { transform: translateY(-5px); }
         .table-container { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
+        .badge-pending { background-color: #ffd700; color: #000; }
     </style>
 </head>
 <body>
 
     <div class="sidebar d-flex flex-column">
-        <h4 class="text-center mb-4"><i class="fas fa-user-shield me-2 text-warning"></i> Control Panel</h4>
+        <h4 class="text-center mb-4"><i class="fas fa-user-shield me-2 text-warning"></i> Super Admin</h4>
         <hr>
         <ul class="nav nav-pills flex-column mb-auto">
             <li class="nav-item">
-                <a href="/super-admin-dashboard" class="nav-link active">Overview</a>
+                <a href="/super-admin-dashboard" class="nav-link active"><i class="fas fa-home me-2"></i> Overview</a>
             </li>
             <li>
-                <a href="/attendance-history" class="nav-link text-white">Global History</a>
+                <a href="/attendance-history" class="nav-link text-white"><i class="fas fa-history me-2"></i> Global History</a>
             </li>
         </ul>
         <hr>
-        <form action="/submit-super-admin-request" method="POST" class="px-2 mb-3">
-             <button type="submit" class="btn btn-sm btn-outline-warning w-100">Request Elevation</button>
-        </form>
-        <a href="/logout" class="nav-link text-danger border border-danger text-center">Logout</a>
+        <a href="/logout" class="btn btn-outline-danger w-100"><i class="fas fa-sign-out-alt me-2"></i> Logout</a>
     </div>
 
     <div class="main-content">
-        <header class="mb-5">
-            <h2 class="fw-bold m-0">System Overview</h2>
-            <small class="text-muted">
-                Admin: <%= (typeof user !== 'undefined') ? user.email : 'Not Logged In' %>
-            </small>
+        <header class="mb-5 d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="fw-bold m-0">System Overview</h2>
+                <small class="text-muted">Logged in as: <strong><%= user.email %></strong></small>
+            </div>
+            <span class="badge bg-dark">Role: SuperAdmin</span>
         </header>
 
         <div class="row g-4 mb-5">
             <div class="col-md-4">
                 <div class="card stat-card bg-primary text-white p-4">
-                    <p class="mb-0 opacity-75">Total Users</p>
-                    <h3><%= (typeof allUsers !== 'undefined') ? allUsers.length : 0 %></h3>
+                    <p class="mb-0 opacity-75">Total Registered Users</p>
+                    <h3 class="fw-bold"><%= allUsers.length %></h3>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="card stat-card bg-success text-white p-4">
                     <p class="mb-0 opacity-75">Active Subjects</p>
-                    <h3><%= (typeof allSubjects !== 'undefined') ? allSubjects.length : 0 %></h3>
+                    <h3 class="fw-bold"><%= allSubjects.length %></h3>
                 </div>
             </div>
         </div>
 
         <div class="table-container">
-            <h4 class="fw-bold mb-4">User Directory</h4>
+            <h4 class="fw-bold mb-4">User Directory & Management</h4>
             <div class="table-responsive">
                 <table class="table table-hover align-middle">
                     <thead class="table-light">
                         <tr>
-                            <th>User</th>
-                            <th>Role</th>
+                            <th>User Identity</th>
+                            <th>System Role</th>
                             <th>Status</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <% if (typeof allUsers !== 'undefined' && allUsers.length > 0) { %>
+                        <% if (allUsers && allUsers.length > 0) { %>
                             <% allUsers.forEach(u => { %>
                             <tr>
                                 <td>
-                                    <strong><%= u.name || 'Anonymous' %></strong><br>
-                                    <small class="text-muted"><%= u.email %></small>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-sm me-3 bg-light rounded-circle p-2 text-center" style="width: 40px;">
+                                            <i class="fas fa-user text-secondary"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold"><%= u.name || 'New User' %></div>
+                                            <small class="text-muted"><%= u.email %></small>
+                                        </div>
+                                    </div>
                                 </td>
                                 <td>
-                                    <span class="badge bg-secondary text-capitalize"><%= u.role %></span>
+                                    <span class="badge bg-info text-dark text-capitalize"><%= u.role %></span>
                                 </td>
                                 <td>
-                                    <span class="badge <%= u.approved ? 'bg-success' : 'bg-danger' %>">
-                                        <%= u.approved ? 'Approved' : 'Pending' %>
+                                    <span class="badge <%= u.approved ? 'bg-success' : 'badge-pending' %>">
+                                        <%= u.approved ? 'Authorized' : 'Pending Review' %>
                                     </span>
                                 </td>
                                 <td>
                                     <div class="d-flex gap-2">
                                         <% if (!u.approved) { %>
-                                            <a href="/approve-user/<%= u._id %>" class="btn btn-sm btn-success">
+                                            <a href="/approve-super-admin?email=<%= u.email %>&secret=MANUAL_AUTH" class="btn btn-sm btn-success" title="Approve User">
                                                 <i class="fas fa-check"></i>
                                             </a>
                                         <% } %>
                                         
-                                        <form action="/delete-user/<%= u._id %>" method="POST" onsubmit="return confirm('Permanently delete this user?')">
-                                            <button class="btn btn-sm btn-outline-danger">
-                                                <i class="fas fa-trash"></i>
+                                        <form action="/delete-user/<%= u._id %>" method="POST" onsubmit="return confirm('Permanently delete this user from the database?')">
+                                            <button class="btn btn-sm btn-outline-danger" title="Delete User">
+                                                <i class="fas fa-trash-alt"></i>
                                             </button>
                                         </form>
                                     </div>
@@ -107,7 +114,10 @@
                             <% }) %>
                         <% } else { %>
                             <tr>
-                                <td colspan="4" class="text-center py-4 text-muted">No users found in the system.</td>
+                                <td colspan="4" class="text-center py-5 text-muted">
+                                    <i class="fas fa-users-slash fa-3x mb-3"></i>
+                                    <p>No user records found.</p>
+                                </td>
                             </tr>
                         <% } %>
                     </tbody>
