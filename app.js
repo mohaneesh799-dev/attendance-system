@@ -417,13 +417,13 @@ app.get('/logout', (req, res) => {
 });
 
 
-// This tells the server to actually OPEN the register.ejs file
+// Add this route to app.js to show the registration form
 app.get('/register', (req, res) => {
     try {
-        // This looks inside your 'views' folder for 'register.ejs'
+        // Renders the register.ejs file from your views folder
         res.render('register'); 
     } catch (err) {
-        console.error("View Error:", err);
+        console.error("Error loading register page:", err);
         res.status(500).send("Could not find register.ejs in views folder.");
     }
 });
@@ -468,51 +468,67 @@ app.post('/update-settings', async (req, res) => {
 });
 
 
-// --- UPDATE FROM LINE 235 ---
-app.post('/register', async (req, res) => {
-    // 1. Capture ONLY email, password, and role
-    const { email, password, role } = req.body; 
-    
-    try {
-        // 2. Hash the password
-        const hashedPassword = await bcrypt.hash(password, 10); 
 
-        // 3. Create the new user with empty name and rollNo
+app.post('/register', async (req, res) => {
+    // 1. Capture email, password, and role from the form
+    const { email, password, role } = req.body;
+
+    try {
+        // 2. Hash the password for security
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // 3. Create the new user
+        // Note: Name and rollNo are empty strings to satisfy schema
         const newUser = new User({
             email,
             password: hashedPassword,
-            role,
-            approved: false,
-            name: "",   // Initialized as empty
-            rollNo: ""  // Initialized as empty
+            role, // This will be 'SuperAdmin' if you updated your register.ejs
+            isApproved: false,
+            name: "", 
+            rollNo: ""
         });
-        // 2. Save to MongoDB
-        await newUser.save();
-        console.log("✅ User saved to DB");
 
-        // 3. Setup the approval link (This uses your Ngrok URL or Render URL)
+        // 4. Save to MongoDB
+        await newUser.save();
+        console.log("✅ User saved to DB: " + email);
+
+        // 5. Generate the approval link
         const approvalLink = `${req.protocol}://${req.get('host')}/approve-user/${newUser._id}`;
 
-        // 4. Send the notification email
-        const mailOptions = {
-            from: 'mohaneesh799@gmail.com',
-            to: 'mohaneesh799@gmail.com', // Sending to yourself for approval
-            subject: 'New User Registration Request',
-            html: `<h3>New Registration</h3>
-                   <p>Email: ${email}</p>
-                   <p>Role: ${role}</p>
-                   <a href="${approvalLink}">Click here to Approve this user</a>`
-        };
+        // 6. Send the notification email
+        // We put this in a separate try-catch so an email timeout doesn't break the app
+        try {
+            const mailOptions = {
+                from: 'mohaneesh799@gmail.com',
+                to: 'mohaneesh799@gmail.com', // Notification goes to you
+                subject: 'New User Registration Request',
+                html: `
+                    <h3>New Registration</h3>
+                    <p><strong>Email:</strong> ${email}</p>
+                    <p><strong>Role Requested:</strong> ${role}</p>
+                    <p>Click the link below to approve this account:</p>
+                    <a href="${approvalLink}" style="padding:10px; background:blue; color:white; text-decoration:none;">Approve User</a>
+                `
+            };
+            await transporter.sendMail(mailOptions);
+            console.log("📧 Approval email sent to admin");
+        } catch (mailErr) {
+            console.error("⚠️ User saved, but email failed to send:", mailErr.message);
+            // We do NOT throw this error, so the user still gets redirected below
+        }
 
-        await transporter.sendMail(mailOptions);
-        console.log("📧 Approval email sent");
-
-        // 5. Tell the user it worked
-        res.redirect('/login?message=Registration%20successful!%20Please%20wait%20for%20approval.');
+        // 7. Success Redirect
+        res.redirect('/login?message=Registration successful! Please wait for approval.');
 
     } catch (err) {
-        console.error("❌ Registration Error:", err);
-        res.status(500).send("Registration failed. Error: " + err.message);
+        console.error("❌ Registration Database Error:", err);
+        
+        // Handle the duplicate email error specifically
+        if (err.code === 11000) {
+            return res.status(400).send("This email is already registered. Please go back and login.");
+        }
+        
+        res.status(500).send("Registration failed. Please try again later.");
     }
 });
 
