@@ -32,6 +32,7 @@ app.use(helmet());
 
 
 
+// --- SESSION CONFIGURATION ---
 app.use(session({
     secret: process.env.SESSION_SECRET || 'attendance_system_secret',
     resave: false,
@@ -41,13 +42,12 @@ app.use(session({
         collectionName: 'sessions'
     }),
     cookie: { 
-        // CHANGE: Set to false for testing, or ensure Render has NODE_ENV=production
         secure: process.env.NODE_ENV === 'production', 
         httpOnly: true, 
-        maxAge: 24 * 60 * 60 * 1000,
-        sameSite: 'lax' // Added for better cross-site compatibility
+        maxAge: 24 * 60 * 60 * 1000 
     }
 }));
+
 
 
 // Your existing lines 13 and 14 follow
@@ -273,39 +273,23 @@ app.get('/auth/google/callback',
 
 
 app.get('/master', async (req, res) => {
-    // 1. Get user from either Passport (req.user) or custom session
-    const user = req.user || req.session.user;
+    const user = req.session.user || req.user;
 
-    if (!user) {
-        console.log("No session found, redirecting to login");
-        return res.redirect('/login');
-    }
+    if (!user) return res.redirect('/login');
 
-    // 2. Security Check: Allow 'Master' OR 'SuperAdmin', but ONLY if approved
     const allowedRoles = ['Master', 'SuperAdmin'];
-    
-    // Check if role is allowed AND user is approved
+    // Changed 'approved' to 'isApproved'
     if (!allowedRoles.includes(user.role) || user.isApproved === false) {
-        console.log(`Access denied for role: ${user.role}, Approved: ${user.isApproved}`);
-        return res.redirect('/login?error=Access denied. Pending approval or unauthorized role.');
+        return res.redirect('/login?error=Access Denied.');
     }
 
     try {
-        // 3. Section fallback to prevent crashes if undefined
         const userSection = user.section || "";
-
-        // 4. Fetch data specifically for this user's section
         const users = await User.find({ section: userSection });
         const subjects = await Subject.find({ section: userSection });
-
-        res.render('master', {
-            user: user,
-            allUsers: users,           // Matches loop in master.ejs
-            masterSubjects: subjects   // Matches loop in master.ejs
-        });
+        res.render('master', { user, allUsers: users, masterSubjects: subjects });
     } catch (err) {
-        console.error("Master Route Error:", err);
-        res.status(500).send("Internal Server Error: Missing data for Master Dashboard.");
+        res.status(500).send("Internal Server Error.");
     }
 });
 
@@ -395,28 +379,18 @@ app.get('/student', async (req, res) => {
 
 
 app.get('/super-admin-dashboard', async (req, res) => {
-    // 1. Get user from either Passport or custom session
     const user = req.user || req.session.user;
 
-    // 2. Security Check: Must be SuperAdmin AND Approved
-    if (!user || user.role !== 'SuperAdmin' || user.isApproved === false) {
-        console.log("Unauthorized access attempt by: " + (user ? user.email : "Unknown"));
-        return res.redirect('/login?error=Access Denied: Pending Developer Approval');
+    // Changed 'approved' to 'isApproved' to match your DB
+    if (!user || user.role !== 'SuperAdmin' || user.isApproved === false) { 
+        return res.redirect('/login?error=Access Denied: Pending Approval');
     }
 
     try {
-        // 3. Fetch all administrative data
         const allUsers = await User.find({});
         const allSubjects = await Subject.find({});
-
-        // 4. Render with correct user object
-        res.render('super-admin', {
-            user: user,
-            allUsers: allUsers,
-            allSubjects: allSubjects
-        });
+        res.render('super-admin', { user, allUsers, allSubjects });
     } catch (err) {
-        console.error("Dashboard Error:", err);
         res.status(500).send("Database Error.");
     }
 });
@@ -976,30 +950,13 @@ app.post('/submit-super-admin-request', async (req, res) => {
 
 app.get('/approve-super-admin', async (req, res) => {
     const { email, secret } = req.query;
-
-    // Security check against environment variable
-    if (secret !== process.env.ADMIN_APPROVAL_SECRET) {
-        return res.status(403).send("Unauthorized.");
-    }
+    if (secret !== process.env.ADMIN_APPROVAL_SECRET) return res.status(403).send("Invalid Secret");
 
     try {
-        const user = await User.findOneAndUpdate(
-            { email: email.toLowerCase().trim() },
-            { 
-                role: 'SuperAdmin', 
-                approved: true,   // FIXED: Changed from isApproved to approved
-                section: 'Global' 
-            },
-            { new: true }
-        );
-
-        if (user) {
-            res.send(`<h3>Success!</h3><p>${email} promoted to Super Admin.</p>`);
-        } else {
-            res.status(404).send("User not found.");
-        }
+        await User.findOneAndUpdate({ email }, { isApproved: true, role: 'SuperAdmin' });
+        res.send("User approved! You can now log in.");
     } catch (err) {
-        res.status(500).send("Database error.");
+        res.status(500).send("Error updating user.");
     }
 });
 
