@@ -240,44 +240,47 @@ app.get('/auth/google',
 app.get('/auth/google/callback', 
   passport.authenticate('google', { failureRedirect: '/login' }),
   (req, res) => {
-    req.session.user = req.user; 
-
     req.session.save((err) => {
       if (err) return res.redirect('/login');
 
-      // Add this check here!
-      if (req.user.isApproved === false) {
-          return res.send("<script>alert('Your account is pending approval by the Master.'); window.location.href='/login';</script>");
+      // Make sure req.user.role exists before calling .toLowerCase()
+      const role = (req.user.role || "").toLowerCase().trim();
+      
+      if (role === 'superadmin') {
+          res.redirect('/super-admin-dashboard');
+      } else if (role === 'master') {
+          res.redirect('/master-dashboard'); // Ensure this route is defined!
+      } else {
+          res.redirect('/student');
       }
-
-      const user = req.session.user;
-      if (role === 'superadmin')res.redirect('/super-admin-dashboard');
-      else if (role === 'master')res.redirect('/master');
-      else if (user.role === 'Leader') res.redirect('/leader');
-      else res.redirect('/student');
     });
   }
 );
 
 app.get('/master', async (req, res) => {
-    const user = req.session.user || req.user;
+    try {
+        // 1. Ensure the user is logged in
+        if (!req.isAuthenticated()) {
+            return res.redirect('/login');
+        }
 
-    if (!user) return res.redirect('/login');
+        // 2. Safely check for the Master role
+        const user = req.user;
+        const role = (user.role || "").toLowerCase().trim();
 
-    const allowedRoles = ['Master', 'SuperAdmin'];
-    // Changed 'approved' to 'isApproved'
-    if (!allowedRoles.includes(user.role) || user.isApproved === false) {
-        return res.redirect('/login?error=Access Denied.');
-    }
+        if (role !== 'master') {
+            console.log(`Access Denied: User role is ${role}`);
+            return res.redirect('/login');
+        }
 
-    try {
-        const userSection = user.section || "";
-        const users = await User.find({ section: userSection });
-        const subjects = await Subject.find({ section: userSection });
-        res.render('master', { user, allUsers: users, masterSubjects: subjects });
-    } catch (err) {
-        res.status(500).send("Internal Server Error.");
-    }
+        // 3. Render the dashboard (ensure views/master.ejs exists!)
+        res.render('master', { user: user });
+
+    } catch (err) {
+        console.error("Master Route Crash:", err.message);
+        // This prevents the 502 error by sending a clear response
+        res.status(500).send("Internal Server Error in Master Route");
+    }
 });
 
 
@@ -787,27 +790,28 @@ app.post('/update-attendance-status', async (req, res) => {
 
 
 app.post('/add-subject', async (req, res) => {
-    try {
-        // 1. Capture both the Name and the Section from the request body
-        const { subjectName, section } = req.body;
+    try {
+        const { subjectName, subjectCode } = req.body;
+        
+        // 1. Validate the data exists
+        if (!subjectName) {
+            return res.status(400).send("Subject Name is required");
+        }
 
-        // 2. Validation: Ensure both fields are provided
-        if (!subjectName || subjectName.trim() === "" || !section) {
-            return res.status(400).send("Subject name and section are required.");
-        }
+        // 2. Create the new subject
+        const newSubject = new Subject({
+            name: subjectName,
+            code: subjectCode
+        });
 
-        // 3. Save the new subject with the section tag
-        const newSubject = new Subject({
-            name: subjectName.trim(),
-            section: section // NEW: Crucial for filtering on Leader Dashboard
-        });
+        await newSubject.save();
+        console.log("✅ Subject Added Successfully");
+        res.redirect('/super-admin-dashboard'); // Or wherever you want to go back to
 
-        await newSubject.save();
-        res.redirect('/master');
-    } catch (err) {
-        console.error("Subject Add Error:", err);
-        res.status(500).send("Error adding subject.");
-    }
+    } catch (err) {
+        console.error("Subject Add Error:", err.message);
+        res.status(500).send("Could not add subject.");
+    }
 });
 
 
