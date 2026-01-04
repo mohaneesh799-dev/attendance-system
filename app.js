@@ -116,28 +116,40 @@ passport.use(new GoogleStrategy({
         // This link matches the secret security check in your backend
         const approvalLink = `https://attendance-system-g6f8.onrender.com/approve-super-admin?email=${email}&secret=${process.env.ADMIN_APPROVAL_SECRET}`;
 
-        const mailOptions = {
-            from: process.env.EMAIL_USER,
-            to: 'mohaneesh799@gmail.com', // Your developer email
-            subject: 'URGENT: SuperAdmin Approval Request',
-            html: `
-                <h3>New Admin Request</h3>
-                <p><strong>User:</strong> ${profile.displayName} (${email})</p>
-                <p>Click the button below to grant SuperAdmin access:</p>
-                <a href="${approvalLink}" style="background:green; color:white; padding:10px; text-decoration:none; border-radius:5px;">Approve Now</a>
-            `
-        };
+       // --- CORRECT MAIL TRY/CATCH START ---
+            try {
+                const mailOptions = {
+                    from: process.env.EMAIL_USER,
+                    to: 'mohaneesh799@gmail.com', // Your developer email
+                    subject: 'URGENT: SuperAdmin Approval Request',
+                    html: `
+                        <h3>New Admin Request</h3>
+                        <p><strong>User:</strong> ${profile.displayName} (${email})</p>
+                        <p>Click the button below to grant SuperAdmin access:</p>
+                        <a href="${approvalLink}" style="background:green; color:white; padding:10px; text-decoration:none; border-radius:5px;">Approve Now</a>
+                    `
+                };
 
-        // 3. Use non-blocking mail send to prevent timeouts
-        transporter.sendMail(mailOptions).catch(err => {
-            console.error("📧 Email failed but user saved:", err.message);
-        });
-    }
-    return done(null, user); // Continue to login (security check will handle redirect)
-} catch (err) {
-    return done(err, null);
+                // Use .catch to handle errors without hanging the server
+                transporter.sendMail(mailOptions).catch(err => {
+                    console.error("📧 Email failed but user saved:", err.message);
+                });
+            } catch (mailSetupError) {
+                console.error("📧 Mailer setup error:", mailSetupError.message);
+            }
+            // --- CORRECT MAIL TRY/CATCH END ---
+        }
+        
+        // This line MUST be outside the IF block but inside the first TRY block
+        return done(null, user); 
+
+    } catch (err) {
+        return done(err, null);
+    }
 }
-}));
+));
+
+
 
 passport.serializeUser((user, done) => {
     done(null, user.id);
