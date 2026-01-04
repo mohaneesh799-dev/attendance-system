@@ -37,14 +37,16 @@ app.use(session({
     secret: process.env.SESSION_SECRET || 'attendance_system_secret',
     resave: false,
     saveUninitialized: false, 
+    proxy: true, // Add this for Render
     store: MongoStore.create({
         mongoUrl: process.env.MONGO_URI,
         collectionName: 'sessions'
     }),
     cookie: { 
-        secure: process.env.NODE_ENV === 'production', 
-        httpOnly: true, 
-        maxAge: 24 * 60 * 60 * 1000 
+       secure: true, // Must be true for Render (HTTPS)
+        httpOnly: true, 
+        maxAge: 24 * 60 * 60 * 1000,
+        sameSite: 'lax' // Helps with Google Auth redirects
     }
 }));
 
