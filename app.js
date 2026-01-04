@@ -31,21 +31,24 @@ app.use(helmet());
 
 
 
-// --- UPDATED SESSION FOR VERSION 6.0.0 ---
+
 app.use(session({
     secret: process.env.SESSION_SECRET || 'attendance_system_secret',
     resave: false,
-    saveUninitialized: false,
+    saveUninitialized: false, 
     store: MongoStore.create({
-         mongoUrl: process.env.MONGO_URI,
-         collectionName: 'sessions'
+        mongoUrl: process.env.MONGO_URI,
+        collectionName: 'sessions'
     }),
     cookie: { 
+        // CHANGE: Set to false for testing, or ensure Render has NODE_ENV=production
         secure: process.env.NODE_ENV === 'production', 
-        httpOnly: true,
-        maxAge: 24 * 60 * 60 * 1000 
+        httpOnly: true, 
+        maxAge: 24 * 60 * 60 * 1000,
+        sameSite: 'lax' // Added for better cross-site compatibility
     }
 }));
+
 
 // Your existing lines 13 and 14 follow
 app.use(express.json());
@@ -103,7 +106,7 @@ passport.use(new GoogleStrategy({
         const approvalLink = `https://attendance-system-g6f8.onrender.com/approve-super-admin?email=${email}&secret=${process.env.ADMIN_APPROVAL_SECRET}`;
 
         const mailOptions = {
-            from: 'mohaneesh799@gmail.com',
+            from: process.env.EMAIL_USER,
             to: 'mohaneesh799@gmail.com', // Your developer email
             subject: 'URGENT: SuperAdmin Approval Request',
             html: `
@@ -125,10 +128,17 @@ passport.use(new GoogleStrategy({
 }
 }));
 
-passport.serializeUser((user, done) => done(null, user.id));
+passport.serializeUser((user, done) => {
+    done(null, user.id);
+});
+
 passport.deserializeUser(async (id, done) => {
-    const user = await User.findById(id);
-    done(null, user);
+    try {
+        const user = await User.findById(id);
+        done(null, user);
+    } catch (err) {
+        done(err, null);
+    }
 });
 
 
