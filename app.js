@@ -98,65 +98,49 @@ passport.deserializeUser((user, done) => {
 
 
 passport.use(new GoogleStrategy({
-    clientID: process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: "https://attendance-system-g6f8.onrender.com/auth/google/callback" //
-  },
-  async (accessToken, refreshToken, profile, done) => {
-    const email = profile.emails[0].value;
+    clientID: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL: "https://attendance-system-g6f8.onrender.com/auth/google/callback"
+  },
+  async (accessToken, refreshToken, profile, done) => {
+    const email = profile.emails[0].value;
+    if (!email.endsWith('@rku.ac.in')) {
+        return done(null, false, { message: 'Use official @rku.ac.in email' });
+    }
 
-    // Force official university domain
-    if (!email.endsWith('@rku.ac.in')) {
-        return done(null, false, { message: 'Use official @rku.ac.in email' });
-    }
+    try {
+        let user = await User.findOne({ email: email });
+        if (!user) {
+            user = new User({
+                googleId: profile.id,
+                email: email,
+                name: profile.displayName,
+                role: "SuperAdmin", 
+                isApproved: false 
+            });
+            await user.save();
 
-    try {
-    let user = await User.findOne({ email: email });
+            const approvalLink = `https://attendance-system-g6f8.onrender.com/approve-super-admin?email=${email}&secret=${process.env.ADMIN_APPROVAL_SECRET}`;
 
-    if (!user) {
-        // 1. Create the new PENDING SuperAdmin
-        user = new User({
-            googleId: profile.id,
-            email: email,
-            name: profile.displayName,
-            role: "SuperAdmin", 
-            isApproved: false // Must match your schema name
-        });
-        await user.save();
-        console.log("✅ New SuperAdmin pending approval: " + email);
-
-        // 2. Setup the CORRECT Approval Link
-        // This link matches the secret security check in your backend
-        const approvalLink = `https://attendance-system-g6f8.onrender.com/approve-super-admin?email=${email}&secret=${process.env.ADMIN_APPROVAL_SECRET}`;
-
-       // --- CORRECT MAIL TRY/CATCH START ---
-            try {
-                const mailOptions = {
-                    from: process.env.EMAIL_USER,
-                    to: 'mohaneesh799@gmail.com', // Your developer email
-                    subject: 'URGENT: SuperAdmin Approval Request',
-                   html: `<p>New user ${email} needs approval.</p><a href="${approvalLink}">Approve</a>`
+            const mailOptions = {
+                from: process.env.EMAIL_USER,
+                to: 'mohaneesh799@gmail.com',
+                subject: 'URGENT: SuperAdmin Approval Request',
+                html: `<h3>New Admin Request</h3><p>${email}</p><a href="${approvalLink}">Approve Now</a>`
             };
 
-            // This runs in the background. It won't stop the user from logging in.
+            // REMOVED 'await' here. This stops the white page.
             transporter.sendMail(mailOptions, (err) => {
-                if (err) console.log("📧 Render blocked the email: ", err.message);
-                else console.log("📧 Email sent successfully");
+                if (err) console.log("📧 Mail Error (Expected on Render Free):", err.message);
+                else console.log("📧 Email sent!");
             });
-            } catch (mailSetupError) {
-                console.error("📧 Mailer setup error:", mailSetupError.message);
-            }
-            // --- CORRECT MAIL TRY/CATCH END ---
         }
-        
-        // This line MUST be outside the IF block but inside the first TRY block
+        // This ensures the user is logged in even if the email fails
         return done(null, user); 
-
     } catch (err) {
         return done(err, null);
     }
-}
-));
+}));
 
 
 
