@@ -276,29 +276,34 @@ app.get('/auth/google/callback',
 
 app.get('/master', async (req, res) => {
     try {
-        const user = req.user || req.session.user;
-        if (!user) return res.redirect('/login');
-
-        const allowedRoles = ['Master', 'SuperAdmin'];
-        if (!allowedRoles.includes(user.role) || user.isApproved === false) {
-            return res.redirect('/login?error=Access Denied.');
+        if (!req.isAuthenticated() || req.user.role !== 'Master') {
+            return res.redirect('/login');
         }
 
-        const userSection = user.section || "";
-        const users = await User.find({ section: userSection });
+        const facultySection = req.user.section;
         
-        // CRITICAL FIX: Ensure this variable name matches your EJS file exactly
-        const subjects = await Subject.find({ section: userSection });
+        // Parallel fetching for speed
+        const [allUsers, masterSubjects] = await Promise.all([
+            User.find({ section: facultySection }),
+            Subject.find({ section: facultySection })
+        ]);
 
-        // Pass 'masterSubjects' so the EJS file can find it
+        // Calculate Analytics
+        const stats = {
+            total: allUsers.length,
+            pending: allUsers.filter(u => !u.approved).length,
+            subjects: masterSubjects.length
+        };
+
         res.render('master', { 
-            user, 
-            allUsers: users, 
-            masterSubjects: subjects // FIX: This was missing!
+            user: req.user, 
+            allUsers, 
+            masterSubjects,
+            stats 
         });
     } catch (err) {
-        console.error("Master Route Error:", err);
-        res.status(500).send("Internal Server Error.");
+        console.error("Master Dashboard Error:", err);
+        res.status(500).render('error', { message: "Failed to load faculty portal." });
     }
 });
 
@@ -988,6 +993,22 @@ app.get('/approve-super-admin', async (req, res) => {
     }
 });
 
+
+
+app.get('/export-students', async (req, res) => {
+    if (!req.isAuthenticated() || req.user.role !== 'Master') return res.redirect('/login');
+    
+    const students = await User.find({ section: req.user.section });
+    let csv = "Name,Email,Role,Status\n";
+    
+    students.forEach(u => {
+        csv += `${u.name},${u.email},${u.role},${u.approved ? 'Approved' : 'Pending'}\n`;
+    });
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename=${req.user.section}_students.csv`);
+    res.send(csv);
+});
 
 
 // Add this at the very bottom of app.js
