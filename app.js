@@ -31,23 +31,22 @@ app.use(helmet());
 
 
 
-// 1. Add this at the top of your middleware section
-app.set('trust proxy', 1); 
+// --- SECTION 1: SESSION SETTINGS ---
+app.set('trust proxy', 1); // Place this right above the session config
 
-// 2. Update your session configuration
 app.use(session({
-    secret: process.env.SESSION_SECRET || 'attendance_system_secret',
-    resave: false,
-    saveUninitialized: false, // Prevents creating sessions for unauthenticated users
-    proxy: true, // Crucial for Render
-    store: MongoStore.create({
+    secret: process.env.SESSION_SECRET || 'your-secret-key',
+    resave: true,                
+    saveUninitialized: false,    
+    proxy: true,                 
+    store: MongoStore.create({ 
         mongoUrl: process.env.MONGO_URI,
-        collectionName: 'sessions'
+        touchAfter: 24 * 3600    
     }),
     cookie: { 
-        secure: true,    // Required because Render uses HTTPS
+        secure: true,            
         httpOnly: true, 
-        sameSite: 'lax', // Needed for Google OAuth cross-site redirects
+        sameSite: 'lax',         
         maxAge: 24 * 60 * 60 * 1000 
     }
 }));
@@ -282,28 +281,31 @@ app.get('/master', async (req, res) => {
 
         const facultySection = req.user.section;
         
-        // Parallel fetching for speed
+        // Fetch data
         const [allUsers, masterSubjects] = await Promise.all([
-            User.find({ section: facultySection }),
-            Subject.find({ section: facultySection })
+            User.find({ section: facultySection }) || [],
+            Subject.find({ section: facultySection }) || []
         ]);
 
-        // Calculate Analytics
+        // FIX: Check if your DB uses .approved or .isApproved
+        // Using || false ensures it doesn't crash if the field is missing
         const stats = {
             total: allUsers.length,
-            pending: allUsers.filter(u => !u.approved).length,
+            pending: allUsers.filter(u => (u.isApproved === false || u.approved === false)).length,
             subjects: masterSubjects.length
         };
 
+        // Ensure we pass empty arrays if nothing is found to prevent EJS "not defined" errors
         res.render('master', { 
             user: req.user, 
-            allUsers, 
-            masterSubjects,
+            allUsers: allUsers || [], 
+            masterSubjects: masterSubjects || [], 
             stats 
         });
     } catch (err) {
         console.error("Master Dashboard Error:", err);
-        res.status(500).render('error', { message: "Failed to load faculty portal." });
+        // Use a generic error render that doesn't depend on dashboard variables
+        res.status(500).send("Internal Server Error: Failed to load faculty portal.");
     }
 });
 
@@ -603,6 +605,20 @@ app.post('/upload-users', async (req, res) => {
 
 
 
+// --- SECTION 2: THE BOUNCER (MIDDLEWARE) ---
+function isMaster(req, res, next) {
+    if (req.isAuthenticated() && req.user.role === 'Master') {
+        return next();
+    }
+    // This force-saves the session to prevent the redirect loop
+    req.session.save(() => {
+        res.redirect('/login?error=Unauthorized');
+    });
+}  
+
+
+
+
 app.post('/lock-attendance', async (req, res) => {
     try {
         const { section, lecturerEmail, manualTime, subject, date, students } = req.body;
@@ -628,48 +644,61 @@ app.post('/lock-attendance', async (req, res) => {
 
 
 
-// New Route: Approve User from Dashboard
 app.post('/approve-user/:id', async (req, res) => {
-    if (req.user && req.user.role === 'SuperAdmin') {
+    try {
+        // Allow both Master and SuperAdmin to approve
+        if (!req.isAuthenticated() || (req.user.role !== 'Master' && req.user.role !== 'SuperAdmin')) {
+            return res.status(403).send("Unauthorized");
+        }
+
         await User.findByIdAndUpdate(req.params.id, { isApproved: true });
-        res.redirect('/super-admin-dashboard');
-    } else {
-        res.status(403).send("Unauthorized");
+        
+        // Critical for Render: Save session before redirecting
+        req.session.save(() => {
+            res.redirect(req.user.role === 'SuperAdmin' ? '/super-admin-dashboard' : '/master');
+        });
+    } catch (err) {
+        res.status(500).send("Error approving user");
     }
 });
 
 
 
-// --- DELETE USER ROUTE ---
+
 app.post('/delete-user/:id', async (req, res) => {
-    try {
-        // This removes the user from the MongoDB collection based on their unique ID
-        await User.findByIdAndDelete(req.params.id);
-        
-        // After deletion, refresh the Master Dashboard to show the updated list
-        res.redirect('/master');
-    } catch (err) {
-        console.error("Delete Error:", err);
-        res.status(500).send("Failed to delete user: " + err.message);
-    }
+    try {
+        if (!req.isAuthenticated() || (req.user.role !== 'Master' && req.user.role !== 'SuperAdmin')) {
+            return res.status(403).send("Unauthorized");
+        }
+
+        await User.findByIdAndDelete(req.params.id);
+
+        req.session.save(() => {
+            res.redirect(req.user.role === 'SuperAdmin' ? '/super-admin-dashboard' : '/master');
+        });
+    } catch (err) {
+        console.error("Delete Error:", err);
+        res.status(500).send("Failed to delete user: " + err.message);
+    }
 });
 
 
-// 1. FIX: Bulk Approval Logic
+// Fix for Approval Redirect
 app.post('/bulk-approve', async (req, res) => {
     try {
+        if (!req.isAuthenticated() || req.user.role !== 'Master') return res.redirect('/login');
+        
         const { userIds, targetRole } = req.body;
-        if (!userIds || userIds.length === 0) return res.redirect('/master');
-
-        // Update multiple users at once
         await User.updateMany(
             { _id: { $in: userIds } },
-            { $set: { role: targetRole, isApproved: true } }
+            { $set: { role: targetRole, isApproved: true, approved: true } }
         );
-
-        res.redirect('/master');
+        
+        req.session.save(() => {
+            res.redirect('/master');
+        });
     } catch (err) {
-        res.status(500).render('error', { message: "Failed to update users" });
+        res.redirect('/master');
     }
 });
 
@@ -782,28 +811,21 @@ app.post('/update-attendance-status', async (req, res) => {
 });
 
 
+// Fix for Add Subject Redirect
 app.post('/add-subject', async (req, res) => {
     try {
-        const { subjectName, subjectCode } = req.body;
+        if (!req.isAuthenticated() || req.user.role !== 'Master') return res.redirect('/login');
         
-        // 1. Validate the data exists
-        if (!subjectName) {
-            return res.status(400).send("Subject Name is required");
-        }
-
-        // 2. Create the new subject
-        const newSubject = new Subject({
-            name: subjectName,
-            code: subjectCode
+        const { subjectName, section } = req.body;
+        const newSub = new Subject({ name: subjectName, section: section });
+        await newSub.save();
+        
+        // CRITICAL: Save session before redirecting to prevent login kick-back
+        req.session.save(() => {
+            res.redirect('/master');
         });
-
-        await newSubject.save();
-        console.log("✅ Subject Added Successfully");
-        res.redirect('/super-admin-dashboard'); // Or wherever you want to go back to
-
     } catch (err) {
-        console.error("Subject Add Error:", err.message);
-        res.status(500).send("Could not add subject.");
+        res.redirect('/master');
     }
 });
 
