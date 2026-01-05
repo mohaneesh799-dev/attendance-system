@@ -31,25 +31,26 @@ app.use(helmet());
 
 
 
-app.set('trust proxy', 1);
-// --- SESSION CONFIGURATION ---
-app.use(session({
-    secret: process.env.SESSION_SECRET || 'attendance_system_secret',
-    resave: false,
-    saveUninitialized: false, 
-    proxy: true, // Add this for Render
-    store: MongoStore.create({
-        mongoUrl: process.env.MONGO_URI,
-        collectionName: 'sessions'
-    }),
-    cookie: { 
-       secure: true, // Must be true for Render (HTTPS)
-        httpOnly: true, 
-        maxAge: 24 * 60 * 60 * 1000,
-        sameSite: 'lax' // Helps with Google Auth redirects
-    }
-}));
+// 1. Add this at the top of your middleware section
+app.set('trust proxy', 1); 
 
+// 2. Update your session configuration
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'attendance_system_secret',
+    resave: false,
+    saveUninitialized: false, // Prevents creating sessions for unauthenticated users
+    proxy: true, // Crucial for Render
+    store: MongoStore.create({
+        mongoUrl: process.env.MONGO_URI,
+        collectionName: 'sessions'
+    }),
+    cookie: { 
+        secure: true,    // Required because Render uses HTTPS
+        httpOnly: true, 
+        sameSite: 'lax', // Needed for Google OAuth cross-site redirects
+        maxAge: 24 * 60 * 60 * 1000 
+    }
+}));
 
 
 // Your existing lines 13 and 14 follow
@@ -240,22 +241,38 @@ app.get('/auth/google',
 app.get('/auth/google/callback', 
   passport.authenticate('google', { failureRedirect: '/login' }),
   (req, res) => {
+    // FORCE save the session to the database
     req.session.save((err) => {
-      if (err) return res.redirect('/login');
+      if (err) {
+          console.error("Session Save Error:", err);
+          return res.redirect('/login');
+      }
 
-      // Make sure req.user.role exists before calling .toLowerCase()
-      const role = (req.user.role || "").toLowerCase().trim();
+      const user = req.user;
       
+      // 1. Handle Unapproved Users first
+      if (!user.isApproved) {
+          return res.render('pending', { user });
+      }
+
+      // 2. Route by Role (Case-Insensitive)
+      const role = (user.role || "").toLowerCase().trim();
+      
+      console.log(`User ${user.email} logged in with role: ${role}`);
+
       if (role === 'superadmin') {
           res.redirect('/super-admin-dashboard');
-      } else if (role === 'master') {
-          res.redirect('/master-dashboard'); // Ensure this route is defined!
+      } else if (role === 'master' || role === 'leader' || role === 'lecturer') {
+          res.redirect('/master'); // Or your specific route for these roles
       } else {
           res.redirect('/student');
       }
     });
   }
 );
+
+
+
 
 app.get('/master', async (req, res) => {
     try {
@@ -369,27 +386,21 @@ app.get('/student', async (req, res) => {
 
 
 app.get('/super-admin-dashboard', async (req, res) => {
-    // 1. Get the user from Passport (req.user) or fallback to manual session
-    const user = req.user || req.session.user;
-
-    // 2. Debugging: This will show up in your Render Logs
-    console.log("Current User in Session:", user ? user.email : "No User Found");
-
-    // 3. Updated check to handle potential undefined fields
-    if (!user || user.role !== 'SuperAdmin' || user.isApproved !== true) {
-        console.log("Access Denied: Redirecting to login...");
-        return res.redirect('/login?error=Access Denied: Pending Approval');
+    // Check authentication and role strictly
+    if (!req.isAuthenticated() || req.user.role !== 'SuperAdmin') {
+        return res.redirect('/login');
     }
 
     try {
         const allUsers = await User.find({});
         const allSubjects = await Subject.find({});
-        res.render('super-admin', { user, allUsers, allSubjects });
+        res.render('super-admin', { user: req.user, allUsers, allSubjects });
     } catch (err) {
-        console.error("Dashboard DB Error:", err);
-        res.status(500).send("Database Error.");
+        console.error("Dashboard Error:", err);
+        res.status(500).render('error', { message: "Database failure" });
     }
 });
+
 
 
 app.post('/login', async (req, res) => {
