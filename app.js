@@ -387,22 +387,40 @@ app.get('/student', async (req, res) => {
 
 
 
+// Updated SuperAdmin Dashboard Route
 app.get('/super-admin-dashboard', async (req, res) => {
-    // Check authentication and role strictly
-    if (!req.isAuthenticated() || req.user.role !== 'SuperAdmin') {
-        return res.redirect('/login');
-    }
-
     try {
+        const user = req.user || req.session.user;
+
+        // Strict security check
+        if (!user || user.role !== 'SuperAdmin' || user.isApproved !== true) {
+            return res.redirect('/login?error=Access Denied');
+        }
+
+        // Fetch everything from DB to display on the dashboard
         const allUsers = await User.find({});
         const allSubjects = await Subject.find({});
-        res.render('super-admin', { user: req.user, allUsers, allSubjects });
+
+        res.render('super-admin', { 
+            user, 
+            allUsers, 
+            allSubjects 
+        });
     } catch (err) {
-        console.error("Dashboard Error:", err);
-        res.status(500).render('error', { message: "Database failure" });
+        console.error("Dashboard Load Error:", err);
+        res.status(500).send("Critical Database Error.");
     }
 });
 
+// New Route: Approve User from Dashboard
+app.post('/approve-user/:id', async (req, res) => {
+    if (req.user && req.user.role === 'SuperAdmin') {
+        await User.findByIdAndUpdate(req.params.id, { isApproved: true });
+        res.redirect('/super-admin-dashboard');
+    } else {
+        res.status(403).send("Unauthorized");
+    }
+});
 
 
 app.post('/login', async (req, res) => {

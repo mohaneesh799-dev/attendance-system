@@ -3,129 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Super Admin Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>SuperAdmin Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --sidebar-width: 260px; }
-        body { background-color: #f4f7f6; font-family: 'Segoe UI', sans-serif; }
-        .sidebar { width: var(--sidebar-width); height: 100vh; position: fixed; background: #2c3e50; color: white; padding: 20px; z-index: 1000; }
-        .main-content { margin-left: var(--sidebar-width); padding: 30px; }
-        .nav-link { color: rgba(255,255,255,0.7); border-radius: 5px; margin: 5px 0; transition: 0.3s; }
-        .nav-link:hover, .nav-link.active { background: #34495e; color: white !important; }
-        .stat-card { border: none; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.3s; }
-        .stat-card:hover { transform: translateY(-5px); }
-        .table-container { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
-        .badge-pending { background-color: #ffd700; color: #000; }
+        :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --danger: #e74c3c; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f4f7f6; display: flex; }
+        .sidebar { width: 250px; background: var(--primary); color: white; height: 100vh; padding: 20px; position: fixed; }
+        .main-content { margin-left: 270px; padding: 30px; width: 100%; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #f8f9fa; }
+        .btn { padding: 8px 15px; border-radius: 5px; text-decoration: none; color: white; border: none; cursor: pointer; }
+        .btn-approve { background: var(--success); }
+        .btn-delete { background: var(--danger); }
+        .status-pill { padding: 4px 8px; border-radius: 20px; font-size: 12px; }
+        .approved { background: #d4edda; color: #155724; }
+        .pending { background: #fff3cd; color: #856404; }
     </style>
 </head>
 <body>
-
-    <div class="sidebar d-flex flex-column">
-        <h4 class="text-center mb-4"><i class="fas fa-user-shield me-2 text-warning"></i> Super Admin</h4>
+    <div class="sidebar">
+        <h2>Admin Portal</h2>
+        <p><i class="fas fa-user-shield"></i> <%= user.name %></p>
         <hr>
-        <ul class="nav nav-pills flex-column mb-auto">
-            <li class="nav-item">
-                <a href="/super-admin-dashboard" class="nav-link active"><i class="fas fa-home me-2"></i> Overview</a>
-            </li>
-            <li>
-                <a href="/attendance-history" class="nav-link text-white"><i class="fas fa-history me-2"></i> Global History</a>
-            </li>
-        </ul>
-        <hr>
-        <a href="/logout" class="btn btn-outline-danger w-100"><i class="fas fa-sign-out-alt me-2"></i> Logout</a>
+        <nav>
+            <p><a href="#users" style="color:white; text-decoration:none;">Manage Users</a></p>
+            <p><a href="#subjects" style="color:white; text-decoration:none;">Subjects</a></p>
+            <p><a href="/logout" style="color:white; text-decoration:none;">Logout</a></p>
+        </nav>
     </div>
 
     <div class="main-content">
-        <header class="mb-5 d-flex justify-content-between align-items-center">
-            <div>
-                <h2 class="fw-bold m-0">System Overview</h2>
-                <small class="text-muted">Logged in as: <strong><%= user.email %></strong></small>
-            </div>
-            <span class="badge bg-dark">Role: SuperAdmin</span>
-        </header>
-
-        <div class="row g-4 mb-5">
-            <div class="col-md-4">
-                <div class="card stat-card bg-primary text-white p-4">
-                    <p class="mb-0 opacity-75">Total Registered Users</p>
-                    <h3 class="fw-bold"><%= allUsers.length %></h3>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card stat-card bg-success text-white p-4">
-                    <p class="mb-0 opacity-75">Active Subjects</p>
-                    <h3 class="fw-bold"><%= allSubjects.length %></h3>
-                </div>
-            </div>
+        <h1>Dashboard Overview</h1>
+        
+        <div style="display: flex; gap: 20px;">
+            <div class="card" style="flex: 1;"><h3>Total Users</h3><p><%= allUsers.length %></p></div>
+            <div class="card" style="flex: 1;"><h3>Subjects</h3><p><%= allSubjects.length %></p></div>
         </div>
 
-        <div class="table-container">
-            <h4 class="fw-bold mb-4">User Directory & Management</h4>
-            <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                    <thead class="table-light">
+        <div class="card" id="users">
+            <h2>User Management</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% allUsers.forEach(u => { %>
                         <tr>
-                            <th>User Identity</th>
-                            <th>System Role</th>
-                            <th>Status</th>
-                            <th>Actions</th>
+                            <td><%= u.name %></td>
+                            <td><%= u.email %></td>
+                            <td><%= u.role %></td>
+                            <td>
+                                <span class="status-pill <%= u.isApproved ? 'approved' : 'pending' %>">
+                                    <%= u.isApproved ? 'Approved' : 'Pending' %>
+                                </span>
+                            </td>
+                            <td>
+                                <% if(!u.isApproved) { %>
+                                    <form action="/approve-user/<%= u._id %>" method="POST" style="display:inline;">
+                                        <button class="btn btn-approve">Approve</button>
+                                    </form>
+                                <% } %>
+                                <form action="/delete-user/<%= u._id %>" method="POST" style="display:inline;" onsubmit="return confirm('Delete this user?')">
+                                    <button class="btn btn-delete"><i class="fas fa-trash"></i></button>
+                                </form>
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        <% if (allUsers && allUsers.length > 0) { %>
-                            <% allUsers.forEach(u => { %>
-                            <tr>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        <div class="avatar-sm me-3 bg-light rounded-circle p-2 text-center" style="width: 40px;">
-                                            <i class="fas fa-user text-secondary"></i>
-                                        </div>
-                                        <div>
-                                            <div class="fw-bold"><%= u.name || 'New User' %></div>
-                                            <small class="text-muted"><%= u.email %></small>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="badge bg-info text-dark text-capitalize"><%= u.role %></span>
-                                </td>
-                                <td>
-                                    <span class="badge <%= u.approved ? 'bg-success' : 'badge-pending' %>">
-                                        <%= u.approved ? 'Authorized' : 'Pending Review' %>
-                                    </span>
-                                </td>
-                                <td>
-                                    <div class="d-flex gap-2">
-                                        <% if (!u.approved) { %>
-                                            <a href="/approve-super-admin?email=<%= u.email %>&secret=MANUAL_AUTH" class="btn btn-sm btn-success" title="Approve User">
-                                                <i class="fas fa-check"></i>
-                                            </a>
-                                        <% } %>
-                                        
-                                        <form action="/delete-user/<%= u._id %>" method="POST" onsubmit="return confirm('Permanently delete this user from the database?')">
-                                            <button class="btn btn-sm btn-outline-danger" title="Delete User">
-                                                <i class="fas fa-trash-alt"></i>
-                                            </button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                            <% }) %>
-                        <% } else { %>
-                            <tr>
-                                <td colspan="4" class="text-center py-5 text-muted">
-                                    <i class="fas fa-users-slash fa-3x mb-3"></i>
-                                    <p>No user records found.</p>
-                                </td>
-                            </tr>
-                        <% } %>
-                    </tbody>
-                </table>
-            </div>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card" id="subjects">
+            <h2>Quick Add Subject</h2>
+            <form action="/add-subject" method="POST">
+                <input type="text" name="subjectName" placeholder="Subject Name" required>
+                <input type="text" name="subjectCode" placeholder="Code (e.g. CS101)" required>
+                <button type="submit" class="btn btn-approve">Add Subject</button>
+            </form>
         </div>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
