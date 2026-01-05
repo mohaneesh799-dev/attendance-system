@@ -20,6 +20,7 @@
     "ejs": "^3.1.10",
     "exceljs": "^4.4.0",
     "express": "^5.2.1",
+    "express-fileupload": "^1.5.2",
     "express-session": "^1.18.2",
     "helmet": "^8.1.0",
     "mongoose": "^9.1.1",

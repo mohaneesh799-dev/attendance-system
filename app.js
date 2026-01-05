@@ -570,65 +570,35 @@ app.post('/register', async (req, res) => {
 
 
 
-app.post('/upload-users', upload.single('csvFile'), async (req, res) => {
-    if (!req.file) return res.status(400).send("No file uploaded.");
-    
-    const targetSection = req.body.section; // From hidden input in master.ejs
-    const users = [];
-
-    try {
-        const workbook = new ExcelJS.Workbook();
-        const filePath = req.file.path;
-
-        // Load file based on extension
-        if (req.file.originalname.endsWith('.csv')) {
-            await workbook.csv.readFile(filePath);
-        } else {
-            await workbook.xlsx.readFile(filePath);
-        }
-
-        const worksheet = workbook.getWorksheet(1); // Get the first sheet
-
-        // Loop through rows (starting from row 2 to skip headers)
-        worksheet.eachRow((row, rowNumber) => {
-            if (rowNumber > 1) {
-                // Mapping columns: 1=RollNo, 2=Name, 3=Email
-                // You can adjust these indices if your Excel structure is different
-                const rollNo = row.getCell(1).value;
-                const name = row.getCell(2).value;
-                const email = row.getCell(3).value;
-
-                if (email) {
-                    users.push({
-                        rollNo: rollNo ? rollNo.toString().trim() : '',
-                        name: name ? name.toString().trim() : 'New User',
-                        email: email.toString().toLowerCase().trim(),
-                        role: 'Student',
-                        section: targetSection, // Link to Master's section
-                        isApproved: true,
-                        isPreRegistered: true
-                    });
-                }
-            }
-        });
-
-        // Save to Database
-        if (users.length > 0) {
-            // ordered: false ensures one duplicate email doesn't stop the whole upload
-            await User.insertMany(users, { ordered: false });
-        }
-
-        // Clean up: delete file after processing
-        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-        
-        res.send("<script>alert('Upload Successful!'); window.location.href='/master';</script>");
-
-    } catch (err) {
-        console.error("Upload Error:", err);
-        // Clean up even if it fails
-        if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-        res.status(500).send("Failed to process file. Check column order: RollNo, Name, Email.");
-    }
+// 2. ADD: Bulk Import Logic (using a CSV parser or simple split)
+app.post('/upload-users', async (req, res) => {
+    try {
+        if (!req.files || !req.files.csvFile) return res.status(400).send("No file uploaded");
+        
+        const fileData = req.files.csvFile.data.toString('utf8');
+        const lines = fileData.split('\n');
+        
+        // Skip header, loop through rows
+        for (let i = 1; i < lines.length; i++) {
+            const [name, email, studentId] = lines[i].split(',');
+            if (email) {
+                await User.updateOne(
+                    { email: email.trim() },
+                    { 
+                        name: name.trim(), 
+                        studentId: studentId.trim(),
+                        section: req.body.section,
+                        role: 'Student',
+                        isApproved: true 
+                    },
+                    { upsert: true }
+                );
+            }
+        }
+        res.redirect('/master');
+    } catch (err) {
+        res.status(500).send("Error processing file");
+    }
 });
 
 
@@ -685,23 +655,22 @@ app.post('/delete-user/:id', async (req, res) => {
 });
 
 
+// 1. FIX: Bulk Approval Logic
 app.post('/bulk-approve', async (req, res) => {
-    try {
-        const { userIds, targetRole } = req.body;
-        if (!userIds || userIds.length === 0) return res.redirect('/master');
+    try {
+        const { userIds, targetRole } = req.body;
+        if (!userIds || userIds.length === 0) return res.redirect('/master');
 
-        // Update all selected users at once
-        await User.updateMany(
-            { _id: { $in: userIds } },
-            { 
-                role: targetRole, 
-                isApproved: true 
-            }
-        );
-        res.redirect('/master');
-    } catch (err) {
-        res.status(500).send("Error in bulk approval");
-    }
+        // Update multiple users at once
+        await User.updateMany(
+            { _id: { $in: userIds } },
+            { $set: { role: targetRole, isApproved: true } }
+        );
+
+        res.redirect('/master');
+    } catch (err) {
+        res.status(500).render('error', { message: "Failed to update users" });
+    }
 });
 
 
@@ -995,20 +964,30 @@ app.get('/approve-super-admin', async (req, res) => {
 
 
 
-app.get('/export-students', async (req, res) => {
-    if (!req.isAuthenticated() || req.user.role !== 'Master') return res.redirect('/login');
-    
-    const students = await User.find({ section: req.user.section });
-    let csv = "Name,Email,Role,Status\n";
-    
-    students.forEach(u => {
-        csv += `${u.name},${u.email},${u.role},${u.approved ? 'Approved' : 'Pending'}\n`;
-    });
+app.get('/export-attendance', async (req, res) => {
+    try {
+        const section = req.user.section;
+        const students = await User.find({ section, role: 'Student' });
+        const attendanceRecords = await Attendance.find({ section });
 
-    res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', `attachment; filename=${req.user.section}_students.csv`);
-    res.send(csv);
+        let csv = "Student ID,Name,Date,Status\n";
+
+        students.forEach(student => {
+            // Check every date recorded in the system
+            attendanceRecords.forEach(record => {
+                const isPresent = record.presentStudents.includes(student._id);
+                csv += `${student.studentId},${student.name},${record.date.toLocaleDateString()},${isPresent ? 'Present' : 'Absent'}\n`;
+            });
+        });
+
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', `attachment; filename=Attendance_Report_${section}.csv`);
+        res.send(csv);
+    } catch (err) {
+        res.status(500).send("Export failed");
+    }
 });
+
 
 
 // Add this at the very bottom of app.js
