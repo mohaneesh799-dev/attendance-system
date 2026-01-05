@@ -945,16 +945,28 @@ app.post('/submit-super-admin-request', async (req, res) => {
 });
 
 
+// Paste this in your app.js routes section
 app.get('/approve-super-admin', async (req, res) => {
-    const { email, secret } = req.query;
-    if (secret !== process.env.ADMIN_APPROVAL_SECRET) return res.status(403).send("Invalid Secret");
+    const { email, secret } = req.query;
 
-    try {
-        await User.findOneAndUpdate({ email }, { isApproved: true, role: 'SuperAdmin' });
-        res.send("User approved! You can now log in.");
-    } catch (err) {
-        res.status(500).send("Error updating user.");
-    }
+    // Check if secret key matches your environment variable
+    if (secret !== process.env.ADMIN_APPROVAL_SECRET) {
+        return res.status(403).render('error', { message: "Invalid Secret Key" });
+    }
+
+    try {
+        const user = await User.findOneAndUpdate(
+            { email: email },
+            { isApproved: true },
+            { new: true }
+        );
+
+        if (!user) return res.status(404).render('error', { message: "User not found" });
+
+        res.send(`<h1>Approved!</h1><p>${email} is now an active SuperAdmin.</p>`);
+    } catch (err) {
+        res.status(500).render('error', { message: "Database update failed" });
+    }
 });
 
 

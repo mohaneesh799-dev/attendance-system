@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Approval Pending</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding-top: 100px; background: #f4f4f9; }
+        .container { background: white; padding: 30px; display: inline-block; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Registration Successful!</h2>
+        <p>Your account (<strong><%= user.email %></strong>) is pending administrator approval.</p>
+        <p>Please check back later or contact the developer.</p>
+        <a href="/logout">Logout</a>
+    </div>
+</body>
+</html>
