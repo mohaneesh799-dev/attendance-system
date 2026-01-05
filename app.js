@@ -276,27 +276,29 @@ app.get('/auth/google/callback',
 
 app.get('/master', async (req, res) => {
     try {
-        // 1. Ensure the user is logged in
-        if (!req.isAuthenticated()) {
-            return res.redirect('/login');
+        const user = req.user || req.session.user;
+        if (!user) return res.redirect('/login');
+
+        const allowedRoles = ['Master', 'SuperAdmin'];
+        if (!allowedRoles.includes(user.role) || user.isApproved === false) {
+            return res.redirect('/login?error=Access Denied.');
         }
 
-        // 2. Safely check for the Master role
-        const user = req.user;
-        const role = (user.role || "").toLowerCase().trim();
+        const userSection = user.section || "";
+        const users = await User.find({ section: userSection });
+        
+        // CRITICAL FIX: Ensure this variable name matches your EJS file exactly
+        const subjects = await Subject.find({ section: userSection });
 
-        if (role !== 'master') {
-            console.log(`Access Denied: User role is ${role}`);
-            return res.redirect('/login');
-        }
-
-        // 3. Render the dashboard (ensure views/master.ejs exists!)
-        res.render('master', { user: user });
-
+        // Pass 'masterSubjects' so the EJS file can find it
+        res.render('master', { 
+            user, 
+            allUsers: users, 
+            masterSubjects: subjects // FIX: This was missing!
+        });
     } catch (err) {
-        console.error("Master Route Crash:", err.message);
-        // This prevents the 502 error by sending a clear response
-        res.status(500).send("Internal Server Error in Master Route");
+        console.error("Master Route Error:", err);
+        res.status(500).send("Internal Server Error.");
     }
 });
 
