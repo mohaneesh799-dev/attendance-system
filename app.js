@@ -412,15 +412,6 @@ app.get('/super-admin-dashboard', async (req, res) => {
     }
 });
 
-// New Route: Approve User from Dashboard
-app.post('/approve-user/:id', async (req, res) => {
-    if (req.user && req.user.role === 'SuperAdmin') {
-        await User.findByIdAndUpdate(req.params.id, { isApproved: true });
-        res.redirect('/super-admin-dashboard');
-    } else {
-        res.status(403).send("Unauthorized");
-    }
-});
 
 
 app.post('/login', async (req, res) => {
@@ -662,17 +653,14 @@ app.post('/lock-attendance', async (req, res) => {
 
 
 
-app.get('/approve-user/:id', async (req, res) => {
-    try {
-        const userId = req.params.id;
-        // Update the user's approved status in MongoDB
-        await User.findByIdAndUpdate(userId, { approved: true });
-        
-        res.send("<h2>User has been successfully approved as SuperAdmin!</h2>");
-    } catch (err) {
-        console.error("Approval Error:", err);
-        res.status(500).send("Error approving user.");
-    }
+// New Route: Approve User from Dashboard
+app.post('/approve-user/:id', async (req, res) => {
+    if (req.user && req.user.role === 'SuperAdmin') {
+        await User.findByIdAndUpdate(req.params.id, { isApproved: true });
+        res.redirect('/super-admin-dashboard');
+    } else {
+        res.status(403).send("Unauthorized");
+    }
 });
 
 
