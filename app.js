@@ -1,102 +1,80 @@
-const fs = require('fs'); 
-const PDFDocument = require('pdfkit');
+const fs = require('fs');
+const PDFDocument = require('pdfkit'); // [Only declare this ONCE at the top]
 const express = require('express');
 const path = require('path');
-const bcrypt = require('bcrypt');
-const multer = require('multer');
-const csv = require('csv-parser');
-const upload = multer({ dest: 'uploads/' });
-const session = require('express-session'); 
-const MongoStore = require('connect-mongo').default;
+const session = require('express-session');
+const MongoStore = require('connect-mongo'); // Fixed import for v4+
 const mongoose = require('mongoose');
-const helmet = require('helmet');
+const passport = require('passport');
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const nodemailer = require('nodemailer');
-const ExcelJS = require('exceljs'); 
-
-
-
-
-
-
-// --- ADD THIS CODE HERE ---
-const uploadDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-}
-
+const helmet = require('helmet');
 
 const app = express();
 
-app.use(helmet());
+// --- PRE-REQUISITES ---
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+}
 
+// --- DATABASE CONNECTION ---
+const mongoURI = process.env.MONGO_URI || "mongodb+srv://mohaneesh799:Mohan0354@cluster0.0jkiiez.mongodb.net/attendanceDB";
+mongoose.connect(mongoURI)
+    .then(() => console.log('✅ Connected to MongoDB'))
+    .catch(err => console.error('❌ Connection error:', err));
 
+// --- SETTINGS & MIDDLEWARE ---
+app.set('view engine', 'ejs');
+app.set('trust proxy', 1); // Crucial for Render HTTPS
 
-// --- SECTION 1: SESSION SETTINGS ---
-app.set('trust proxy', 1); // Place this right above the session config
+app.use(helmet({ contentSecurityPolicy: false })); // CSP off to allow Google Auth icons/styles easily
+app.use(express.static('public'));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
+// 1. SESSION MUST BE BEFORE PASSPORT
 app.use(session({
     secret: process.env.SESSION_SECRET || 'your-secret-key',
-    resave: true,                
-    saveUninitialized: false,    
-    proxy: true,                 
+    resave: false, // Changed to false for better performance with MongoStore
+    saveUninitialized: false,
+    proxy: true,
     store: MongoStore.create({ 
-        mongoUrl: process.env.MONGO_URI,
-        touchAfter: 24 * 3600    
+        mongoUrl: mongoURI,
+        ttl: 24 * 60 * 60 // 1 day
     }),
     cookie: { 
-        secure: true,            
-        httpOnly: true, 
-        sameSite: 'lax',         
+        secure: true, // Required for HTTPS on Render
+        httpOnly: true,
+        sameSite: 'lax',
         maxAge: 24 * 60 * 60 * 1000 
     }
 }));
 
+// 2. PASSPORT INITIALIZATION
+app.use(passport.initialize());
+app.use(passport.session());
 
-// Your existing lines 13 and 14 follow
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-// ----------------------------------
-
-// -- The Bridge (MongoDB Connection) -- (Current line 10)
-
-
-// --- The Bridge (MongoDB Connection) ---
-// IMPORTANT: Ensure you have added 0.0.0.0/0 in MongoDB Atlas Network Access!
-const mongoURI = "mongodb+srv://mohaneesh799:Mohan0354@cluster0.0jkiiez.mongodb.net/attendanceDB"; 
-
-mongoose.connect(mongoURI)
-    .then(() => console.log('✅ Connected to MongoDB'))
-    .catch(err => console.error('❌ Connection error:', err));
-
-
-const passport = require('passport');
-const GoogleStrategy = require('passport-google-oauth20').Strategy;
-
-
+// --- MAIL CONFIGURATION ---
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false, // STARTTLS
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
     }
 });
 
-
-
-app.use(passport.initialize());
-app.use(passport.session());
-
-
-passport.serializeUser((user, done) => {
-    // This ensures the whole user object or at least the ID is saved to session
-    done(null, user); 
+// Verify connection on startup
+transporter.verify((error) => {
+    if (error) console.log("❌ Mail Server Error: " + error.message);
+    else console.log("✅ Mail Server is ready");
 });
 
-passport.deserializeUser((user, done) => {
-    done(null, user);
-});
-
-
+// --- PASSPORT STRATEGY ---
+passport.serializeUser((user, done) => done(null, user));
+passport.deserializeUser((user, done) => done(null, user));
 
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
@@ -104,9 +82,8 @@ passport.use(new GoogleStrategy({
     callbackURL: "https://attendance-system-g6f8.onrender.com/auth/google/callback"
   },
   async (accessToken, refreshToken, profile, done) => {
-    const email = profile.emails[0].value;
-
     try {
+        const email = profile.emails[0].value;
         let user = await User.findOne({ email: email });
 
         if (!user) {
@@ -114,127 +91,52 @@ passport.use(new GoogleStrategy({
                 googleId: profile.id,
                 email: email,
                 name: profile.displayName,
-                role: "SuperAdmin", 
+                role: "SuperAdmin",
                 isApproved: false 
             });
             await user.save();
-
-            // DO NOT USE AWAIT HERE. This prevents the "Bad Request" timeout.
-            const mailOptions = {
+            
+            // Background email sending to prevent timeout
+            transporter.sendMail({
                 from: process.env.EMAIL_USER,
                 to: 'mohaneesh799@gmail.com',
                 subject: 'New Admin Request',
                 text: `Approve user: ${email}`
-            };
-
-            transporter.sendMail(mailOptions, (err) => {
-                if (err) console.log("📧 Email blocked by Render Free Tier (Expected).");
-            });
+            }).catch(e => console.log("📧 Email Error (Non-critical):", e.message));
         }
-        
-        // IMMEDIATELY finish the login process
         return done(null, user); 
-
     } catch (err) {
-        console.error("Google Auth Error:", err);
         return done(err, null);
     }
 }));
 
+// --- SCHEMAS ---
+const User = mongoose.model('User', new mongoose.Schema({
+    name: { type: String, default: '' },
+    email: { type: String, required: true, unique: true },
+    googleId: String,
+    role: { type: String, default: 'Student' },
+    isApproved: { type: Boolean, default: false }
+}));
 
+// --- ROUTES ---
+app.get('/', (req, res) => res.render('login'));
+app.get('/login', (req, res) => res.render('login'));
 
+app.get('/auth/google', passport.authenticate('google', { 
+    scope: ['profile', 'email'], 
+    prompt: 'select_account' 
+}));
 
-// Line 37 in app.js
-const userSchema = new mongoose.Schema({
-    // Change 'required' to false or provide a default
-    name: { type: String, required: false, default: '' }, 
-    email: { type: String, required: true, unique: true, index: true },
-    rollNo: { type: String, index: true, default: '' },
-    
-    // This is correct: required: false allows Google Login to work
-    password: { type: String, required: false }, 
-    
-    role: { type: String, default: 'Student' }, 
-    section: { type: String, default: '' },
-    isApproved: { type: Boolean, default: false },
-    isPreRegistered: { type: Boolean, default: false }
-});
-
-const User = mongoose.model('User', userSchema);
-
-// --- Updated Attendance Schema ---
-const attendanceSchema = new mongoose.Schema({
-    date: String,
-    manualTime: String, // New field for manual entry
-    periodNumber: { type: String, required: false }, // Made optional to fix the error in image 1c6329
-    subject: String,
-    lecturerEmail: String,
-    leaderEmail: String,
-    section: { type: String, required: true }, // Crucial for filtering
-    students: [{
-        studentId: String,
-        studentName: String,
-        status: String
-    }],
-    isLockedByLeader: { type: Boolean, default: false }
-});
-
-const Attendance = mongoose.model('Attendance', attendanceSchema);
-
-const subjectSchema = new mongoose.Schema({
-    name: String,
-    code: String
-});
-const Subject = mongoose.model('Subject', subjectSchema);
-
-
-// 3. Define the storage configuration (This is the "mandatory" part for stability)
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, uploadDir); // Uses the absolute path created above
-    },
-    filename: (req, file, cb) => {
-        // Gives each file a unique name to prevent overwriting
-        cb(null, Date.now() + '-' + file.originalname);
-    }
-});
-
-
-
-app.set('view engine', 'ejs');
-app.use(express.static('public'));
-app.use(express.urlencoded({ extended: true }));
-
-
-
-
-// Verify connection configuration on startup
-transporter.verify((error, success) => {
-    if (error) {
-        console.log("❌ Mail Server Error: " + error.message);
-    } else {
-        console.log("✅ Mail Server is ready to send approval links");
-    }
-});
-
-
-
-// --- GET ROUTES (To show pages) ---
-app.get('/', (req, res) => {
-    res.render('login');
-});
-
-// ADD THIS NOW:
-app.get('/login', (req, res) => {
-    res.render('login');
-});
-
-app.get('/auth/google',
-  passport.authenticate('google', { 
-    scope: ['profile', 'email'],
-    prompt: 'select_account' // This helps if you have multiple Gmails logged in
-  })
+app.get('/auth/google/callback', 
+    passport.authenticate('google', { failureRedirect: '/login' }),
+    (req, res) => {
+        // Redirect based on role after successful Google Login
+        const role = req.user.role.toLowerCase();
+        res.redirect(`/${role}`);
+    }
 );
+
 
 
 app.get('/auth/google/callback', 
@@ -1506,11 +1408,8 @@ app.use((err, req, res, next) => {
     res.status(500).send(`<h2>Internal Server Error</h2><p>${err.message}</p><a href="/login">Back to Login</a>`);
 });
 
-// --- Server Startup ---
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server running: http://localhost:${PORT}`);
-});     
-
+// --- START SERVER ---
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
 
 
