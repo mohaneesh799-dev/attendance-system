@@ -1017,7 +1017,6 @@ app.post('/bulk-approve', async (req, res) => {
 });
 
 
-const PDFDocument = require('pdfkit');
 
 app.get('/generate-day-pdf/:date', async (req, res) => {
     try {
