@@ -4,65 +4,75 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Account Settings</title>
-    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --primary: #2c3e50; --secondary: #34495e; --accent: #3498db; --white: #ffffff; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 0; }
-        .container { max-width: 600px; margin: 50px auto; background: var(--white); padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        h2 { color: var(--primary); border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 0; }
+        :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --danger: #e74c3c; }
+        body { font-family: 'Inter', sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; }
+        .container { max-width: 600px; margin: 30px auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        h2 { color: var(--primary); margin-bottom: 30px; display: flex; align-items: center; gap: 10px; }
         .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; color: var(--secondary); }
-        input[type="text"], input[type="email"], input[type="password"], select {
-            width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; font-size: 16px;
-        }
-        input[readonly] { background-color: #f9f9f9; cursor: not-allowed; }
-        .btn-save { background-color: var(--accent); color: white; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px; transition: background 0.3s; }
-        .btn-save:hover { background-color: #2980b9; }
-        .back-link { display: block; text-align: center; margin-top: 20px; text-decoration: none; color: #7f8c8d; }
-        .back-link:hover { color: var(--primary); }
-        .alert { padding: 10px; margin-bottom: 20px; border-radius: 4px; text-align: center; display: none; }
-        .alert-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: #444; font-size: 14px; }
+        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 15px; transition: border 0.3s; }
+        input:focus { border-color: var(--accent); outline: none; }
+        input[readonly] { background-color: #f8f9fa; color: #7f8c8d; cursor: not-allowed; }
+        .btn-save { background: var(--accent); color: white; border: none; padding: 14px; border-radius: 8px; cursor: pointer; width: 100%; font-size: 16px; font-weight: bold; margin-top: 10px; }
+        .btn-save:hover { background: #2980b9; transform: translateY(-1px); }
+        .back-link { display: block; text-align: center; margin-top: 25px; text-decoration: none; color: #7f8c8d; font-size: 14px; }
+        .msg { padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; text-align: center; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Account Settings</h2>
+    <h2><i class="fas fa-cog"></i> Account Settings</h2>
+
+    <% if (typeof message !== 'undefined') { %>
+        <div class="msg <%= messageType === 'success' ? 'success' : 'error' %>">
+            <%= message %>
+        </div>
+    <% } %>
     
     <form action="/update-settings" method="POST">
         <div class="form-group">
-            <label for="name">Full Name</label>
-            <input type="text" id="name" name="name" value="<%= user.name %>" required>
+            <label>Full Name</label>
+            <input type="text" name="name" value="<%= user.name %>" required>
         </div>
 
         <div class="form-group">
-            <label for="email">Email Address (Read-only)</label>
-            <input type="email" id="email" name="email" value="<%= user.email %>" readonly>
+            <label>Email Address (Primary Identity)</label>
+            <input type="email" value="<%= user.email %>" readonly>
         </div>
 
         <div class="form-group">
-            <label for="role">Your Role</label>
-            <input type="text" id="role" name="role" value="<%= user.role %>" readonly>
-            <small style="color: #666;">Contact Master to change your role.</small>
-        </div>
-
-        <hr style="border: 0; border-top: 1px solid #eee; margin: 25px 0;">
-
-        <h3>Change Password</h3>
-        <div class="form-group">
-            <label for="currentPassword">Current Password</label>
-            <input type="password" id="currentPassword" name="currentPassword" placeholder="Required to save changes" required>
+            <label>WhatsApp Number (For Reports)</label>
+            <input type="text" name="phone" value="<%= user.phone || '' %>" placeholder="e.g. 919876543210">
         </div>
 
         <div class="form-group">
-            <label for="newPassword">New Password (Leave blank to keep current)</label>
-            <input type="password" id="newPassword" name="newPassword" placeholder="Minimum 6 characters">
+            <label>Current Role</label>
+            <input type="text" value="<%= user.role %>" readonly>
         </div>
 
-        <button type="submit" class="btn-save">Save All Changes</button>
+        <hr style="margin: 30px 0; opacity: 0.1;">
+
+        <h3><i class="fas fa-lock"></i> Security Update</h3>
+        
+        <div class="form-group">
+            <label>Current Password</label>
+            <input type="password" name="currentPassword" placeholder="Required to authorize changes" required>
+        </div>
+
+        <div class="form-group">
+            <label>New Password</label>
+            <input type="password" name="newPassword" placeholder="Leave blank to keep current">
+        </div>
+
+        <button type="submit" class="btn-save">Update Profile</button>
     </form>
 
-    <a href="/<%= user.role.toLowerCase() %>" class="back-link">← Back to Dashboard</a>
+    <a href="/<%= user.role.toLowerCase() %>" class="back-link">← Back to <%= user.role %> Dashboard</a>
 </div>
 
 </body>

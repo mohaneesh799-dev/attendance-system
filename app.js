@@ -240,7 +240,7 @@ app.get('/auth/google',
 app.get('/auth/google/callback', 
   passport.authenticate('google', { failureRedirect: '/login' }),
   (req, res) => {
-    // FORCE save the session to the database
+    // Force session save to MongoDB before redirecting
     req.session.save((err) => {
       if (err) {
           console.error("Session Save Error:", err);
@@ -249,22 +249,33 @@ app.get('/auth/google/callback',
 
       const user = req.user;
       
-      // 1. Handle Unapproved Users first
+      // 1. Handle Unapproved Users
       if (!user.isApproved) {
           return res.render('pending', { user });
       }
 
-      // 2. Route by Role (Case-Insensitive)
+      // 2. Role-Based Routing
       const role = (user.role || "").toLowerCase().trim();
-      
-      console.log(`User ${user.email} logged in with role: ${role}`);
+      console.log(`User ${user.email} authenticated. Role: ${role}`);
 
-      if (role === 'superadmin') {
-          res.redirect('/super-admin-dashboard');
-      } else if (role === 'master' || role === 'leader' || role === 'lecturer') {
-          res.redirect('/master'); // Or your specific route for these roles
-      } else {
-          res.redirect('/student');
+      switch(role) {
+          case 'superadmin':
+              res.redirect('/super-admin-dashboard');
+              break;
+          case 'master':
+              res.redirect('/master');
+              break;
+          case 'leader':
+              res.redirect('/leader');
+              break;
+          case 'lecturer':
+              res.redirect('/lecturer');
+              break;
+          case 'student':
+              res.redirect('/student');
+              break;
+          default:
+              res.redirect('/login?error=RoleNotAssigned');
       }
     });
   }
@@ -275,571 +286,972 @@ app.get('/auth/google/callback',
 
 app.get('/master', async (req, res) => {
     try {
-        if (!req.isAuthenticated() || req.user.role !== 'Master') {
-            return res.redirect('/login');
+        // 1. Unified Authentication Check
+        // Checks both Passport (req.user) and manual session (req.session.user)
+        const user = req.user || req.session.user;
+
+        if (!user || user.role !== 'Master') {
+            return res.redirect('/login?error=unauthorized');
         }
 
-        const facultySection = req.user.section;
+        // 2. Data Fetching with Section Isolation
+        const facultySection = user.section;
         
-        // Fetch data
+        // Use Promise.all for faster performance
         const [allUsers, masterSubjects] = await Promise.all([
-            User.find({ section: facultySection }) || [],
-            Subject.find({ section: facultySection }) || []
+            User.find({ section: facultySection }).lean(), // .lean() makes queries faster
+            Subject.find({ section: facultySection }).lean()
         ]);
 
-        // FIX: Check if your DB uses .approved or .isApproved
-        // Using || false ensures it doesn't crash if the field is missing
+        // 3. Robust Stats Calculation
+        // Standardizes on 'isApproved' but checks 'approved' as a fallback
         const stats = {
-            total: allUsers.length,
-            pending: allUsers.filter(u => (u.isApproved === false || u.approved === false)).length,
-            subjects: masterSubjects.length
+            total: allUsers.length || 0,
+            pending: allUsers.filter(u => {
+                const status = u.isApproved !== undefined ? u.isApproved : u.approved;
+                return status === false;
+            }).length,
+            subjects: masterSubjects.length || 0
         };
 
-        // Ensure we pass empty arrays if nothing is found to prevent EJS "not defined" errors
-        res.render('master', { 
-            user: req.user, 
-            allUsers: allUsers || [], 
-            masterSubjects: masterSubjects || [], 
-            stats 
+        // 4. Render with Fallbacks
+        // This ensures master.ejs doesn't crash if arrays are empty
+        req.session.save(() => {
+            res.render('master', { 
+                user: user, 
+                allUsers: allUsers || [], 
+                masterSubjects: masterSubjects || [], 
+                stats: stats 
+            });
         });
+
     } catch (err) {
-        console.error("Master Dashboard Error:", err);
-        // Use a generic error render that doesn't depend on dashboard variables
-        res.status(500).send("Internal Server Error: Failed to load faculty portal.");
+        console.error("❌ Master Dashboard Error:", err);
+        res.status(500).send(`
+            <div style="font-family:sans-serif; text-align:center; padding:50px;">
+                <h2>Internal Server Error</h2>
+                <p>Failed to load faculty portal for section ${req.user?.section || 'Unknown'}</p>
+                <a href="/login">Return to Login</a>
+            </div>
+        `);
     }
 });
 
 
 app.get('/leader', async (req, res) => {
-    if (!req.session.user || req.session.user.role !== 'Leader') return res.redirect('/login');
+    // 1. Safety Check: Ensure user is logged in and is a Leader
+    const user = req.session.user || req.user;
+    if (!user || user.role !== 'Leader') {
+        return res.redirect('/login?error=Unauthorized');
+    }
 
-    try {
-        // Fetch only students and pre-registered users to exclude Master/Lecturer from the list
-     // Replace your existing studentsOnly query with this:
-const studentsOnly = await User.find({
-    section: req.session.user.section, // Filter by the Leader's section
-    $or: [
-        { role: 'Student' },
-        { role: 'Leader' }, // Ensure the Leader is included in the list
-        { isPreRegistered: true }
-    ]
-}).sort({ rollNo: 1 });
+    try {
+        // 2. Fetch Students and Leaders ONLY from the specific section
+        // This prevents a Leader from Section A seeing students from Section B
+        const studentsOnly = await User.find({
+            section: user.section, 
+            $or: [
+                { role: 'Student' },
+                { role: 'Leader' }
+            ]
+        }).sort({ rollNo: 1 }).lean();
 
-// Modify your subject query as well:
-const masterSubjects = await Subject.find({ section: req.session.user.section });
-        res.render('leader', { 
-            user: req.session.user, 
-            allUsers: studentsOnly, // Only contains students now
-            masterSubjects: masterSubjects 
-        });
-    } catch (err) {
-        console.error("Leader Route Error:", err);
-        res.status(500).send("Error loading dashboard.");
-    }
+        // 3. Fetch Lecturers (needed for the "Choose Lecturer" dropdown)
+        // Note: Lecturers usually aren't tied to a specific section in the User model,
+        // so we fetch all approved lecturers.
+        const lecturers = await User.find({ 
+            role: 'Lecturer', 
+            isApproved: true 
+        }).select('name email').lean();
+
+        // 4. Fetch Subjects assigned to this specific section
+        const masterSubjects = await Subject.find({ 
+            section: user.section 
+        }).lean();
+
+        // 5. Render with all required data
+        res.render('leader', { 
+            user: user, 
+            allUsers: studentsOnly,     // The list of students to mark
+            lecturers: lecturers,       // For the lecturer dropdown
+            masterSubjects: masterSubjects 
+        });
+
+    } catch (err) {
+        console.error("❌ Leader Dashboard Route Error:", err);
+        res.status(500).send("Internal Server Error: Could not load the Leader Entry portal.");
+    }
 });
 
 app.get('/lecturer', async (req, res) => {
-    try {
-        // 1. Get Today's Date in YYYY-MM-DD format to match your DB strings
-        const today = new Date().toISOString().split('T')[0];
+    try {
+        // 1. Unified User Detection (Passport or Session)
+        const user = req.user || req.session.user;
 
-       // Replace your existing todayRecords query with this:
-    const todayRecords = await Attendance.find({
-    section: req.session.user.section, // Added: Only show records for the lecturer's section
-    lecturerEmail: req.session.user.email,
-    date: today
-});
+        // 2. Security Check
+        if (!user || user.role !== 'Lecturer') {
+            return res.redirect('/login?error=Unauthorized');
+        }
 
-        // 3. Render the page (Crucial: pass todayRecords so it's not undefined)
-        res.render('lecturer', { 
-            user: req.session.user, 
-            todayRecords: todayRecords 
-        });
-    } catch (err) {
-        console.error(err);
-        res.status(500).send("Internal Server Error: Could not load Lecturer Dashboard");
-    }
+        // 3. Date Handling (YYYY-MM-DD)
+        const today = new Date().toISOString().split('T')[0];
+
+        // 4. Optimized Database Query
+        // .lean() makes the query faster and prevents EJS circular reference errors
+        const todayRecords = await Attendance.find({
+            section: user.section,
+            // Use lean() for read-only dashboard data
+            date: today 
+        }).lean();
+
+        // 5. Ensure todayRecords is at least an empty array to prevent EJS ".length" errors
+        const safeRecords = todayRecords || [];
+
+        // 6. Force Session Save (Important for Render/Heroku stability)
+        req.session.save(() => {
+            res.render('lecturer', { 
+                user: user, 
+                todayRecords: safeRecords 
+            });
+        });
+
+    } catch (err) {
+        console.error("❌ Lecturer Dashboard Error:", err);
+        res.status(500).send(`
+            <div style="font-family:sans-serif; text-align:center; padding:50px;">
+                <h2>Dashboard Error</h2>
+                <p>Could not retrieve attendance logs for today.</p>
+                <a href="/login">Try Logging in Again</a>
+            </div>
+        `);
+    }
 });
 
 
 app.get('/student', async (req, res) => {
-    if (!req.session.user || req.session.user.role !== 'Student') return res.redirect('/login');
+    // 1. Unified User Detection (Passport or Session)
+    const user = req.session.user || req.user;
 
-    try {
-        const userRoll = req.session.user.rollNo;
+    // 2. Security Check: Redirect if not logged in or wrong role
+    if (!user || user.role !== 'Student') {
+        return res.redirect('/login?error=Unauthorized');
+    }
 
-       // Add the section filter to ensure data isolation
-        const records = await Attendance.find({
-        section: req.session.user.section, // NEW: Filter by student's current section
-         "students": { $elemMatch: { studentId: userRoll } }
-    }).sort({ date: -1 });
+    try {
+        const userRoll = user.rollNo;
+        const userSection = user.section;
 
-        // Calculate stats for the summary cards
-        let present = 0;
-        records.forEach(rec => {
-            const me = rec.students.find(s => s.studentId === userRoll);
-            if (me && me.status === 'Present') present++;
-        });
+        // 3. Optimized Database Query
+        // We filter by section AND rollNo to ensure data isolation.
+        // .lean() is used for faster read-only performance.
+        const records = await Attendance.find({
+            section: userSection,
+            "students.studentId": userRoll 
+        })
+        .sort({ date: -1 })
+        .limit(50) // Optional: limit to recent 50 records for performance
+        .lean();
 
-        res.render('student', { 
-            user: req.session.user, 
-            records, 
-            presentCount: present, 
-            totalCount: records.length 
-        });
-    } catch (err) {
-        res.status(500).send("Error loading board.");
-    }
+        // 4. Efficient Stats Calculation
+        let presentCount = 0;
+        records.forEach(rec => {
+            const myEntry = rec.students.find(s => s.studentId === userRoll);
+            if (myEntry && myEntry.status === 'Present') {
+                presentCount++;
+            }
+        });
+
+        // 5. Render with calculated variables
+        res.render('student', { 
+            user: user, 
+            records: records, 
+            presentCount: presentCount, 
+            totalCount: records.length 
+        });
+
+    } catch (err) {
+        console.error("❌ Student Dashboard Error:", err);
+        res.status(500).send(`
+            <div style="font-family:sans-serif; text-align:center; padding:50px;">
+                <h2>Database Error</h2>
+                <p>We couldn't retrieve your attendance stats. Please try again later.</p>
+                <a href="/login">Back to Login</a>
+            </div>
+        `);
+    }
 });
 
 
-
-// Updated SuperAdmin Dashboard Route
 app.get('/super-admin-dashboard', async (req, res) => {
     try {
+        // 1. Unified User Retrieval
         const user = req.user || req.session.user;
 
-        // Strict security check
+        // 2. Strict Security Gate
+        // Checks for: Login status, Role, and Approval status
         if (!user || user.role !== 'SuperAdmin' || user.isApproved !== true) {
-            return res.redirect('/login?error=Access Denied');
+            console.warn(`🛑 Unauthorized access attempt to SuperAdmin by: ${user ? user.email : 'Unknown'}`);
+            return res.redirect('/login?error=Unauthorized Access');
         }
 
-        // Fetch everything from DB to display on the dashboard
-        const allUsers = await User.find({});
-        const allSubjects = await Subject.find({});
+        // 3. Optimized Parallel Data Fetching
+        // Using Promise.all allows both queries to run simultaneously, saving time.
+        // .select('-password') ensures security by excluding hashed passwords.
+        const [allUsers, allSubjects] = await Promise.all([
+            User.find({})
+                .select('-password') 
+                .sort({ role: 1, name: 1 })
+                .lean(),
+            Subject.find({})
+                .sort({ section: 1, name: 1 })
+                .lean()
+        ]);
 
+        // 4. Render with optimized data
         res.render('super-admin', { 
             user, 
             allUsers, 
-            allSubjects 
+            allSubjects,
+            // Pass current counts for the stat cards
+            stats: {
+                totalUsers: allUsers.length,
+                pendingApprovals: allUsers.filter(u => !u.isApproved).length,
+                totalSubjects: allSubjects.length
+            }
         });
+
     } catch (err) {
-        console.error("Dashboard Load Error:", err);
-        res.status(500).send("Critical Database Error.");
+        console.error("🔥 SuperAdmin Dashboard Critical Error:", err);
+        res.status(500).render('error', { 
+            message: "System was unable to load administrative data. Please check database logs." 
+        });
     }
 });
 
 
 
 app.post('/login', async (req, res) => {
-    try {
-        const { email, password } = req.body;
-        const user = await User.findOne({ email: email.toLowerCase().trim() });
+    try {
+        const { email, password } = req.body;
+        
+        // 1. Find user with basic sanitization
+        const user = await User.findOne({ email: email.toLowerCase().trim() });
 
-        if (!user) {
-            return res.send("<script>alert('User not found.'); window.location.href='/login';</script>");
-        }
+        if (!user) {
+            return res.send("<script>alert('Account not found. Please register first.'); window.location.href='/login';</script>");
+        }
 
-        if (user.role !== 'Master' && !user.isApproved) {
-            return res.send("<script>alert('Approval Pending. Please wait for the Master.'); window.location.href='/login';</script>");
-        }
+        // 2. Password Check (Note: Consider using bcrypt.compare in production)
+        if (user.password !== password) {
+            return res.send("<script>alert('Invalid credentials. Please try again.'); window.location.href='/login';</script>");
+        }
 
-        if (user.password !== password) {
-            return res.send("<script>alert('Invalid Password'); window.location.href='/login';</script>");
-        }
+        // 3. Approval Gate
+        // Masters bypass approval; all other roles (Student, Lecturer, Leader) must be approved
+        if (user.role !== 'Master' && !user.isApproved) {
+            return res.send("<script>alert('Your account is awaiting approval from the Master.'); window.location.href='/login';</script>");
+        }
 
-        // SETTING SESSION - Crucial for lecturer data retrieval
-        req.session.user = {
-            id: user._id,
-            email: user.email.toLowerCase(),
-            role: user.role, // This will now be 'Lecturer' if updated by Master
-            name: user.name,
-            section: user.section, // NEW: Crucial for multi-section filtering
-            rollNo: user.rollNo    // NEW: Needed for student dashboard stats
-        };
+        // 4. Set Session Data
+        // Storing the ID and RollNo is essential for attendance indexing
+        req.session.user = {
+            _id: user._id,
+            email: user.email.toLowerCase(),
+            role: user.role,
+            name: user.name,
+            section: user.section,
+            rollNo: user.rollNo
+        };
 
-     // Replace lines 299-307 in your app.js
-const userRole = user.role.toLowerCase(); 
-if (userRole === 'master') {
-    res.redirect('/master');
-} else if (userRole === 'lecturer') {
-    res.redirect('/lecturer');
-} else if (userRole === 'leader') {
-    res.redirect('/leader');
-} else {
-    res.redirect('/student');
-}
+        // 5. Explicitly save session before redirecting
+        // This prevents the "Login Loop" error common on platforms like Render or Heroku
+        req.session.save((err) => {
+            if (err) {
+                console.error("Session Save Error:", err);
+                return res.status(500).send("Login failed: Session could not be initialized.");
+            }
 
-    } catch (err) {
-        console.error("Login Error:", err);
-        res.status(500).send("Internal Server Error during login.");
-    }
+            // 6. Dynamic Redirect based on Role
+            const roleRedirects = {
+                'master': '/master',
+                'lecturer': '/lecturer',
+                'leader': '/leader',
+                'student': '/student'
+            };
+
+            const targetPath = roleRedirects[user.role.toLowerCase()] || '/student';
+            res.redirect(targetPath);
+        });
+
+    } catch (err) {
+        console.error("Login System Error:", err);
+        res.status(500).render('error', { message: "Internal Server Error during the authentication process." });
+    }
 });
 
-
+// --- Logout Route ---
 app.get('/logout', (req, res) => {
-    req.session.destroy((err) => {
-        if (err) {
-            console.log("Logout error:", err);
-            return res.redirect('/dashboard');
-        }
-        res.clearCookie('connect.sid'); // Clears the browser cookie
-        res.redirect('/login');
-    });
+    // 1. Passport.js logout (if you use it)
+    if (typeof req.logout === 'function') {
+        req.logout((err) => {
+            if (err) console.error("Passport logout error:", err);
+        });
+    }
+
+    // 2. Destroy Express Session
+    req.session.destroy((err) => {
+        if (err) {
+            console.error("Session destruction error:", err);
+            return res.redirect('/'); 
+        }
+        
+        // 3. Clear the cookie and redirect to login
+        res.clearCookie('connect.sid'); 
+        res.redirect('/login?message=Logged out successfully');
+    });
 });
 
 
-// Add this route to app.js to show the registration form
+
+// --- Registration Page Route ---
 app.get('/register', (req, res) => {
-    try {
-        // Renders the register.ejs file from your views folder
-        res.render('register'); 
-    } catch (err) {
-        console.error("Error loading register page:", err);
-        res.status(500).send("Could not find register.ejs in views folder.");
-    }
+    // If user is already logged in, redirect them away from register page
+    if (req.session.user) {
+        return res.redirect(`/${req.session.user.role.toLowerCase()}`);
+    }
+    
+    res.render('register', { error: null }); 
 });
 
-
+// --- Settings Page Route ---
 app.get('/settings', async (req, res) => {
-    try {
+    try {
+        // 1. Auth Check: Ensure we know WHO is asking for settings
+        const sessionUser = req.session.user || req.user;
+        
+        if (!sessionUser) {
+            return res.redirect('/login?error=Please log in to access settings');
+        }
 
-    
-        const currentUser = await User.findOne({ role: 'Student' }); 
+        // 2. Fetch fresh data from DB (instead of just using session data)
+        // This ensures if their role or status changed, it reflects here
+        const userDetails = await User.findById(sessionUser._id).lean();
 
-        if (!currentUser) {
-            return res.send("User not found. Please log in again.");
-        }
+        if (!userDetails) {
+            return res.status(404).render('error', { message: "Account no longer exists." });
+        }
 
+        // 3. Render settings with the specific user's data
+        res.render('settings', { 
+            user: userDetails,
+            success: req.query.success || null 
+        }); 
 
-        res.render('settings', { user: currentUser }); 
-    } catch (err) {
-        console.error(err);
-        res.status(500).send("Error loading settings page.");
-    }
+    } catch (err) {
+        console.error("Settings Load Error:", err);
+        res.status(500).render('error', { message: "Internal Server Error loading settings." });
+    }
 });
 
 app.post('/update-settings', async (req, res) => {
-    try {
-        const { name, rollNo, themeColor, email } = req.body;
-       
-        
+    const { name, phone, currentPassword, newPassword } = req.body;
+    const userId = req.session.user._id;
 
-      
-        const userEmail = email; 
+    try {
+        const user = await User.findById(userId);
 
-        await User.findOneAndUpdate(
-            { email: userEmail },
-            { $set: { name: name, rollNo: rollNo, theme: themeColor } }
-        );
+        // 1. Verify Current Password
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!isMatch) {
+            return res.render('settings', { 
+                user: req.session.user, 
+                message: "Incorrect current password!", 
+                messageType: 'error' 
+            });
+        }
 
-        res.send("<script>alert('Settings Updated!'); window.location.href='/student';</script>");
-    } catch (err) {
-        res.status(500).send("Update failed");
-    }
+        // 2. Update Basic Info
+        user.name = name;
+        user.phone = phone;
+
+        // 3. Update Password if provided
+        if (newPassword && newPassword.trim() !== "") {
+            if (newPassword.length < 6) {
+                return res.render('settings', { 
+                    user: req.session.user, 
+                    message: "New password must be at least 6 characters.", 
+                    messageType: 'error' 
+                });
+            }
+            user.password = await bcrypt.hash(newPassword, 10);
+        }
+
+        await user.save();
+
+        // 4. IMPORTANT: Update the session so the dashboard shows new name
+        req.session.user = user; 
+
+        res.render('settings', { 
+            user: user, 
+            message: "Profile updated successfully!", 
+            messageType: 'success' 
+        });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Error updating settings.");
+    }
 });
 
 
 
 app.post('/register', async (req, res) => {
-    const { email, password, role } = req.body;
-    try {
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = new User({
-            email,
-            password: hashedPassword,
-            role, 
-            isApproved: false,
-            name: "", // Initialized to prevent validation errors
-            rollNo: "" 
-        });
+    // Destructure all required fields from the registration form
+    const { name, email, password, role, section, rollNo } = req.body;
 
-        await newUser.save();
-        console.log("✅ User saved to DB");
+    try {
+        // 1. Basic Validation
+        if (!email.endsWith('@rku.ac.in')) {
+            return res.status(400).send("Please use your official @rku.ac.in email.");
+        }
 
-        // Use a separate try-catch so email failure doesn't crash the registration
-        try {
-            const approvalLink = `${req.protocol}://${req.get('host')}/approve-user/${newUser._id}`;
-            const mailOptions = {
-                from: 'mohaneesh799@gmail.com',
-                to: 'mohaneesh799@gmail.com',
-                subject: 'New User Registration Request',
-                html: `<p>New User: ${email}</p><p>Role: ${role}</p><a href="${approvalLink}">Approve</a>`
-            };
-            await transporter.sendMail(mailOptions);
-        } catch (mailErr) {
-            console.error("⚠️ Email timeout, but user was saved successfully.");
-        }
+        // 2. Security: Check if user already exists
+        const existingUser = await User.findOne({ email: email.toLowerCase() });
+        if (existingUser) {
+            return res.status(400).send("Email is already registered. Try logging in.");
+        }
 
-        res.redirect('/login?message=Registration successful! Waiting for approval.');
-    } catch (err) {
-        if (err.code === 11000) return res.status(400).send("Email already exists.");
-        res.status(500).send("Registration error.");
-    }
+        // 3. Password Hashing
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // 4. Create New User Object
+        const newUser = new User({
+            name: name,
+            email: email.toLowerCase(),
+            password: hashedPassword,
+            role: role,
+            section: section, // Crucial for dashboard data isolation
+            rollNo: rollNo || "", // Optional for faculty, required for students
+            isApproved: false,
+            isPreRegistered: false
+        });
+
+        await newUser.save();
+        console.log(`✅ New registration request: ${email} (${role})`);
+
+        // 5. Notification System (Admin Email)
+        try {
+            const approvalLink = `${req.protocol}://${req.get('host')}/super-admin-dashboard`;
+            
+            const mailOptions = {
+                from: process.env.EMAIL_USER || 'mohaneesh799@gmail.com',
+                to: 'mohaneesh799@gmail.com', // Primary Admin Email
+                subject: `🔔 Approval Required: ${name} (${role})`,
+                html: `
+                    <div style="font-family: sans-serif; border: 1px solid #eee; padding: 20px; border-radius: 10px;">
+                        <h2 style="color: #2c3e50;">New User Registration</h2>
+                        <p><strong>Name:</strong> ${name}</p>
+                        <p><strong>Email:</strong> ${email}</p>
+                        <p><strong>Role:</strong> ${role}</p>
+                        <p><strong>Section/Dept:</strong> ${section}</p>
+                        <p><strong>Roll No:</strong> ${rollNo || 'N/A'}</p>
+                        <hr>
+                        <p>Please log in to the SuperAdmin dashboard to approve this user.</p>
+                        <a href="${approvalLink}" style="background: #3498db; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Open Admin Panel</a>
+                    </div>
+                `
+            };
+            await transporter.sendMail(mailOptions);
+        } catch (mailErr) {
+            console.error("⚠️ Mailer Error: User saved, but admin notification failed.");
+        }
+
+        // 6. Success Response
+        res.redirect('/login?message=Registration successful! Your account is pending admin approval.');
+
+    } catch (err) {
+        console.error("❌ Registration Error:", err);
+        if (err.code === 11000) return res.status(400).send("Email or Roll Number already exists.");
+        res.status(500).send("Critical error during registration.");
+    }
 });
 
 
 
 
 
-// 2. ADD: Bulk Import Logic (using a CSV parser or simple split)
 app.post('/upload-users', async (req, res) => {
     try {
+        const adminUser = req.session.user || req.user;
+        if (!adminUser || adminUser.role !== 'Master') return res.status(403).send("Unauthorized");
+
         if (!req.files || !req.files.csvFile) return res.status(400).send("No file uploaded");
         
         const fileData = req.files.csvFile.data.toString('utf8');
-        const lines = fileData.split('\n');
-        
-        // Skip header, loop through rows
+        const lines = fileData.split(/\r?\n/); // Handles both Windows and Unix line endings
+        const section = req.body.section;
+
+        if (!section) return res.status(400).send("Target section is required.");
+
+        // Loop through rows (skipping header)
         for (let i = 1; i < lines.length; i++) {
-            const [name, email, studentId] = lines[i].split(',');
-            if (email) {
+            if (!lines[i].trim()) continue; // Skip empty lines
+
+            const [name, email, studentId] = lines[i].split(',').map(item => item.trim());
+            
+            if (email && email.includes('@')) {
                 await User.updateOne(
-                    { email: email.trim() },
+                    { email: email.toLowerCase() },
                     { 
-                        name: name.trim(), 
-                        studentId: studentId.trim(),
-                        section: req.body.section,
-                        role: 'Student',
-                        isApproved: true 
+                        $set: {
+                            name: name, 
+                            rollNo: studentId, // Ensure field names match your schema (rollNo vs studentId)
+                            section: section,
+                            role: 'Student',
+                            isApproved: true,
+                            isPreRegistered: true // Tag to differentiate bulk-uploaded students
+                        }
                     },
                     { upsert: true }
                 );
             }
         }
-        res.redirect('/master');
+
+        req.session.save(() => {
+            res.redirect('/master?success=Bulk import completed');
+        });
     } catch (err) {
-        res.status(500).send("Error processing file");
+        console.error("Bulk Upload Error:", err);
+        res.status(500).send("Error processing file: " + err.message);
     }
 });
 
 
-
-// --- SECTION 2: THE BOUNCER (MIDDLEWARE) ---
-function isMaster(req, res, next) {
-    if (req.isAuthenticated() && req.user.role === 'Master') {
+function isAdmin(req, res, next) {
+    const user = req.session.user || req.user;
+    
+    // Allow both Master and SuperAdmin roles
+    if (user && (user.role === 'Master' || user.role === 'SuperAdmin')) {
         return next();
     }
-    // This force-saves the session to prevent the redirect loop
-    req.session.save(() => {
-        res.redirect('/login?error=Unauthorized');
-    });
-}  
 
+    console.warn(`🚨 Unauthorized access attempt by: ${user ? user.email : 'Guest'}`);
+    
+    req.session.save(() => {
+        res.redirect('/login?error=Access Denied');
+    });
+}
 
 
 
 app.post('/lock-attendance', async (req, res) => {
-    try {
-        const { section, lecturerEmail, manualTime, subject, date, students } = req.body;
-        const newAttendance = new Attendance({
-            section: section, // NEW: Save the section tag
-            date,
-            manualTime, // Save the manual text string
-            subject,
-            lecturerEmail,
-            leaderEmail: req.session.user.email,
-            students: Object.values(students).map(s => ({
-                studentId: s.id,
-                studentName: s.name,
-                status: s.status || 'Absent'
-            })),
-            isLockedByLeader: true
-        });
-        // IMPORTANT: Ensure periodNumber is NOT required in your mongoose schema!
-        await newAttendance.save();
-        res.send("<script>alert('Locked!'); window.location.href='/leader';</script>");
-    } catch (err) { res.status(500).send(err.message); }
-});
+    try {
+        const leader = req.session.user;
+        if (!leader || leader.role !== 'Leader') return res.status(403).send("Unauthorized");
 
+        const { section, lecturerEmail, manualTime, subject, date, students } = req.body;
+
+        // 1. Data Transformation
+        // Convert the students object into the array format Mongoose expects
+        const studentList = Object.keys(students).map(key => {
+            const s = students[key];
+            return {
+                studentId: s.id || key,
+                studentName: s.name,
+                status: s.status === 'Present' ? 'Present' : 'Absent' // Explicit fallback
+            };
+        });
+
+        // 2. Create the locked record
+        const newAttendance = new Attendance({
+            section: section || leader.section,
+            date: date || new Date().toISOString().split('T')[0],
+            manualTime, 
+            subject,
+            lecturerEmail: lecturerEmail.toLowerCase(),
+            leaderEmail: leader.email,
+            students: studentList,
+            isLockedByLeader: true,
+            submissionTimestamp: new Date()
+        });
+
+        await newAttendance.save();
+        
+        // 3. User Feedback
+        res.send(`
+            <script>
+                alert('Attendance for ${subject} has been locked and saved.');
+                window.location.href='/leader';
+            </script>
+        `);
+
+    } catch (err) { 
+        console.error("Locking Error:", err);
+        res.status(500).send("Error locking attendance: " + err.message); 
+    }
+});
 
 
 app.post('/approve-user/:id', async (req, res) => {
     try {
-        // Allow both Master and SuperAdmin to approve
-        if (!req.isAuthenticated() || (req.user.role !== 'Master' && req.user.role !== 'SuperAdmin')) {
-            return res.status(403).send("Unauthorized");
+        const currentUser = req.session.user || req.user;
+
+        // 1. Unified Authorization Check
+        // Checks if user exists and has administrative privileges
+        if (!currentUser || (currentUser.role !== 'Master' && currentUser.role !== 'SuperAdmin')) {
+            return res.status(403).render('error', { message: "Unauthorized: Administrative access required." });
         }
 
-        await User.findByIdAndUpdate(req.params.id, { isApproved: true });
-        
-        // Critical for Render: Save session before redirecting
-        req.session.save(() => {
-            res.redirect(req.user.role === 'SuperAdmin' ? '/super-admin-dashboard' : '/master');
+        const targetUserId = req.params.id;
+
+        // 2. Execution: Update user and return the document to verify it existed
+        const updatedUser = await User.findByIdAndUpdate(
+            targetUserId, 
+            { isApproved: true }, 
+            { new: true }
+        );
+
+        if (!updatedUser) {
+            const failPath = currentUser.role === 'SuperAdmin' ? '/super-admin-dashboard' : '/master';
+            return res.redirect(`${failPath}?error=UserNotFound`);
+        }
+
+        console.log(`✅ User Approved: ${updatedUser.email} by ${currentUser.email}`);
+
+        // 3. Session Synchronization & Redirect
+        // req.session.save ensures the redirect happens only after the session store is updated
+        req.session.save((err) => {
+            if (err) {
+                console.error("Session Save Error:", err);
+            }
+            
+            const successPath = currentUser.role === 'SuperAdmin' ? '/super-admin-dashboard' : '/master';
+            res.redirect(`${successPath}?success=UserApproved&name=${encodeURIComponent(updatedUser.name || updatedUser.email)}`);
         });
+
     } catch (err) {
-        res.status(500).send("Error approving user");
+        console.error("❌ Approval Route Error:", err);
+        res.status(500).render('error', { message: "Internal Server Error during user approval." });
     }
 });
 
 
 
-
+// --- Delete User Route ---
 app.post('/delete-user/:id', async (req, res) => {
     try {
-        if (!req.isAuthenticated() || (req.user.role !== 'Master' && req.user.role !== 'SuperAdmin')) {
-            return res.status(403).send("Unauthorized");
+        const currentUser = req.session.user || req.user;
+
+        // 1. Authorization: Only Master or SuperAdmin can delete
+        if (!currentUser || (currentUser.role !== 'Master' && currentUser.role !== 'SuperAdmin')) {
+            return res.status(403).render('error', { message: "Unauthorized: Access Denied" });
         }
 
-        await User.findByIdAndDelete(req.params.id);
+        // 2. Execution
+        const targetId = req.params.id;
+        
+        // Prevent accidental self-deletion
+        if (targetId === currentUser._id.toString()) {
+            return res.status(400).send("Security Error: You cannot delete your own account.");
+        }
 
+        await User.findByIdAndDelete(targetId);
+        console.log(`🗑️ User ${targetId} deleted by ${currentUser.email}`);
+
+        // 3. Dynamic Redirect based on role
         req.session.save(() => {
-            res.redirect(req.user.role === 'SuperAdmin' ? '/super-admin-dashboard' : '/master');
+            const redirectPath = currentUser.role === 'SuperAdmin' ? '/super-admin-dashboard' : '/master';
+            res.redirect(`${redirectPath}?success=User deleted`);
         });
+
     } catch (err) {
         console.error("Delete Error:", err);
-        res.status(500).send("Failed to delete user: " + err.message);
+        res.status(500).render('error', { message: "Failed to delete user." });
     }
 });
 
 
-// Fix for Approval Redirect
+
+// --- Bulk Approval Route ---
 app.post('/bulk-approve', async (req, res) => {
     try {
-        if (!req.isAuthenticated() || req.user.role !== 'Master') return res.redirect('/login');
-        
-        const { userIds, targetRole } = req.body;
+        const currentUser = req.session.user || req.user;
+
+        // 1. Authorization Check
+        if (!currentUser || (currentUser.role !== 'Master' && currentUser.role !== 'SuperAdmin')) {
+            return res.redirect('/login?error=Unauthorized');
+        }
+
+        let { userIds, targetRole } = req.body;
+
+        // 2. Data Sanitization: Convert single ID string to Array if necessary
+        if (!userIds) return res.redirect('/master?error=No users selected');
+        const idsToUpdate = Array.isArray(userIds) ? userIds : [userIds];
+
+        // 3. Update Operation
+        // We set both isApproved and approved to true to satisfy different schema versions
         await User.updateMany(
-            { _id: { $in: userIds } },
-            { $set: { role: targetRole, isApproved: true, approved: true } }
+            { _id: { $in: idsToUpdate } },
+            { 
+                $set: { 
+                    role: targetRole, 
+                    isApproved: true, 
+                    approved: true 
+                } 
+            }
         );
         
+        console.log(`✅ Bulk Approved ${idsToUpdate.length} users as ${targetRole}`);
+
+        // 4. Session sync and Redirect
         req.session.save(() => {
-            res.redirect('/master');
+            const redirectPath = currentUser.role === 'SuperAdmin' ? '/super-admin-dashboard' : '/master';
+            res.redirect(`${redirectPath}?success=Users approved successfully`);
         });
+
     } catch (err) {
-        res.redirect('/master');
+        console.error("Bulk Approval Error:", err);
+        const redirectPath = (req.session.user && req.session.user.role === 'SuperAdmin') ? '/super-admin-dashboard' : '/master';
+        res.redirect(`${redirectPath}?error=Approval failed`);
     }
 });
 
 
-// UPDATED PDF GENERATION ROUTE
+const PDFDocument = require('pdfkit');
+
 app.get('/generate-day-pdf/:date', async (req, res) => {
-    try {
-        // 1. Security check: Ensure user is logged in
-        if (!req.session.user) return res.redirect('/login');
+    try {
+        if (!req.session.user) return res.redirect('/login');
 
-        const { date } = req.params;
-        const { filter } = req.query;
-        const userSection = req.session.user.section; // NEW: Get user's section
+        const { date } = req.params;
+        const { filter } = req.query; // 'Present' or 'Absent'
+        const userSection = req.session.user.section;
 
-        // 2. Fetch records ONLY for this section on this date
-        const records = await Attendance.find({ 
-            date: date, 
-            section: userSection // CRUCIAL: Add this filter
-        }).sort({ manualTime: 1 });
+        const records = await Attendance.find({ 
+            date: date, 
+            section: userSection 
+        }).sort({ manualTime: 1 });
 
-        const PDFDocument = require('pdfkit');
-        const doc = new PDFDocument({ margin: 30 });
+        const doc = new PDFDocument({ margin: 50, size: 'A4' });
 
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `inline; filename=Attendance_Report_${date}_${userSection}.pdf`);
+        // Stream the PDF directly to the browser
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `inline; filename=Attendance_${userSection}_${date}.pdf`);
+        doc.pipe(res);
 
-        doc.pipe(res);
+        // --- Header Section ---
+        doc.fillColor('#2c3e50').fontSize(22).text('RKU Attendance Report', { align: 'center' });
+        doc.fontSize(12).fillColor('#7f8c8d').text(`Generated on: ${new Date().toLocaleString()}`, { align: 'center' });
+        doc.moveDown();
 
-        // 3. Update Title to include Section
-        doc.fontSize(20).text(`Attendance Report: ${date}`, { align: 'center' });
-        doc.fontSize(16).text(`Section: ${userSection}`, { align: 'center' }); // NEW
-        
-        if (filter) doc.fontSize(12).text(`Filter Applied: ${filter}`, { align: 'center' });
-        doc.moveDown();
+        doc.fillColor('black').fontSize(14).text(`Date: ${date}`, { continued: true });
+        doc.text(` | Section: ${userSection}`, { align: 'right' });
+        if (filter) doc.fillColor('#e74c3c').text(`Filter: Showing ${filter} only`, { align: 'center' });
+        
+        doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+        doc.moveDown();
 
-        if (records.length === 0) {
-            doc.fontSize(14).text("No records found for this section on this date.", { align: 'center' });
-        } else {
-            records.forEach(rec => {
-                doc.fontSize(14).text(`Slot: ${rec.manualTime} | Subject: ${rec.subject}`, { underline: true });
-                doc.moveDown(0.5);
+        if (records.length === 0) {
+            doc.fontSize(14).text("No records found for this section on this date.", { align: 'center' });
+        } else {
+            records.forEach((rec, index) => {
+                // Background for slot header
+                doc.rect(50, doc.y, 500, 20).fill('#f1f2f6');
+                doc.fillColor('#2f3542').fontSize(11).text(` SLOT: ${rec.manualTime} | SUBJECT: ${rec.subject}`, 55, doc.y - 15);
+                doc.moveDown(0.5);
 
-                rec.students.forEach(s => {
-                    if (!filter || s.status === filter) {
-                        doc.fontSize(10).text(`${s.name || s.studentName} (${s.studentId}): ${s.status}`);
-                    }
-                });
-                doc.moveDown();
-            });
-        }
+                // Table Headers
+                const startY = doc.y;
+                doc.fillColor('#000').fontSize(10).text('Student ID', 60, startY, { bold: true });
+                doc.text('Student Name', 160, startY);
+                doc.text('Status', 450, startY);
+                doc.moveDown(0.5);
+                doc.moveTo(50, doc.y).lineTo(550, doc.y).strokeColor('#dfe4ea').stroke();
 
-        doc.end();
-    } catch (err) {
-        console.error("PDF Error:", err);
-        res.status(500).send("Error generating PDF.");
-    }
+                // List Students
+                rec.students.forEach(s => {
+                    if (!filter || s.status === filter) {
+                        // Check for page overflow
+                        if (doc.y > 700) doc.addPage();
+
+                        doc.fillColor('#34495e').fontSize(9)
+                           .text(s.studentId, 60, doc.y)
+                           .text(s.name || s.studentName, 160, doc.y - 9)
+                           .fillColor(s.status === 'Present' ? '#27ae60' : '#c0392b')
+                           .text(s.status, 450, doc.y - 9);
+                        doc.moveDown(0.2);
+                    }
+                });
+                doc.moveDown(1.5);
+            });
+        }
+
+        doc.end();
+    } catch (err) {
+        console.error("PDF Error:", err);
+        res.status(500).send("Error generating PDF.");
+    }
 });
 
-// History Route for Leader Dashboard
 app.get('/leader-history', async (req, res) => {
-    if (!req.session.user) return res.json([]);
-    const records = await Attendance.find({ leaderEmail: req.session.user.email }).sort({ date: -1 });
-    res.json(records);
+    try {
+        if (!req.session.user) return res.status(401).json({ error: "Unauthorized" });
+
+        const records = await Attendance.find({ 
+            leaderEmail: req.session.user.email 
+        })
+        .sort({ date: -1 })
+        .lean();
+
+        // Optional: Map data to include a quick summary count
+        const historyData = records.map(r => ({
+            ...r,
+            presentCount: r.students.filter(s => s.status === 'Present').length,
+            totalCount: r.students.length
+        }));
+
+        res.json(historyData);
+    } catch (err) {
+        res.status(500).json({ error: "Failed to fetch history" });
+    }
 });
 
-// 2. ROUTE TO VIEW THE PDF (FOR THE "CHECK PDF" BUTTON)
 app.get('/view-pdf', (req, res) => {
-    const filePath = path.join(__dirname, 'daily_attendance.pdf');
-    if (fs.existsSync(filePath)) {
-        res.contentType("application/pdf");
-        fs.createReadStream(filePath).pipe(res);
-    } else {
-        res.send("<script>alert('PDF not found. Please generate it first.'); window.location.href='/leader';</script>");
-    }
+    // We get the date from the query or default to today
+    const today = new Date().toISOString().split('T')[0];
+    const targetDate = req.query.date || today;
+    
+    // Redirect to the dynamic generator route
+    res.redirect(`/generate-day-pdf/${targetDate}`);
 });
 
 
 app.post('/update-attendance-status', async (req, res) => {
-    if (!req.session.user || req.session.user.role !== 'Lecturer') {
-        return res.status(403).json({ success: false, message: "Unauthorized" });
-    }
+    // 1. Enhanced Authorization (Allow both Lecturer and Master)
+    const user = req.session.user || req.user;
+    const allowedRoles = ['Lecturer', 'Master', 'SuperAdmin'];
+    
+    if (!user || !allowedRoles.includes(user.role)) {
+        return res.status(403).json({ success: false, message: "Unauthorized: Insufficient Permissions" });
+    }
 
-    const { attendanceId, studentId, newStatus } = req.body;
+    const { attendanceId, studentId, newStatus } = req.body;
 
-    try {
-        const result = await Attendance.updateOne(
-            { 
-                _id: attendanceId, 
-                "students.studentId": studentId,
-                section: req.session.user.section // Section security
-            },
-            {
-                $set: {
-                    "students.$.status": newStatus,
-                    lastModifiedBy: req.session.user.email, // Better tracking
-                    lastModifiedDate: new Date()
-                }
-            }
-        );
+    // 2. Input Validation
+    if (!attendanceId || !studentId || !newStatus) {
+        return res.status(400).json({ success: false, message: "Missing required fields." });
+    }
 
-        if (result.modifiedCount > 0) {
-            res.json({ success: true });
-        } else {
-            res.status(400).json({ success: false, message: "Record not found or no change made." });
-        }
-    } catch (err) {
-        console.error("Update Error:", err);
-        res.status(500).json({ success: false });
-    }
+    try {
+        // 3. Precision Update using Positional Operator ($)
+        // We verify the ID, the specific student in the array, and the section for security
+        const query = { 
+            _id: attendanceId, 
+            "students.studentId": studentId 
+        };
+
+        // Section Security: Only enforce for Lecturers (Masters can edit across sections)
+        if (user.role === 'Lecturer') {
+            query.section = user.section;
+        }
+
+        const update = {
+            $set: {
+                "students.$.status": newStatus,
+                "lastModifiedBy": user.email,
+                "lastModifiedDate": new Date()
+            }
+        };
+
+        
+
+        const result = await Attendance.findOneAndUpdate(query, update, { new: true });
+
+        if (result) {
+            console.log(`✅ Attendance Updated: Student ${studentId} marked ${newStatus} by ${user.email}`);
+            res.json({ 
+                success: true, 
+                message: "Status updated successfully",
+                updatedBy: user.email 
+            });
+        } else {
+            // If result is null, either the Attendance ID is wrong or that student isn't in this specific record
+            res.status(404).json({ 
+                success: false, 
+                message: "Record not found. Ensure the student is part of this attendance sheet." 
+            });
+        }
+    } catch (err) {
+        console.error("🔥 Attendance Update Error:", err);
+        res.status(500).json({ success: false, message: "Internal Server Error" });
+    }
 });
 
-
-// Fix for Add Subject Redirect
+// --- Add Subject Route ---
 app.post('/add-subject', async (req, res) => {
     try {
-        if (!req.isAuthenticated() || req.user.role !== 'Master') return res.redirect('/login');
-        
+        // 1. Consistent Auth Check
+        const user = req.session.user || req.user;
+        if (!user || user.role !== 'Master') {
+            return res.redirect('/login?error=Unauthorized');
+        }
+
         const { subjectName, section } = req.body;
-        const newSub = new Subject({ name: subjectName, section: section });
+
+        // 2. Validation: Prevent empty subject names
+        if (!subjectName || !section) {
+            return res.redirect('/master?error=Missing Fields');
+        }
+
+        // 3. Create and Save
+        const newSub = new Subject({ 
+            name: subjectName.trim(), 
+            section: section 
+        });
         await newSub.save();
         
-        // CRITICAL: Save session before redirecting to prevent login kick-back
-        req.session.save(() => {
-            res.redirect('/master');
+        // 4. Manual Session Save
+        // This ensures the database update and session state are in sync before the redirect
+        req.session.save((err) => {
+            if (err) console.error("Session Save Error:", err);
+            res.redirect('/master?success=Subject Added');
         });
+
     } catch (err) {
-        res.redirect('/master');
+        console.error("Add Subject Error:", err);
+        // Handle duplicate subject names if you have a unique index
+        const msg = err.code === 11000 ? 'Duplicate Subject' : 'Server Error';
+        res.redirect(`/master?error=${msg}`);
     }
 });
 
 
+
+// --- Delete Subject Route ---
 app.post('/delete-subject/:id', async (req, res) => {
-    try {
-        if (!req.session.user || req.session.user.role !== 'Master') {
-            return res.status(403).send("Unauthorized");
-        }
-        await Subject.findByIdAndDelete(req.params.id);
-        res.redirect('/master');
-    } catch (err) {
-        res.status(500).send("Error deleting subject");
-    }
+    try {
+        // 1. Consistent Auth Check
+        const user = req.session.user || req.user;
+        if (!user || user.role !== 'Master') {
+            return res.status(403).send("Unauthorized Access");
+        }
+
+        // 2. Execution
+        const deletedSub = await Subject.findByIdAndDelete(req.params.id);
+
+        if (!deletedSub) {
+            return res.redirect('/master?error=Subject not found');
+        }
+
+        // 3. Save session before redirecting to refresh state
+        req.session.save(() => {
+            res.redirect('/master?success=Subject Deleted');
+        });
+
+    } catch (err) {
+        console.error("Delete Subject Error:", err);
+        res.status(500).render('error', { message: "Could not remove subject from database." });
+    }
 });
 
 
@@ -875,112 +1287,156 @@ app.get('/fix-database', async (req, res) => {
 });
 
 
-
 app.get('/attendance-history', async (req, res) => {
-    if (!req.session.user) return res.redirect('/login');
+    // 1. Authentication Gate
+    const user = req.session.user || req.user;
+    if (!user) return res.redirect('/login');
 
-    try {
-        const { startDate, endDate } = req.query;
-        const user = req.session.user;
-        let query = {};
+    try {
+        const { startDate, endDate } = req.query;
+        let query = {};
 
-        // Date filtering logic
-        if (startDate && endDate) {
-            query.date = { $gte: startDate, $lte: endDate };
-        }
+        // 2. Optimized Date Filtering
+        // If no dates are provided, default to the last 30 days to prevent loading massive datasets
+        if (startDate && endDate) {
+            query.date = { $gte: startDate, $lte: endDate };
+        } else {
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            query.date = { $gte: thirtyDaysAgo.toISOString().split('T')[0] };
+        }
 
-        // Updated Role-based data scoping
-if (user.role === 'Student') {
-    query["students.studentId"] = user.rollNo;
-} else if (user.role === 'Lecturer') {
-    query.lecturerEmail = user.email;
-} else if (user.role === 'Leader') {
-    // NEW: Ensure Leaders are restricted to their own section
-    query.section = user.section; 
-}
-// Masters continue to see all records by default if no section is added to their query
-        const history = await Attendance.find(query).sort({ date: -1 });
-        
-        res.render('history', { 
-            user: user, 
-            records: history,
-            startDate,
-            endDate
-        });
-    } catch (err) {
-        res.status(500).send("Error fetching history");
-    }
+        // 3. Security: Role-Based Data Isolation
+        if (user.role === 'Student') {
+            // Students only see records containing their Roll Number
+            query["students.studentId"] = user.rollNo;
+            query.section = user.section; // Double security: ensure it's their section
+        } 
+        else if (user.role === 'Lecturer') {
+            // Lecturers see only what they personally marked
+            query.lecturerEmail = user.email;
+        } 
+        else if (user.role === 'Leader') {
+            // Leaders see everything for their assigned section
+            query.section = user.section;
+        }
+        // Masters (SuperAdmins) fall through and see everything by default
+
+        // 4. Fetching Data with Lean for Performance
+        const history = await Attendance.find(query)
+            .sort({ date: -1 })
+            .lean(); // Returns plain JS objects, making rendering significantly faster
+
+        // 5. Render Response
+        res.render('history', { 
+            user: user, 
+            records: history,
+            startDate: startDate || "",
+            endDate: endDate || ""
+        });
+
+    } catch (err) {
+        console.error("❌ History Fetch Error:", err);
+        res.status(500).render('error', { message: "Failed to load attendance logs." });
+    }
 });
 
 
 
+app.get('/super-admin-dashboard', async (req, res) => {
+    try {
+        const user = req.session.user || req.user;
 
-app.get('/request-super-admin', async (req, res) => {
-    try {
-        // 1. Safety Check: Is the user logged in?
-        if (!req.session.user) {
-            return res.redirect('/login');
-        }
+        // 1. Strict Authorization Gate
+        if (!user || user.role !== 'SuperAdmin' || !user.isApproved) {
+            return res.status(403).render('error', { 
+                message: "Access Denied. Elevated privileges required." 
+            });
+        }
 
-        // 2. Fetch data (Only if you want the dashboard view)
-        // Note: Use the 'User' that is already declared at line 119
-        const allUsers = await User.find({}); 
-        const allSubjects = await mongoose.model('Subject').find({}); 
+        // 2. Optimized Parallel Data Fetching
+        // .select('-password') ensures we don't accidentally leak password hashes to the view
+        const [allUsers, allSubjects] = await Promise.all([
+            User.find({}).select('-password').lean(),
+            mongoose.model('Subject').find({}).lean()
+        ]);
 
-        // 3. Render the file shown in your views folder
-        res.render('super-admin', { 
-            user: req.session.user,
-            allUsers: allUsers,
-            allSubjects: allSubjects
-        });
-    } catch (error) {
-        console.error("Route Error:", error);
-        res.status(500).send("Internal Server Error: " + error.message);
-    }
+        res.render('super-admin', { 
+            user,
+            allUsers,
+            allSubjects 
+        });
+    } catch (error) {
+        console.error("Dashboard Load Error:", error);
+        res.status(500).render('error', { message: "Internal Server Error" });
+    }
 });
 
 
 app.post('/submit-super-admin-request', async (req, res) => {
-    const user = req.session.user || req.user;
-    if (!user) return res.redirect('/login');
+    const user = req.session.user || req.user;
+    if (!user) return res.redirect('/login');
 
-    const mailOptions = {
-        from: 'mohaneesh799@gmail.com',
-        to: 'mohaneesh799@gmail.com',
-        subject: 'Elevation Request',
-        text: `User ${user.email} has requested higher permissions.`
-    };
+    // Create a secure approval link using your environment secret
+    const approvalLink = `${req.protocol}://${req.get('host')}/approve-super-admin?email=${user.email}&secret=${process.env.ADMIN_APPROVAL_SECRET}`;
 
-    try {
-        await transporter.sendMail(mailOptions);
-        res.send("<script>alert('Request sent to developer'); window.location='/super-admin-dashboard';</script>");
-    } catch (err) {
-        res.status(500).send("Mail error: " + err.message);
-    }
+    const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: 'mohaneesh799@gmail.com',
+        subject: `⚠️ Access Elevation Request: ${user.name}`,
+        html: `
+            <h3>Elevation Request</h3>
+            <p><strong>User:</strong> ${user.name} (${user.email})</p>
+            <p>The user above has requested SuperAdmin privileges.</p>
+            <br>
+            <a href="${approvalLink}" style="padding: 10px 20px; background-color: #27ae60; color: white; text-decoration: none; border-radius: 5px;">
+                Approve as SuperAdmin
+            </a>
+        `
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        res.send("<script>alert('Elevation request sent to developer. You will be notified via email upon approval.'); window.location='/login';</script>");
+    } catch (err) {
+        console.error("Mail Error:", err);
+        res.status(500).send("Failed to send request. Contact developer directly.");
+    }
 });
 
 
-// Paste this in your app.js routes section
+
 app.get('/approve-super-admin', async (req, res) => {
     const { email, secret } = req.query;
 
-    // Check if secret key matches your environment variable
-    if (secret !== process.env.ADMIN_APPROVAL_SECRET) {
-        return res.status(403).render('error', { message: "Invalid Secret Key" });
+    // 1. Verify the secret key from your .env file
+    if (!secret || secret !== process.env.ADMIN_APPROVAL_SECRET) {
+        return res.status(403).render('error', { message: "Invalid or missing Secret Approval Key" });
     }
 
     try {
-        const user = await User.findOneAndUpdate(
-            { email: email },
-            { isApproved: true },
+        // 2. Find user, change role to SuperAdmin AND set isApproved to true
+        const updatedUser = await User.findOneAndUpdate(
+            { email: email.toLowerCase() },
+            { 
+                role: 'SuperAdmin', 
+                isApproved: true 
+            },
             { new: true }
         );
 
-        if (!user) return res.status(404).render('error', { message: "User not found" });
+        if (!updatedUser) return res.status(404).render('error', { message: "User not found" });
 
-        res.send(`<h1>Approved!</h1><p>${email} is now an active SuperAdmin.</p>`);
+        res.send(`
+            <div style="font-family: sans-serif; text-align: center; padding: 50px;">
+                <h1 style="color: #27ae60;">Access Granted!</h1>
+                <p><strong>${email}</strong> has been promoted to <b>SuperAdmin</b>.</p>
+                <p>They can now log in to the admin dashboard.</p>
+                <a href="/login">Go to Portal</a>
+            </div>
+        `);
     } catch (err) {
-        res.status(500).render('error', { message: "Database update failed" });
+        res.status(500).render('error', { message: "Critical Database Error during promotion." });
     }
 });
 
@@ -988,28 +1444,61 @@ app.get('/approve-super-admin', async (req, res) => {
 
 app.get('/export-attendance', async (req, res) => {
     try {
-        const section = req.user.section;
-        const students = await User.find({ section, role: 'Student' });
-        const attendanceRecords = await Attendance.find({ section });
+        const user = req.session.user || req.user;
+        const { startDate, endDate } = req.query;
 
-        let csv = "Student ID,Name,Date,Status\n";
+        // 1. Authorization Check
+        if (!user || !['Lecturer', 'Leader', 'SuperAdmin'].includes(user.role)) {
+            return res.status(403).send("Unauthorized to export data.");
+        }
 
-        students.forEach(student => {
-            // Check every date recorded in the system
-            attendanceRecords.forEach(record => {
-                const isPresent = record.presentStudents.includes(student._id);
-                csv += `${student.studentId},${student.name},${record.date.toLocaleDateString()},${isPresent ? 'Present' : 'Absent'}\n`;
+        const section = user.section;
+
+        // 2. Build Query with Optional Date Filtering
+        let attendanceQuery = { section };
+        if (startDate && endDate) {
+            attendanceQuery.date = { $gte: startDate, $lte: endDate };
+        }
+
+        // 3. Fetch Data in Parallel
+        const [students, attendanceRecords] = await Promise.all([
+            User.find({ section, role: 'Student' }).select('rollNo name').lean(),
+            Attendance.find(attendanceQuery).sort({ date: 1 }).lean()
+        ]);
+
+        // 4. Construct CSV with sanitization
+        // Using "Roll No" and "Name" first for a cleaner spreadsheet layout
+        let csv = "\uFEFF"; // UTF-8 BOM for Excel compatibility (prevents encoding issues)
+        csv += "Roll No,Student Name,Date,Subject,Time Slot,Status\n";
+
+        attendanceRecords.forEach(record => {
+            const formattedDate = record.date; // Assuming YYYY-MM-DD string
+            const subject = record.subject || "N/A";
+            const time = record.manualTime || "N/A";
+
+            students.forEach(student => {
+                // Check if this student exists in the record's student array
+                const attendanceEntry = record.students.find(s => s.studentId === student.rollNo);
+                const status = attendanceEntry ? attendanceEntry.status : 'N/A';
+                
+                // Sanitize name to prevent CSV injection (escapes quotes and handles commas)
+                const sanitizedName = `"${student.name.replace(/"/g, '""')}"`;
+
+                csv += `${student.rollNo},${sanitizedName},${formattedDate},${subject},${time},${status}\n`;
             });
         });
 
-        res.setHeader('Content-Type', 'text/csv');
-        res.setHeader('Content-Disposition', `attachment; filename=Attendance_Report_${section}.csv`);
-        res.send(csv);
+        // 5. Send File
+        const fileName = `Attendance_${section}_${new Date().toISOString().split('T')[0]}.csv`;
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+        res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
+        res.status(200).send(csv);
+
     } catch (err) {
-        res.status(500).send("Export failed");
+        console.error("Export Error:", err);
+        res.status(500).send("Critical error during CSV generation.");
     }
 });
-
 
 
 // Add this at the very bottom of app.js
@@ -1023,3 +1512,6 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server running: http://localhost:${PORT}`);
 });     
+
+
+

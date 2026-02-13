@@ -3,36 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>College Login</title>
+    <title>RKU Attendance Portal | Login</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { background-color: #f4f7f6; height: 100vh; display: flex; align-items: center; justify-content: center; font-family: 'Segoe UI', sans-serif; }
-        .login-card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); width: 100%; max-width: 450px; text-align: center; }
-        .google-btn { display: flex; align-items: center; justify-content: center; background-color: #4285F4; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; margin-bottom: 15px; width: 100%; }
-        .admin-btn { display: flex; align-items: center; justify-content: center; background-color: #212529; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; width: 100%; }
-        .admin-btn:hover { color: #ffc107; }
+        :root { --rku-blue: #003366; --google-blue: #4285F4; --dark-bg: #1a1d20; }
+        body { 
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); 
+            height: 100vh; display: flex; align-items: center; justify-content: center; 
+            font-family: 'Inter', 'Segoe UI', sans-serif; 
+        }
+        .login-card { 
+            background: white; padding: 45px; border-radius: 20px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1); 
+            width: 100%; max-width: 420px; text-align: center; 
+        }
+        .logo-placeholder { font-size: 2.5rem; color: var(--rku-blue); margin-bottom: 10px; }
+        
+        .btn-sso { 
+            display: flex; align-items: center; justify-content: center; 
+            background-color: var(--google-blue); color: white; padding: 14px; 
+            text-decoration: none; border-radius: 10px; font-weight: 600; 
+            margin-bottom: 15px; transition: 0.3s; border: none; width: 100%;
+        }
+        .btn-sso:hover { background-color: #357ae8; color: white; transform: translateY(-2px); }
+
+        .btn-credential { 
+            display: flex; align-items: center; justify-content: center; 
+            background-color: var(--dark-bg); color: white; padding: 14px; 
+            text-decoration: none; border-radius: 10px; font-weight: 600; 
+            width: 100%; transition: 0.3s;
+        }
+        .btn-credential:hover { background-color: #000; color: #ffc107; transform: translateY(-2px); }
+
+        .divider { display: flex; align-items: center; text-align: center; margin: 25px 0; color: #adb5bd; }
+        .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid #dee2e6; }
+        .divider:not(:empty)::before { margin-right: .5em; }
+        .divider:not(:empty)::after { margin-left: .5em; }
+
+        .footer-text { font-size: 0.85rem; color: #6c757d; margin-top: 25px; }
+        .alert { border-radius: 10px; border: none; }
     </style>
 </head>
 <body>
+
     <div class="login-card">
-        <h2 class="fw-bold mb-3">Attendance Portal</h2>
+        <div class="logo-placeholder"><i class="fas fa-university"></i></div>
+        <h2 class="fw-bold mb-2">RKU Attendance</h2>
+        <p class="text-muted mb-4">Secure Gateway for Students & Faculty</p>
         
         <% if (typeof error !== 'undefined' && error) { %>
-            <div class="alert alert-danger small py-2 mb-4"><%= error %></div>
+            <div class="alert alert-danger small py-2 mb-4">
+                <i class="fas fa-exclamation-circle me-1"></i> <%= error %>
+            </div>
         <% } %>
 
-        <p class="text-muted mb-4">Select your login role below:</p>
-        
-        <a href="/auth/google" class="google-btn">
-            <i class="fab fa-google me-2"></i> Standard Login (@rku.ac.in)
+        <% if (typeof message !== 'undefined' && message) { %>
+            <div class="alert alert-success small py-2 mb-4">
+                <i class="fas fa-check-circle me-1"></i> <%= message %>
+            </div>
+        <% } %>
+
+        <a href="/auth/google" class="btn-sso">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" width="18" height="18" class="me-2 bg-white rounded-circle p-1" alt="Google">
+            Sign in with Google
         </a>
 
-        <a href="/auth/google" class="admin-btn">
-            <i class="fas fa-user-shield me-2 text-warning"></i> Super Admin Login
+        <div class="divider">OR</div>
+
+        <a href="/login-email" class="btn-credential">
+            <i class="fas fa-key me-2 text-warning"></i> Admin / Faculty Login
         </a>
 
-        <p class="small text-secondary mt-4 mb-0">Only official RKU emails are permitted.</p>
+        <div class="footer-text">
+            Don't have an account? <br>
+            <a href="/register" class="text-primary text-decoration-none fw-bold">Create Request</a>
+        </div>
+
+        <p class="small text-secondary mt-4 mb-0" style="font-size: 0.75rem;">
+            <i class="fas fa-shield-alt"></i> Strictly authorized for <strong>@rku.ac.in</strong> users only.
+        </p>
     </div>
+
 </body>
 </html>

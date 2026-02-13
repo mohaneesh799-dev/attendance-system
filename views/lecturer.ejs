@@ -3,33 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lecturer Dashboard - Verification</title>
-    <link rel="stylesheet" href="/style.css">
+    <title>Lecturer Portal - <%= user.section %></title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --danger: #e74c3c; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; padding: 20px; }
-        .container { max-width: 1100px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --danger: #e74c3c; --bg: #f4f7f6; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 1100px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
+        
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid #eee; padding-bottom: 15px; }
+        .header h1 { margin: 0; font-size: 1.8rem; color: var(--primary); }
         
-        /* Added Section Badge Styling */
-        .section-badge { background: var(--accent); color: white; padding: 3px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; margin-right: 10px; text-transform: uppercase; }
+        .section-badge { background: var(--accent); color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; text-transform: uppercase; }
         
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .stat-card { background: #fff; padding: 20px; border-radius: 8px; border-left: 5px solid var(--accent); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .stat-card h4 { margin: 0; color: #666; font-size: 14px; text-transform: uppercase; }
-        .stat-card p { margin: 10px 0 0; font-size: 24px; font-weight: bold; color: var(--primary); }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: #fff; padding: 20px; border-radius: 10px; border-left: 5px solid var(--accent); box-shadow: 0 2px 8px rgba(0,0,0,0.04); display: flex; flex-direction: column; }
+        .stat-card small { color: #7f8c8d; text-transform: uppercase; font-weight: 600; font-size: 12px; }
+        .stat-card span { font-size: 28px; font-weight: 800; color: var(--primary); margin-top: 5px; }
 
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { padding: 12px; border: 1px solid #eee; text-align: left; }
-        th { background: var(--primary); color: white; }
+        .record-card { margin-top: 25px; border: 1px solid #e0e0e0; border-radius: 10px; overflow: hidden; transition: transform 0.2s; }
+        .record-card:hover { border-color: var(--accent); }
+        .record-header { background: #f8f9fa; padding: 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
         
-        .status-badge { padding: 5px 10px; border-radius: 15px; font-size: 12px; font-weight: bold; }
-        .Present { background: #d4edda; color: #155724; }
-        .Absent { background: #f8d7da; color: #721c24; }
+        table { width: 100%; border-collapse: collapse; background: white; }
+        th { background: #f1f2f6; color: #57606f; font-size: 13px; text-transform: uppercase; text-align: left; padding: 12px 15px; border-bottom: 2px solid #ddd; }
+        td { padding: 12px 15px; border-bottom: 1px solid #eee; font-size: 14px; }
         
-        .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: white; text-decoration: none; display: inline-block; }
-        .btn-history { background: var(--primary); }
-        .btn-logout { background: var(--danger); }
+        .status-badge { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+        .status-badge.Present { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
+        .status-badge.Absent { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
+        
+        .btn { padding: 10px 18px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: 0.3s; font-size: 14px; }
+        .btn-history { background: var(--primary); color: white; }
+        .btn-history:hover { background: #1a252f; }
+        .btn-logout { background: #fdf0f0; color: var(--danger); border: 1px solid #f9d6d6; }
+        .btn-logout:hover { background: var(--danger); color: white; }
+        .btn-refresh { background: #f0f7ff; color: var(--accent); border: 1px solid #d0e8ff; }
     </style>
 </head>
 <body>
@@ -37,73 +45,91 @@
 <div class="container">
     <div class="header">
         <div>
-            <h1>Lecturer Verification Portal</h1>
-            <p>Welcome, <strong><%= user.name %></strong> | <span style="color: var(--accent); font-weight: bold;"><%= user.section %> Department</span></p>
+            <h1><i class="fas fa-chalkboard-teacher"></i> Lecturer Portal</h1>
+            <p style="margin-top: 5px;">Welcome back, <strong><%= user.name %></strong></p>
         </div>
-        <div>
-            <a href="/attendance-history" class="btn btn-history">📅 Attendance History</a>
-            <a href="/logout" class="btn btn-logout" style="margin-left:10px;">Logout</a>
+        <div style="display: flex; gap: 10px;">
+            <button onclick="location.reload()" class="btn btn-refresh"><i class="fas fa-sync-alt"></i> Refresh</button>
+            <a href="/attendance-history" class="btn btn-history"><i class="fas fa-history"></i> History</a>
+            <a href="/logout" class="btn btn-logout"><i class="fas fa-power-off"></i> Logout</a>
         </div>
     </div>
 
     <div class="stats-grid">
         <div class="stat-card">
-            <h4>Total Classes Today</h4>
-            <p><%= todayRecords ? todayRecords.length : 0 %></p>
+            <small>Active Section</small>
+            <span><%= user.section %></span>
         </div>
         <div class="stat-card" style="border-left-color: var(--success);">
-            <h4>Active Department</h4>
-            <p><%= user.section %></p>
+            <small>Today's Total Classes</small>
+            <span><%= todayRecords ? todayRecords.length : 0 %></span>
+        </div>
+        <div class="stat-card" style="border-left-color: #f1c40f;">
+            <small>Current Status</small>
+            <span>Verified</span>
         </div>
     </div>
 
-    <div class="card">
-        <h3>Today's Attendance Logs (Marked by Leaders)</h3>
-        <p style="font-size: 14px; color: #666;">View and verify the attendance marked for your subjects today.</p>
+    <div class="main-body">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0; color: var(--primary);">Today's Attendance Logs</h3>
+            <span class="section-badge">Live Updates</span>
+        </div>
+        <p style="font-size: 14px; color: #7f8c8d; margin-top: 8px;">Review attendance submitted by Section Leaders for today.</p>
 
         <% if (todayRecords && todayRecords.length > 0) { %>
             <% todayRecords.forEach(record => { %>
-                <div style="margin-top: 25px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
-                    <div style="background: #f1f1f1; padding: 15px; display: flex; justify-content: space-between; align-items: center;">
+                <div class="record-card">
+                    <div class="record-header">
                         <div>
-                            <span class="section-badge"><%= record.section || 'N/A' %></span>
-                            <strong>Subject:</strong> <%= record.subject %> | 
-                            <strong>Time:</strong> <%= record.manualTime %> | 
-                            <strong>Date:</strong> <%= record.date %>
+                            <span class="section-badge" style="background: #57606f;"><%= record.subject %></span>
+                            <span style="margin-left: 10px; font-weight: 600;"><i class="far fa-clock"></i> <%= record.manualTime %></span>
                         </div>
-                        <div class="status-badge Present">
-                            <%= record.students.filter(s => s.status === 'Present').length %> Students Present
+                        <div style="font-size: 14px;">
+                            <strong>Date:</strong> <%= record.date %> | 
+                            <span class="status-badge Present" style="margin-left:5px;">
+                                <%= record.students ? record.students.filter(s => s.status === 'Present').length : 0 %> Present
+                            </span>
                         </div>
                     </div>
                     
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Roll No</th>
-                                <th>Student Name</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <% record.students.forEach(student => { %>
+                    <div style="max-height: 400px; overflow-y: auto;">
+                        <table>
+                            <thead>
                                 <tr>
-                                    <td><%= student.studentId || 'N/A' %></td>
-                                    <td><%= student.name || student.studentName %></td>
-                                    <td>
-                                        <span class="status-badge <%= student.status %>">
-                                            <%= student.status %>
-                                        </span>
-                                    </td>
+                                    <th>Roll No</th>
+                                    <th>Student Name</th>
+                                    <th>Status</th>
                                 </tr>
-                            <% }) %>
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                <% if (record.students && record.students.length > 0) { %>
+                                    <% record.students.forEach(student => { %>
+                                        <tr>
+                                            <td style="font-family: monospace; font-weight: bold; color: var(--accent);"><%= student.studentId || 'N/A' %></td>
+                                            <td><%= student.name || student.studentName %></td>
+                                            <td>
+                                                <span class="status-badge <%= student.status %>">
+                                                    <%= student.status %>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    <% }) %>
+                                <% } else { %>
+                                    <tr>
+                                        <td colspan="3" style="text-align: center; color: #999; padding: 20px;">No students listed in this record.</td>
+                                    </tr>
+                                <% } %>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             <% }) %>
         <% } else { %>
-            <div style="text-align: center; padding: 40px; color: #7f8c8d; background: #f9f9f9; border-radius: 8px; margin-top: 20px;">
-                <p>No attendance records have been locked for <strong><%= user.section %></strong> today yet.</p>
-                <a href="/attendance-history" style="color: var(--accent);">Check Previous History</a>
+            <div style="text-align: center; padding: 60px 20px; color: #7f8c8d; background: #fff; border: 2px dashed #ddd; border-radius: 12px; margin-top: 20px;">
+                <i class="fas fa-clipboard-list" style="font-size: 3rem; margin-bottom: 15px; opacity: 0.3;"></i>
+                <p style="font-size: 1.1rem; margin-bottom: 20px;">No attendance records have been submitted for <strong><%= user.section %></strong> today.</p>
+                <a href="/attendance-history" style="color: var(--accent); font-weight: 600; text-decoration: underline;">View previous logs in history</a>
             </div>
         <% } %>
     </div>

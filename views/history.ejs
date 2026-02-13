@@ -1,60 +1,132 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Attendance History</title>
-    <link rel="stylesheet" href="/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance History | System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        .filter-box { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; display: flex; gap: 15px; align-items: flex-end; }
-        .history-table { width: 100%; border-collapse: collapse; background: white; }
-        .history-table th, .history-table td { padding: 12px; border: 1px solid #ddd; text-align: left; }
-        .status-Present { color: green; font-weight: bold; }
-        .status-Absent { color: red; font-weight: bold; }
+        :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --danger: #e74c3c; --bg: #f8f9fa; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 1100px; margin: 0 auto; }
+        
+        .header-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .back-btn { text-decoration: none; color: var(--primary); font-weight: 600; display: flex; align-items: center; gap: 8px; }
+
+        /* Filter Styling */
+        .filter-card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 30px; }
+        .filter-box { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end; }
+        .filter-group { display: flex; flex-direction: column; gap: 8px; }
+        label { font-size: 13px; font-weight: bold; color: #7f8c8d; text-transform: uppercase; }
+        input[type="date"] { padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; }
+        
+        .btn-search { background: var(--accent); color: white; border: none; padding: 11px 25px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: 0.3s; }
+        .btn-search:hover { background: #2980b9; transform: translateY(-1px); }
+
+        /* Summary Stats */
+        .summary-ribbon { display: flex; gap: 15px; margin-bottom: 20px; }
+        .mini-stat { background: white; padding: 10px 20px; border-radius: 8px; border-left: 4px solid var(--accent); font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+
+        /* Table Styling */
+        .table-container { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .history-table { width: 100%; border-collapse: collapse; }
+        .history-table th { background: #f1f2f6; padding: 15px; text-align: left; font-size: 13px; color: #2f3542; border-bottom: 2px solid #dfe4ea; }
+        .history-table td { padding: 15px; border-bottom: 1px solid #f1f2f6; font-size: 14px; }
+        
+        .status-pill { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+        .status-Present { background: #e8f5e9; color: #2e7d32; }
+        .status-Absent { background: #ffebee; color: #c62828; }
+        .status-N-A { background: #f1f2f6; color: #747d8c; }
+
+        @media (max-width: 768px) { .filter-box { flex-direction: column; align-items: stretch; } }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Attendance History</h1>
-        <a href="/<%= user.role.toLowerCase() %>">Back to Dashboard</a>
 
+<div class="container">
+    <div class="header-section">
+        <h1><i class="fas fa-history"></i> Attendance History</h1>
+        <a href="/<%= user.role.toLowerCase() %>" class="back-btn"><i class="fas fa-chevron-left"></i> Dashboard</a>
+    </div>
+
+    <div class="filter-card">
         <form action="/attendance-history" method="GET" class="filter-box">
-            <div>
-                <label>Start Date</label>
+            <div class="filter-group">
+                <label>From Date</label>
                 <input type="date" name="startDate" value="<%= startDate %>" required>
             </div>
-            <div>
-                <label>End Date</label>
+            <div class="filter-group">
+                <label>To Date</label>
                 <input type="date" name="endDate" value="<%= endDate %>" required>
             </div>
-            <button type="submit" class="btn" style="background: #3498db; color: white; border: none; padding: 10px;">Search Records</button>
+            <button type="submit" class="btn-search"><i class="fas fa-filter"></i> Apply Filter</button>
+            <button type="button" onclick="window.print()" class="btn-search" style="background: #747d8c;"><i class="fas fa-print"></i> Print</button>
         </form>
+    </div>
 
+    <div class="summary-ribbon">
+        <div class="mini-stat"><strong>Records Found:</strong> <%= records.length %></div>
+        <% if (user.role === 'Student') { 
+            let pCount = 0;
+            records.forEach(r => {
+                const me = r.students.find(s => s.studentId === user.rollNo);
+                if(me && me.status === 'Present') pCount++;
+            });
+        %>
+            <div class="mini-stat" style="border-left-color: var(--success);"><strong>Range Attendance:</strong> <%= records.length > 0 ? ((pCount/records.length)*100).toFixed(1) : 0 %>%</div>
+        <% } %>
+    </div>
+
+    
+
+    <div class="table-container">
         <table class="history-table">
             <thead>
                 <tr>
-                    <th>Date</th>
-                    <th>Subject</th>
-                    <th>Time Slot</th>
-                    <% if (user.role !== 'Student') { %> <th>Strength</th> <% } else { %> <th>Status</th> <% } %>
+                    <th><i class="far fa-calendar-alt"></i> Date</th>
+                    <th><i class="fas fa-book"></i> Subject</th>
+                    <th><i class="far fa-clock"></i> Time Slot</th>
+                    <th><i class="fas fa-info-circle"></i> <%= user.role === 'Student' ? 'Your Status' : 'Attendance Strength' %></th>
                 </tr>
             </thead>
             <tbody>
-                <% records.forEach(rec => { %>
+                <% if (records && records.length > 0) { %>
+                    <% records.forEach(rec => { %>
+                        <tr>
+                            <td><strong><%= rec.date %></strong></td>
+                            <td><%= rec.subject %></td>
+                            <td><span style="color: #7f8c8d;"><%= rec.manualTime || 'Not Specified' %></span></td>
+                            <td>
+                                <% if (user.role === 'Student') { 
+                                    const me = rec.students.find(s => s.studentId === user.rollNo);
+                                    const statusClass = me ? me.status : 'N-A';
+                                %>
+                                    <span class="status-pill status-<%= statusClass %>">
+                                        <%= me ? me.status : 'Not Marked' %>
+                                    </span>
+                                <% } else { 
+                                    const presentCount = rec.students.filter(s => s.status === 'Present').length;
+                                    const totalInClass = rec.students.length;
+                                %>
+                                    <div style="font-weight: 600; color: var(--primary);">
+                                        <%= presentCount %> / <%= totalInClass %> <small style="font-weight: normal; color: #7f8c8d;">(Present)</small>
+                                    </div>
+                                <% } %>
+                            </td>
+                        </tr>
+                    <% }) %>
+                <% } else { %>
                     <tr>
-                        <td><%= rec.date %></td>
-                        <td><%= rec.subject %></td>
-                        <td><%= rec.manualTime %></td>
-                        <td>
-                            <% if (user.role === 'Student') { %>
-                                <% const me = rec.students.find(s => s.studentId === user.rollNo); %>
-                                <span class="status-<%= me ? me.status : 'N/A' %>"><%= me ? me.status : 'Not Marked' %></span>
-                            <% } else { %>
-                                <%= rec.students.filter(s => s.status === 'Present').length %> Present
-                            <% } %>
+                        <td colspan="4" style="text-align: center; padding: 50px; color: #95a5a6;">
+                            <i class="fas fa-search" style="font-size: 30px; display: block; margin-bottom: 10px;"></i>
+                            No records found for the selected date range.
                         </td>
                     </tr>
-                <% }) %>
+                <% } %>
             </tbody>
         </table>
     </div>
+</div>
+
 </body>
 </html>

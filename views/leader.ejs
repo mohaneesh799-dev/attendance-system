@@ -4,139 +4,193 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Leader Dashboard - Attendance</title>
-    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --whatsapp: #25D366; --danger: #e74c3c; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; padding: 20px; }
+        :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --whatsapp: #25D366; --danger: #e74c3c; --bg: #f4f7f6; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; color: #333; }
         .container { max-width: 1100px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .card { background: #fff; padding: 20px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 20px; }
-        .grid-inputs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 15px; }
-        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { padding: 12px; border: 1px solid #eee; text-align: left; }
-        th { background: var(--primary); color: white; }
-        .btn { padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: white; text-decoration: none; display: inline-block; }
-        .btn-whatsapp { background: var(--whatsapp); width: 100%; margin-top: 15px; font-size: 16px; }
-        .quick-mark-area { background: #e8f4fd; border-left: 5px solid var(--accent); padding: 15px; margin-bottom: 20px; border-radius: 5px; }
-        /* Section Badge styling */
-        .section-badge { background: var(--accent); color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.9rem; font-weight: bold; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid #eee; padding-bottom: 15px; }
+        .section-badge { background: var(--accent); color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; text-transform: uppercase; }
+        
+        .card { background: #fff; padding: 20px; border: 1px solid #ddd; border-radius: 10px; margin-bottom: 20px; }
+        .grid-inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px; }
+        
+        label { display: block; font-weight: 600; margin-bottom: 5px; font-size: 0.9rem; color: #666; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
+        input:focus, select:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1); }
+
+        .quick-mark-area { background: #ebf5ff; border: 1px solid #d0e8ff; padding: 20px; margin-bottom: 25px; border-radius: 10px; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; }
+        th { background: var(--primary); color: white; padding: 12px; text-align: left; font-size: 14px; }
+        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 14px; }
+        tr:hover { background: #fcfcfc; }
+
+        .btn { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; color: white; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; font-size: 14px; }
+        .btn-primary { background: var(--primary); }
+        .btn-accent { background: var(--accent); }
+        .btn-success { background: var(--success); }
+        .btn-danger { background: var(--danger); }
+        .btn-whatsapp { background: var(--whatsapp); width: 100%; justify-content: center; font-size: 16px; margin-top: 10px; }
+        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+
+        .checkbox-wrapper { display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
+        input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+    <div class="header">
         <div>
-            <h1>Leader Attendance Entry</h1>
-            <p>User: <strong><%= user.name %></strong> | <span class="section-badge">Section: <%= user.section %></span></p>
+            <h1 style="margin:0;">Attendance Entry</h1>
+            <p style="margin:5px 0 0 0;">Leader: <strong><%= user.name %></strong> | <span class="section-badge"><%= user.section %></span></p>
         </div>
-        <div>
-            <a href="/attendance-history" class="btn" style="background: var(--primary);">View History</a>
-            <a href="/logout" style="color: var(--danger); margin-left:15px; font-weight:bold; text-decoration:none;">Logout</a>
+        <div style="display: flex; gap: 10px;">
+            <a href="/attendance-history" class="btn btn-primary"><i class="fas fa-history"></i> History</a>
+            <a href="/logout" class="btn btn-danger" style="background: #fff; color: var(--danger); border: 1px solid var(--danger);"><i class="fas fa-sign-out-alt"></i> Logout</a>
         </div>
     </div>
 
     <div class="quick-mark-area">
-        <h4 style="margin-top:0;">⚡ Quick Attendance Mark (<%= user.section %>)</h4>
+        <h4 style="margin: 0 0 10px 0;"><i class="fas fa-bolt" style="color: #f1c40f;"></i> Quick Mark Present</h4>
         <div style="display: flex; gap: 10px;">
-            <input type="text" id="quickInput" placeholder="Enter Roll Numbers separated by commas (e.g., 101, 105, 120)">
-            <button type="button" onclick="applyQuickMark()" class="btn" style="background: var(--accent); white-space: nowrap;">Mark Present</button>
+            <input type="text" id="quickInput" placeholder="Paste roll numbers (e.g. 101, 105, 122)...">
+            <button type="button" onclick="applyQuickMark()" class="btn btn-accent" style="white-space: nowrap;">Mark Students</button>
         </div>
-        <small style="color: #666;">Tip: Paste roll numbers only from your section.</small>
+        <p style="font-size: 12px; color: #5a91c5; margin: 8px 0 0 0;">Tip: You can copy a list of roll numbers from any source and paste them here.</p>
     </div>
 
-    <form action="/lock-attendance" method="POST">
+    <form action="/lock-attendance" method="POST" id="attendanceForm">
         <input type="hidden" name="section" value="<%= user.section %>">
 
         <div class="card">
             <div class="grid-inputs">
                 <div>
-                    <label>Lecturer</label>
+                    <label>Assigned Lecturer</label>
                     <select name="lecturerEmail" required>
-                        <option value="">-- Choose Lecturer --</option>
+                        <option value="">-- Select Lecturer --</option>
                         <% allUsers.filter(u => u.role === 'Lecturer').forEach(l => { %>
                             <option value="<%= l.email %>"><%= l.name %></option>
                         <% }) %>
                     </select>
                 </div>
                 <div>
-                    <label>Time Slot</label>
-                    <input type="text" name="manualTime" placeholder="e.g. 10:30 AM" required>
+                    <label>Period/Time Slot</label>
+                    <input type="text" name="manualTime" placeholder="e.g. 09:00 AM - 10:00 AM" required>
                 </div>
                 <div>
-                    <label>Date</label>
+                    <label>Class Date</label>
                     <input type="date" name="date" id="currentDate" value="<%= new Date().toISOString().split('T')[0] %>" required>
                 </div>
             </div>
 
-            <label>Subject</label>
-            <select name="subject" required style="margin-bottom:15px;">
-                <option value="">-- Choose Subject --</option>
-                <% masterSubjects.forEach(sub => { %>
-                    <option value="<%= sub.name %>"><%= sub.name %></option>
-                <% }) %>
-            </select>
+            <div style="margin-top: 15px;">
+                <label>Subject</label>
+                <select name="subject" required>
+                    <option value="">-- Select Subject --</option>
+                    <% masterSubjects.forEach(sub => { %>
+                        <option value="<%= sub.name %>"><%= sub.name %></option>
+                    <% }) %>
+                </select>
+            </div>
 
-            <h3>Student Attendance List - <%= user.section %></h3>
+            <h3 style="margin: 30px 0 15px 0; border-left: 4px solid var(--primary); padding-left: 10px;">Students in Section <%= user.section %></h3>
+            
             <table id="studentTable">
                 <thead>
                     <tr>
-                        <th>Roll No</th>
+                        <th width="120">Roll No</th>
                         <th>Student Name</th>
-                        <th>Action</th>
+                        <th width="180">Attendance Status</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <% let i = 0; %>
+                    <% let studentIndex = 0; %>
                     <% allUsers.forEach(u => { %>
-                        <% if (u.role !== 'Master' && u.role !== 'Lecturer' && u.role !== 'Admin') { %>
+                        <% if (u.role !== 'Master' && u.role !== 'Lecturer' && u.role !== 'SuperAdmin') { %>
                             <tr>
-                                <td class="roll-col"><%= u.rollNo || u.rollno || 'N/A' %></td>
-                                <td><%= u.name %> <%= u.role === 'Leader' ? '(Leader/You)' : '' %></td>
+                                <td class="roll-col" style="font-family: monospace; font-weight: bold;"><%= u.rollNo || u.rollno %></td>
                                 <td>
-                                    <div style="display:flex; align-items:center; gap:10px;">
-                                        <input type="hidden" name="students[<%=i%>][id]" value="<%= u.rollNo || u.rollno %>">
-                                        <input type="hidden" name="students[<%=i%>][name]" value="<%= u.name %>">
-                                        <input type="checkbox" name="students[<%=i%>][status]" value="Present" class="student-checkbox">
-                                        <span>Mark Present</span>
-                                    </div>
+                                    <%= u.name %> 
+                                    <% if(u.email === user.email) { %><span style="color: var(--accent); font-size: 11px;">(YOU)</span><% } %>
+                                </td>
+                                <td>
+                                    <input type="hidden" name="students[<%=studentIndex%>][id]" value="<%= u.rollNo || u.rollno %>">
+                                    <input type="hidden" name="students[<%=studentIndex%>][name]" value="<%= u.name %>">
+                                    
+                                    <label class="checkbox-wrapper">
+                                        <input type="checkbox" 
+                                               name="students[<%=studentIndex%>][status]" 
+                                               value="Present" 
+                                               class="student-checkbox">
+                                        <span>Present</span>
+                                    </label>
                                 </td>
                             </tr>
-                            <% i++; %>
+                            <% studentIndex++; %>
                         <% } %>
                     <% }) %>
                 </tbody>
             </table>
-            <button type="submit" class="btn" style="background: var(--danger); width:100%; margin-top:15px;" onclick="return confirm('Lock this attendance for <%= user.section %>?')">Lock Period Attendance</button>
+
+            <button type="submit" class="btn btn-danger" style="width:100%; margin-top:25px; height: 50px; font-size: 16px;">
+                <i class="fas fa-lock"></i> Finalize & Lock Attendance
+            </button>
         </div>
     </form>
 
     <div class="card">
-        <h3>Daily Report Management</h3>
-        <div style="display: flex; gap: 15px; align-items: flex-end;">
-            <div style="flex: 1;">
-                <label>Filter By Status:</label>
+        <h3><i class="fas fa-file-pdf"></i> Report Management</h3>
+        <div class="grid-inputs" style="align-items: flex-end;">
+            <div style="flex: 2;">
+                <label>Filter Records By:</label>
                 <select id="reportFilter">
-                    <option value="">All Students</option>
-                    <option value="Present">Present Only</option>
-                    <option value="Absent">Absent Only</option>
+                    <option value="">Full Class List (All)</option>
+                    <option value="Present">Present Students Only</option>
+                    <option value="Absent">Absent Students Only</option>
                 </select>
             </div>
-            <button type="button" class="btn" style="background: var(--accent);" onclick="downloadPDF()">Download PDF</button>
+            <button type="button" class="btn btn-accent" onclick="downloadPDF()">
+                <i class="fas fa-download"></i> Download PDF
+            </button>
         </div>
+        
         <button type="button" class="btn btn-whatsapp" onclick="submitToWhatsApp()">
-            Share Report via WhatsApp
+            <i class="fab fa-whatsapp"></i> Send Report to WhatsApp Group
         </button>
     </div>
 </div>
 
 <script>
+    // Handles the checkbox logic so "Absent" is sent if not checked
+    document.getElementById('attendanceForm').onsubmit = function() {
+        if(!confirm('Are you sure you want to lock attendance? This cannot be edited later.')) return false;
+        
+        const checkboxes = document.querySelectorAll('.student-checkbox');
+        checkboxes.forEach(cb => {
+            if (!cb.checked) {
+                // If not checked, create a hidden field to send "Absent"
+                let hidden = document.createElement('input');
+                hidden.type = 'hidden';
+                hidden.name = cb.name;
+                hidden.value = 'Absent';
+                this.appendChild(hidden);
+            }
+        });
+        return true;
+    };
+
     function applyQuickMark() {
         const input = document.getElementById('quickInput').value;
         if (!input.trim()) return alert("Please enter roll numbers.");
-        const rollsToMark = input.split(',').map(r => r.trim().toLowerCase());
+        
+        // Clean the input: handle commas, spaces, and newlines
+        const rollsToMark = input.split(/[\s,]+/).map(r => r.trim().toLowerCase()).filter(r => r);
         const rows = document.querySelectorAll('#studentTable tbody tr');
         let count = 0;
+
         rows.forEach(row => {
             const rollNumberCell = row.querySelector('.roll-col').innerText.trim().toLowerCase();
             const checkbox = row.querySelector('.student-checkbox');
@@ -145,18 +199,19 @@
                 count++;
             }
         });
+
         if (count > 0) {
-            alert(`Marked ${count} students as Present.`);
+            alert(`Success: ${count} students marked as Present.`);
             document.getElementById('quickInput').value = ""; 
         } else {
-            alert("No matching roll numbers found in this section.");
+            alert("No matching roll numbers found in this section list.");
         }
     }
 
     function downloadPDF() {
         const date = document.getElementById('currentDate').value;
         const filter = document.getElementById('reportFilter').value;
-        if (!date) return alert("Select a date");
+        if (!date) return alert("Please select a date first.");
         window.open(`/generate-day-pdf/${date}?filter=${filter}`, '_blank');
     }
 
@@ -164,12 +219,15 @@
         const date = document.getElementById('currentDate').value;
         const filter = document.getElementById('reportFilter').value;
         if (!date) return alert("Please select a date first.");
+        
         const baseUrl = window.location.origin;
         const pdfUrl = `${baseUrl}/generate-day-pdf/${date}?filter=${filter}`;
-        const message = `*Attendance Report: ${date}*\n` +
+        
+        const message = `*Attendance Report - ${date}*\n` +
                         `Section: <%= user.section %>\n` +
-                        `Status Filter: ${filter || 'All Students'}\n\n` +
-                        `📄 View PDF Report:\n${pdfUrl}`;
+                        `Report Type: ${filter || 'Complete List'}\n\n` +
+                        `🔗 Download PDF Report:\n${pdfUrl}`;
+        
         window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, '_blank');
     }
 </script>

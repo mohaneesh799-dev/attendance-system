@@ -3,79 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Attendance Portal - <%= user.section %></title>
-    <link rel="stylesheet" href="/style.css">
+    <title>Student Portal - <%= user.rollNo %></title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --danger: #e74c3c; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; }
+        :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --danger: #e74c3c; --warning: #f1c40f; --bg: #f0f2f5; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); margin: 0; padding: 20px; color: #333; }
         .container { max-width: 1000px; margin: 0 auto; }
         
-        .dashboard-header { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 25px; text-align: center; position: relative; }
-        .user-info { color: #7f8c8d; font-size: 1.1rem; margin-top: 10px; }
-        
-        /* Added Section Badge */
-        .section-tag { background: var(--accent); color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.9rem; font-weight: bold; display: inline-block; margin-top: 10px; }
+        /* Header Section */
+        .dashboard-header { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 25px; text-align: center; position: relative; border-top: 5px solid var(--accent); }
+        .logout-btn { color: var(--danger); text-decoration: none; font-weight: bold; position: absolute; top: 20px; right: 20px; font-size: 14px; display: flex; align-items: center; gap: 5px; }
+        .user-info h1 { margin: 10px 0; color: var(--primary); }
+        .section-tag { background: var(--accent); color: white; padding: 6px 16px; border-radius: 20px; font-size: 0.9rem; font-weight: bold; display: inline-block; margin-top: 10px; }
 
-        .stats-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .stat-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; border-bottom: 4px solid var(--accent); }
+        /* Stats Grid */
+        .stats-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); text-align: center; transition: 0.3s; }
+        .stat-card:hover { transform: translateY(-5px); }
         .stat-card h3 { margin: 0; color: #7f8c8d; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
-        .stat-card .value { font-size: 28px; font-weight: bold; color: var(--primary); margin: 10px 0; }
+        .stat-card .value { font-size: 32px; font-weight: 800; color: var(--primary); margin: 10px 0; }
+        
+        /* Progress Bar */
+        .progress-container { background: #eee; border-radius: 10px; height: 10px; margin-top: 15px; overflow: hidden; }
+        .progress-fill { height: 100%; transition: width 1s ease-in-out; }
 
-        .attendance-card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th { background-color: #f8f9fa; color: var(--primary); font-weight: 600; text-align: left; padding: 15px; border-bottom: 2px solid #eee; }
-        td { padding: 15px; border-bottom: 1px solid #eee; color: #2c3e50; }
+        /* Attendance List */
+        .attendance-card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background-color: #f8f9fa; color: #636e72; font-weight: 600; text-align: left; padding: 15px; border-bottom: 2px solid #eee; font-size: 13px; text-transform: uppercase; }
+        td { padding: 15px; border-bottom: 1px solid #eee; font-size: 14px; }
+        tr:last-child td { border-bottom: none; }
         
-        .status-pill { padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
-        .status-Present { background: #d4edda; color: #155724; }
-        .status-Absent { background: #f8d7da; color: #721c24; }
+        .status-pill { padding: 5px 12px; border-radius: 6px; font-size: 11px; font-weight: bold; display: inline-block; }
+        .status-Present { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
+        .status-Absent { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
         
-        .btn-history { display: inline-block; background: var(--primary); color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-top: 15px; font-weight: bold; transition: 0.3s; }
-        .btn-history:hover { background: #34495e; }
-        .logout-btn { color: var(--danger); text-decoration: none; font-weight: bold; position: absolute; top: 20px; right: 20px; }
+        .warning-box { background: #fff3cd; color: #856404; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; border-left: 5px solid var(--warning); }
+
+        .btn-history { display: inline-flex; align-items: center; gap: 8px; background: var(--primary); color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; transition: 0.3s; }
+        .btn-history:hover { background: #1a252f; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="dashboard-header">
-        <a href="/logout" class="logout-btn">Logout Exit</a>
-        <h1>My Attendance Dashboard</h1>
+        <a href="/logout" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
         <div class="user-info">
-            Welcome, <strong><%= user.name %></strong> | Roll No: <strong><%= user.rollNo %></strong>
+            <h1>My Attendance Portal</h1>
+            <p>Student: <strong><%= user.name %></strong> | Roll No: <strong><%= user.rollNo %></strong></p>
+            <span class="section-tag"><i class="fas fa-university"></i> Section: <%= user.section %></span>
         </div>
-        <div class="section-tag">Department: <%= user.section %></div>
-        <br>
-        <a href="/attendance-history" class="btn-history">📅 View Full History / Filter by Date</a>
     </div>
+
+    <% 
+        const percentage = totalCount > 0 ? ((presentCount / totalCount) * 100).toFixed(1) : 0;
+        const barColor = percentage >= 75 ? 'var(--success)' : (percentage >= 60 ? 'var(--warning)' : 'var(--danger)');
+    %>
+
+    <% if (percentage < 75 && totalCount > 0) { %>
+        <div class="warning-box">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span><strong>Low Attendance Warning:</strong> Your current attendance is below the required 75%. Please attend more classes to improve your score.</span>
+        </div>
+    <% } %>
 
     <div class="stats-container">
         <div class="stat-card">
-            <h3>Assigned Section</h3>
-            <div class="value" style="font-size: 20px;"><%= user.section %></div>
-        </div>
-        <div class="stat-card">
-            <h3>Total Classes</h3>
+            <h3>Total Sessions</h3>
             <div class="value"><%= totalCount %></div>
         </div>
-        <div class="stat-card" style="border-bottom-color: var(--success);">
+        <div class="stat-card">
             <h3>Present</h3>
             <div class="value" style="color: var(--success);"><%= presentCount %></div>
         </div>
-        <div class="stat-card" style="border-bottom-color: var(--danger);">
+        <div class="stat-card">
             <h3>Absent</h3>
             <div class="value" style="color: var(--danger);"><%= totalCount - presentCount %></div>
         </div>
-        <div class="stat-card" style="border-bottom-color: #f1c40f;">
-            <h3>Attendance %</h3>
-            <div class="value" style="color: var(--primary);">
-                <%= totalCount > 0 ? ((presentCount / totalCount) * 100).toFixed(1) : 0 %>%
+        <div class="stat-card">
+            <h3>Overall %</h3>
+            <div class="value" style="color: <%= barColor %>;"><%= percentage %>%</div>
+            <div class="progress-container">
+                <div class="progress-fill" style="width: <%= percentage %>%; background: <%= barColor %>;"></div>
             </div>
         </div>
     </div>
 
+    
+
     <div class="attendance-card">
-        <h3>Recent Attendance Records (<%= user.section %>)</h3>
+        <div class="card-header">
+            <h3 style="margin:0;">Recent Activity Log</h3>
+            <a href="/attendance-history" class="btn-history"><i class="fas fa-calendar-alt"></i> Detailed History</a>
+        </div>
+        
         <table>
             <thead>
                 <tr>
@@ -91,26 +114,26 @@
                         const myEntry = rec.students.find(s => s.studentId === user.rollNo);
                     %>
                         <tr>
-                            <td><%= rec.date %></td>
-                            <td><%= rec.manualTime || 'N/A' %></td> 
-                            <td>
-                                <strong><%= rec.subject %></strong>
-                            </td>
+                            <td style="font-weight: 600;"><%= rec.date %></td>
+                            <td><i class="far fa-clock"></i> <%= rec.manualTime || 'N/A' %></td> 
+                            <td><strong><%= rec.subject %></strong></td>
                             <td>
                                 <% if (myEntry) { %>
                                     <span class="status-pill status-<%= myEntry.status %>">
+                                        <i class="fas <%= myEntry.status === 'Present' ? 'fa-check-circle' : 'fa-times-circle' %>"></i>
                                         <%= myEntry.status %>
                                     </span>
                                 <% } else { %>
-                                    <span class="status-pill" style="background:#eee;">Not Marked</span>
+                                    <span class="status-pill" style="background:#f1f2f6; color: #a4b0be;">Not Marked</span>
                                 <% } %>
                             </td>
                         </tr>
                     <% }) %>
                 <% } else { %>
                     <tr>
-                        <td colspan="4" style="text-align: center; padding: 40px; color: #7f8c8d;">
-                            No records found for Roll No: <%= user.rollNo %> in Section <%= user.section %>
+                        <td colspan="4" style="text-align: center; padding: 60px; color: #b2bec3;">
+                            <i class="fas fa-folder-open" style="font-size: 40px; display: block; margin-bottom: 10px; opacity: 0.5;"></i>
+                            No attendance records found for your roll number.
                         </td>
                     </tr>
                 <% } %>
