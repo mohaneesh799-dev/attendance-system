@@ -201,33 +201,54 @@
 </div>
 
 <script>
-    // Real-time Search
-    function filterUsers() {
-        let input = document.getElementById('userSearch').value.toLowerCase();
-        let rows = document.querySelector('#userTable tbody').getElementsByTagName('tr');
-        for (let i = 0; i < rows.length; i++) {
-            let text = rows[i].textContent.toLowerCase();
-            rows[i].style.display = text.includes(input) ? "" : "none";
+    // FIX: Wrap in DOMContentLoaded — if any element is null when the script runs
+    // it throws immediately and ALL subsequent JS (Select All, clock) silently stops.
+    document.addEventListener('DOMContentLoaded', function() {
+
+        // Real-time Search
+        const searchInput = document.getElementById('userSearch');
+        if (searchInput) {
+            searchInput.addEventListener('keyup', function() {
+                const query = this.value.toLowerCase();
+                const rows = document.querySelectorAll('#userTable tbody tr');
+                rows.forEach(function(row) {
+                    row.style.display = row.textContent.toLowerCase().includes(query) ? '' : 'none';
+                });
+            });
         }
-    }
 
-    // Toggle All Checkboxes
-    document.getElementById('selectAll').addEventListener('change', function() {
-        document.querySelectorAll('.user-checkbox').forEach(cb => {
-            // Only toggle visible rows (so search works with select all)
-            if(cb.closest('tr').style.display !== 'none') {
-                cb.checked = this.checked;
-            }
+        // Select All — FIX: previously used arrow function so 'this' was wrong context
+        const selectAllBox = document.getElementById('selectAll');
+        if (selectAllBox) {
+            selectAllBox.addEventListener('change', function() {
+                const isChecked = this.checked; // capture before forEach
+                document.querySelectorAll('.user-checkbox').forEach(function(cb) {
+                    // Only check visible rows (respects search filter)
+                    if (cb.closest('tr').style.display !== 'none') {
+                        cb.checked = isChecked;
+                    }
+                });
+            });
+        }
+
+        // Deselect "Select All" automatically when a single checkbox is unchecked
+        document.querySelectorAll('.user-checkbox').forEach(function(cb) {
+            cb.addEventListener('change', function() {
+                if (!this.checked && selectAllBox) {
+                    selectAllBox.checked = false;
+                }
+            });
         });
-    });
 
-    // Dynamic Clock
-    function updateClock() {
-        const now = new Date();
-        document.getElementById('clock').innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
-    }
-    setInterval(updateClock, 1000);
-    updateClock();
+        // Dynamic Clock
+        function updateClock() {
+            const el = document.getElementById('clock');
+            if (el) el.innerText = new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit', second: '2-digit'});
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+    });
+</script>
 </script>
 </body>
 </html>

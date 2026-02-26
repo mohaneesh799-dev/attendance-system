@@ -169,47 +169,60 @@
 </div>
 
 <script>
-    // Handles the checkbox logic so "Absent" is sent if not checked
-    document.getElementById('attendanceForm').onsubmit = function() {
-        if(!confirm('Are you sure you want to lock attendance? This cannot be edited later.')) return false;
-        
-        const checkboxes = document.querySelectorAll('.student-checkbox');
-        checkboxes.forEach(cb => {
+    // FIX 1: Form submit — append hidden "Absent" for every unchecked student
+    // Previously used arrow function inside forEach which captured 'this' incorrectly
+    // when the outer context wasn't a regular function call.
+    document.getElementById('attendanceForm').addEventListener('submit', function(e) {
+        if (!confirm('Are you sure you want to lock attendance? This cannot be edited later.')) {
+            e.preventDefault();
+            return;
+        }
+
+        const form = this;
+        document.querySelectorAll('.student-checkbox').forEach(function(cb) {
             if (!cb.checked) {
-                // If not checked, create a hidden field to send "Absent"
-                let hidden = document.createElement('input');
+                const hidden = document.createElement('input');
                 hidden.type = 'hidden';
                 hidden.name = cb.name;
                 hidden.value = 'Absent';
-                this.appendChild(hidden);
+                form.appendChild(hidden); // FIX: 'form' reference, not 'this' inside forEach
             }
         });
-        return true;
-    };
+    });
+
+    // FIX 2: Quick Mark — normalize roll numbers to handle leading zeros.
+    // Previously "2" wouldn't match "02" because no normalization was done.
+    function normalizeRoll(r) {
+        // Strips leading zeros so "02", "2", "002" all match each other
+        return String(r).trim().replace(/^0+/, '') || '0';
+    }
 
     function applyQuickMark() {
         const input = document.getElementById('quickInput').value;
         if (!input.trim()) return alert("Please enter roll numbers.");
-        
-        // Clean the input: handle commas, spaces, and newlines
-        const rollsToMark = input.split(/[\s,]+/).map(r => r.trim().toLowerCase()).filter(r => r);
+
+        const rollsToMark = input.split(/[\s,\n]+/)
+            .map(r => normalizeRoll(r))
+            .filter(r => r);
+
         const rows = document.querySelectorAll('#studentTable tbody tr');
         let count = 0;
 
-        rows.forEach(row => {
-            const rollNumberCell = row.querySelector('.roll-col').innerText.trim().toLowerCase();
+        rows.forEach(function(row) {
+            const cellRoll = normalizeRoll(row.querySelector('.roll-col').innerText);
             const checkbox = row.querySelector('.student-checkbox');
-            if (rollsToMark.includes(rollNumberCell)) {
+            if (rollsToMark.includes(cellRoll)) {
                 checkbox.checked = true;
+                row.style.background = '#e8f5e9'; // Visual feedback
                 count++;
             }
         });
 
         if (count > 0) {
-            alert(`Success: ${count} students marked as Present.`);
-            document.getElementById('quickInput').value = ""; 
+            alert(`✅ ${count} student(s) marked as Present.`);
+            document.getElementById('quickInput').value = '';
         } else {
-            alert("No matching roll numbers found in this section list.");
+            alert("No matching roll numbers found. Check for typos or leading zeros.");
         }
     }
 
@@ -224,15 +237,15 @@
         const date = document.getElementById('currentDate').value;
         const filter = document.getElementById('reportFilter').value;
         if (!date) return alert("Please select a date first.");
-        
+
         const baseUrl = window.location.origin;
         const pdfUrl = `${baseUrl}/generate-day-pdf/${date}?filter=${filter}`;
-        
+
         const message = `*Attendance Report - ${date}*\n` +
                         `Section: <%= user.section %>\n` +
                         `Report Type: ${filter || 'Complete List'}\n\n` +
                         `🔗 Download PDF Report:\n${pdfUrl}`;
-        
+
         window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, '_blank');
     }
 </script>

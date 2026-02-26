@@ -29,7 +29,21 @@ if (!fs.existsSync(uploadDir)) {
 
 const app = express();
 
-app.use(helmet());
+// FIXED: helmet() default CSP blocks ALL inline <script> tags, onclick attributes,
+// and addEventListener calls — silently. Every JS feature on every page was dead.
+// Configured to allow 'unsafe-inline' scripts while keeping all other security headers.
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "cdn.jsdelivr.net", "cdnjs.cloudflare.com"],
+            styleSrc: ["'self'", "'unsafe-inline'", "cdn.jsdelivr.net", "cdnjs.cloudflare.com"],
+            imgSrc: ["'self'", "data:", "upload.wikimedia.org"],
+            fontSrc: ["'self'", "cdnjs.cloudflare.com"],
+            connectSrc: ["'self'"],
+        }
+    }
+}));
 app.use(fileUpload()); // FIXED: express-fileupload must be mounted for /upload-users to work
 
 
@@ -899,14 +913,24 @@ app.post('/lock-attendance', async (req, res) => {
 
         const { section, lecturerEmail, manualTime, subject, date, students } = req.body;
 
+        // FIXED: Validate required fields before processing — previously would throw
+        // unhandled errors like "Cannot convert undefined to object" crashing the route
+        if (!subject || !manualTime || !date) {
+            return res.status(400).send("<script>alert('Please fill in all fields (Lecturer, Time Slot, Date, Subject).'); window.history.back();</script>");
+        }
+
+        // FIXED: students was undefined if section has no students, causing Object.keys crash
+        if (!students || typeof students !== 'object') {
+            return res.status(400).send("<script>alert('No student data received. Please reload and try again.'); window.history.back();</script>");
+        }
+
         // 1. Data Transformation
-        // Convert the students object into the array format Mongoose expects
         const studentList = Object.keys(students).map(key => {
             const s = students[key];
             return {
                 studentId: s.id || key,
-                studentName: s.name,
-                status: s.status === 'Present' ? 'Present' : 'Absent' // Explicit fallback
+                studentName: s.name || '',
+                status: s.status === 'Present' ? 'Present' : 'Absent'
             };
         });
 
@@ -916,7 +940,7 @@ app.post('/lock-attendance', async (req, res) => {
             date: date || new Date().toISOString().split('T')[0],
             manualTime, 
             subject,
-            lecturerEmail: lecturerEmail.toLowerCase(),
+            lecturerEmail: (lecturerEmail || '').toLowerCase(), // FIXED: was .toLowerCase() on undefined if blank
             leaderEmail: leader.email,
             students: studentList,
             isLockedByLeader: true,
