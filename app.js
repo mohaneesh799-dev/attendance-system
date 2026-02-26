@@ -21,7 +21,6 @@ const PDFDocument = require('pdfkit');
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const rateLimit = require('express-rate-limit');
-const mongoSanitize = require('express-mongo-sanitize');
 
 // ── Ensure uploads directory exists ──────────────────────────
 const uploadDir = path.join(__dirname, 'uploads');
@@ -53,7 +52,6 @@ app.use(helmet({
 
 // ── SECURITY: NoSQL Injection prevention ─────────────────────
 // FIX (NEW): Strips $ and . from user input to block MongoDB operator injection.
-app.use(mongoSanitize());
 
 // ── Body parsers ─────────────────────────────────────────────
 // FIX: express.urlencoded was registered TWICE — removed the duplicate.
