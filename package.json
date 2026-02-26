@@ -1,11 +1,12 @@
 {
   "name": "attendance-app",
   "version": "1.0.0",
-  "description": "",
+  "description": "RKU College Attendance Management System",
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "nodemon app.js",
+    "test": "echo \"No tests configured\" && exit 0"
   },
   "keywords": [],
   "author": "",
@@ -13,7 +14,6 @@
   "type": "commonjs",
   "dependencies": {
     "bcrypt": "^6.0.0",
-    "body-parser": "^2.2.1",
     "connect-mongo": "^6.0.0",
     "csv-parser": "^3.2.0",
     "dotenv": "^17.2.3",
@@ -21,6 +21,8 @@
     "exceljs": "^4.4.0",
     "express": "^5.2.1",
     "express-fileupload": "^1.5.2",
+    "express-mongo-sanitize": "^2.2.0",
+    "express-rate-limit": "^7.5.1",
     "express-session": "^1.18.2",
     "helmet": "^8.1.0",
     "mongoose": "^9.1.1",
@@ -29,5 +31,8 @@
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "pdfkit": "^0.17.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
   }
 }
