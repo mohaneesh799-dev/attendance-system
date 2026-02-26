@@ -71,7 +71,12 @@
                     <label>Assigned Lecturer</label>
                     <select name="lecturerEmail" required>
                         <option value="">-- Select Lecturer --</option>
-                        <% allUsers.filter(u => u.role === 'Lecturer').forEach(l => { %>
+                        <%
+                          // FIXED: was allUsers.filter(u => u.role === 'Lecturer') but allUsers only
+                          // contains Students/Leaders. The route fetches lecturers separately.
+                          const lecturerList = typeof lecturers !== 'undefined' ? lecturers : [];
+                          lecturerList.forEach(l => {
+                        %>
                             <option value="<%= l.email %>"><%= l.name %></option>
                         <% }) %>
                     </select>
