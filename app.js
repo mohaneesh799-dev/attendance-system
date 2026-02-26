@@ -676,10 +676,10 @@ app.get('/logout', (req, res) => {
 // --- Registration Page Route ---
 app.get('/register', (req, res) => {
     // If user is already logged in, redirect them away from register page
-    if (req.session.user) {
-        return res.redirect(`/${req.session.user.role.toLowerCase()}`);
+    const loggedIn = req.session.user || req.user;
+    if (loggedIn) {
+        return res.redirect(`/${loggedIn.role.toLowerCase()}`);
     }
-    
     res.render('register', { error: null }); 
 });
 
@@ -717,16 +717,21 @@ app.get('/settings', async (req, res) => {
 
 app.post('/update-settings', async (req, res) => {
     const { name, phone, currentPassword, newPassword } = req.body;
-    const userId = req.session.user._id;
+    // FIXED: was req.session.user._id only — crashes for Google OAuth users
+    const sessionUser = req.session.user || req.user;
+    if (!sessionUser) return res.redirect('/login');
+    const userId = sessionUser._id;
 
     try {
         const user = await User.findById(userId);
+
+        if (!user) return res.redirect('/login');
 
         // 1. Verify Current Password
         const isMatch = await bcrypt.compare(currentPassword, user.password);
         if (!isMatch) {
             return res.render('settings', { 
-                user: req.session.user, 
+                user: sessionUser, 
                 message: "Incorrect current password!", 
                 messageType: 'error' 
             });
@@ -740,7 +745,7 @@ app.post('/update-settings', async (req, res) => {
         if (newPassword && newPassword.trim() !== "") {
             if (newPassword.length < 6) {
                 return res.render('settings', { 
-                    user: req.session.user, 
+                    user: sessionUser, 
                     message: "New password must be at least 6 characters.", 
                     messageType: 'error' 
                 });
@@ -750,7 +755,7 @@ app.post('/update-settings', async (req, res) => {
 
         await user.save();
 
-        // 4. IMPORTANT: Update the session so the dashboard shows new name
+        // 4. Update the session so the dashboard shows new name
         req.session.user = user; 
 
         res.render('settings', { 
@@ -908,7 +913,9 @@ function isAdmin(req, res, next) {
 
 app.post('/lock-attendance', async (req, res) => {
     try {
-        const leader = req.session.user;
+        // FIXED: was req.session.user only — Google OAuth users only have req.user (Passport).
+        // This was the cause of the "Unauthorized" error for all Google-logged-in Leaders.
+        const leader = req.session.user || req.user;
         if (!leader || leader.role !== 'Leader') return res.status(403).send("Unauthorized");
 
         const { section, lecturerEmail, manualTime, subject, date, students } = req.body;
@@ -1092,11 +1099,13 @@ app.post('/bulk-approve', async (req, res) => {
 
 app.get('/generate-day-pdf/:date', async (req, res) => {
     try {
-        if (!req.session.user) return res.redirect('/login');
+        // FIXED: was req.session.user only — breaks for Google OAuth users
+        const sessionUser = req.session.user || req.user;
+        if (!sessionUser) return res.redirect('/login');
 
         const { date } = req.params;
-        const { filter } = req.query; // 'Present' or 'Absent'
-        const userSection = req.session.user.section;
+        const { filter } = req.query;
+        const userSection = sessionUser.section;
 
         const records = await Attendance.find({ 
             date: date, 
@@ -1166,10 +1175,12 @@ app.get('/generate-day-pdf/:date', async (req, res) => {
 
 app.get('/leader-history', async (req, res) => {
     try {
-        if (!req.session.user) return res.status(401).json({ error: "Unauthorized" });
+        // FIXED: was req.session.user only
+        const sessionUser = req.session.user || req.user;
+        if (!sessionUser) return res.status(401).json({ error: "Unauthorized" });
 
         const records = await Attendance.find({ 
-            leaderEmail: req.session.user.email 
+            leaderEmail: sessionUser.email 
         })
         .sort({ date: -1 })
         .lean();
