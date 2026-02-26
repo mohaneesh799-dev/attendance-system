@@ -8,72 +8,113 @@
     <style>
         :root { --primary: #1a2a3a; --accent: #1e90ff; --success: #2ed573; --danger: #ff4757; --bg: #f1f2f6; --text: #2f3542; }
         body { font-family: 'Inter', 'Segoe UI', sans-serif; margin: 0; background: var(--bg); display: flex; color: var(--text); }
-        
-        /* Sidebar Navigation */
-        .sidebar { width: 260px; background: var(--primary); color: white; height: 100vh; padding: 30px 20px; position: fixed; box-shadow: 4px 0 10px rgba(0,0,0,0.1); }
-        .sidebar h2 { font-size: 1.5rem; color: var(--accent); margin-bottom: 40px; display: flex; align-items: center; gap: 10px; }
-        .nav-link { color: #a4b0be; text-decoration: none; display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 8px; transition: 0.3s; margin-bottom: 5px; }
+
+        .sidebar { width: 260px; background: var(--primary); color: white; height: 100vh; padding: 30px 20px; position: fixed; box-shadow: 4px 0 10px rgba(0,0,0,0.1); overflow-y: auto; }
+        .sidebar h2 { font-size: 1.4rem; color: var(--accent); margin-bottom: 30px; display: flex; align-items: center; gap: 10px; }
+        .nav-link { color: #a4b0be; text-decoration: none; display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 8px; transition: 0.2s; margin-bottom: 4px; font-size: 14px; }
         .nav-link:hover, .nav-link.active { background: rgba(255,255,255,0.1); color: white; }
-        
-        /* Main Content Area */
+
         .main-content { margin-left: 280px; padding: 40px; width: calc(100% - 280px); }
         .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-        
-        /* Quick Stats */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .stat-card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-left: 5px solid var(--accent); }
-        .stat-card h3 { margin: 0; font-size: 0.8rem; text-transform: uppercase; color: #747d8c; }
-        .stat-card .value { font-size: 2rem; font-weight: 800; margin-top: 10px; }
 
-        /* Tables & Cards */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-left: 5px solid var(--accent); }
+        .stat-card h3 { margin: 0; font-size: 0.75rem; text-transform: uppercase; color: #747d8c; }
+        .stat-card .value { font-size: 2rem; font-weight: 800; margin-top: 8px; }
+
         .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 30px; }
-        .search-bar { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 20px; font-size: 14px; }
-        
+
+        /* Division tabs */
+        .div-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+        .div-tab { padding: 8px 20px; border: 2px solid #ddd; border-radius: 20px; cursor: pointer; font-weight: 600; font-size: 13px; background: white; color: #555; transition: 0.2s; }
+        .div-tab.active, .div-tab:hover { background: var(--accent); color: white; border-color: var(--accent); }
+
+        .division-section { margin-bottom: 30px; }
+        .division-section.hidden { display: none; }
+        .division-heading { display: flex; align-items: center; gap: 12px; background: #f8f9fa; padding: 14px 18px; border-radius: 10px; margin-bottom: 12px; }
+        .div-badge { background: var(--primary); color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; text-transform: uppercase; }
+        .div-count { font-size: 13px; color: #747d8c; }
+
         table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; padding: 15px; background: #f8f9fa; font-size: 13px; color: #747d8c; text-transform: uppercase; }
-        td { padding: 15px; border-bottom: 1px solid #f1f2f6; font-size: 14px; }
-        
-        /* Buttons & Badges */
-        .btn { padding: 8px 16px; border-radius: 6px; cursor: pointer; border: none; font-weight: 600; font-size: 13px; transition: 0.2s; }
+        th { text-align: left; padding: 12px 15px; background: #f8f9fa; font-size: 12px; color: #747d8c; text-transform: uppercase; border-bottom: 2px solid #eee; }
+        td { padding: 12px 15px; border-bottom: 1px solid #f1f2f6; font-size: 13px; vertical-align: middle; }
+        tr:last-child td { border-bottom: none; }
+
+        .btn { padding: 7px 14px; border-radius: 6px; cursor: pointer; border: none; font-weight: 600; font-size: 12px; transition: 0.2s; display: inline-flex; align-items: center; gap: 5px; }
         .btn-approve { background: var(--success); color: white; }
+        .btn-approve:hover { opacity: 0.85; }
         .btn-delete { background: #fff; color: var(--danger); border: 1px solid var(--danger); }
         .btn-delete:hover { background: var(--danger); color: white; }
-        
-        .status-pill { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; }
+        .btn-teacher { background: #f3e5f5; color: #8e44ad; border: 1px solid #ce93d8; }
+        .btn-teacher:hover { background: #8e44ad; color: white; }
+        .btn-remove-teacher { background: #fff8e1; color: #f57c00; border: 1px solid #ffe082; }
+        .btn-remove-teacher:hover { background: #f57c00; color: white; }
+
+        .status-pill { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; white-space: nowrap; }
         .approved { background: #e3fcef; color: #00875a; }
         .pending { background: #fffae6; color: #b78103; }
+        .class-teacher-tag { background: #f3e5f5; color: #8e44ad; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: bold; margin-left: 6px; }
 
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 15px; }
-        input, select { padding: 12px; border: 1px solid #ddd; border-radius: 8px; }
+        .role-badge { padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: capitalize; }
+        .role-Master { background: #e3f2fd; color: #1565c0; }
+        .role-Lecturer { background: #e8f5e9; color: #2e7d32; }
+        .role-Leader { background: #fff3e0; color: #e65100; }
+        .role-Student { background: #fce4ec; color: #880e4f; }
+        .role-SuperAdmin { background: #ede7f6; color: #4527a0; }
+
+        /* Class teacher modal */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+        .modal-overlay.open { display: flex; }
+        .modal { background: white; border-radius: 12px; padding: 30px; max-width: 420px; width: 90%; box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
+        .modal h3 { margin: 0 0 20px 0; }
+        .modal label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 13px; color: #555; }
+        .modal select, .modal input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 16px; font-size: 14px; box-sizing: border-box; }
+        .modal-footer { display: flex; gap: 10px; justify-content: flex-end; }
+
+        /* Subject form */
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 12px; align-items: end; }
+        .form-grid input, .form-grid select { padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
+
+        .search-bar { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 20px; font-size: 14px; }
+
+        .alert { padding: 12px 18px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; }
+        .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .alert-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
     </style>
 </head>
 <body>
     <div class="sidebar">
         <h2><i class="fas fa-shield-alt"></i> Admin Panel</h2>
-        <div style="margin-bottom: 30px; font-size: 0.9rem;">
-            <p><i class="fas fa-user-circle"></i> <%= user.name %></p>
+        <div style="margin-bottom: 25px; font-size: 13px; color: #a4b0be;">
+            <i class="fas fa-user-circle"></i> <%= user.name %>
         </div>
         <nav>
             <a href="#overview" class="nav-link active"><i class="fas fa-chart-line"></i> Overview</a>
-            <a href="#users" class="nav-link"><i class="fas fa-users"></i> User Management</a>
+            <a href="#users" class="nav-link"><i class="fas fa-users"></i> Users by Division</a>
             <a href="#subjects" class="nav-link"><i class="fas fa-book"></i> Subject Catalog</a>
             <a href="/logout" class="nav-link" style="margin-top: 50px; color: var(--danger);"><i class="fas fa-sign-out-alt"></i> Logout</a>
         </nav>
     </div>
 
-    
-
     <div class="main-content">
         <div class="header-row">
             <h1>System Overview</h1>
-            <div class="section-badge" style="background: white; padding: 10px 20px; border-radius: 30px; font-weight: bold;">
+            <div style="background: white; padding: 10px 20px; border-radius: 30px; font-weight: bold; font-size: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
                 SuperAdmin Access
             </div>
         </div>
-        
+
+        <% if (typeof req !== 'undefined' && req.query && req.query.success) { %>
+            <div class="alert alert-success"><i class="fas fa-check-circle"></i> <%= req.query.success %></div>
+        <% } %>
+        <% if (typeof req !== 'undefined' && req.query && req.query.error) { %>
+            <div class="alert alert-error"><i class="fas fa-exclamation-circle"></i> <%= req.query.error %></div>
+        <% } %>
+
+        <!-- Stats -->
         <div class="stats-grid" id="overview">
             <div class="stat-card">
-                <h3>System Users</h3>
+                <h3>Total Users</h3>
                 <div class="value"><%= allUsers.length %></div>
             </div>
             <div class="stat-card" style="border-left-color: var(--success);">
@@ -82,110 +123,243 @@
             </div>
             <div class="stat-card" style="border-left-color: var(--danger);">
                 <h3>Pending Approvals</h3>
-                <div class="value"><%= allUsers.filter(u => !u.isApproved).length %></div>
+                <div class="value"><%= allUsers.filter(function(u){ return !u.isApproved; }).length %></div>
+            </div>
+            <div class="stat-card" style="border-left-color: #8e44ad;">
+                <h3>Total Divisions</h3>
+                <div class="value"><%= sections.filter(function(s){ return s !== 'Unassigned'; }).length %></div>
             </div>
         </div>
 
+        <!-- Users by Division -->
         <div class="card" id="users">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h2 style="margin:0;">User Management</h2>
-                <input type="text" id="userSearch" class="search-bar" placeholder="Search by name, email, or roll number..." style="width: 300px; margin-bottom: 0;" onkeyup="filterTable()">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+                <h2 style="margin: 0;">Users by Division</h2>
+                <input type="text" id="userSearch" class="search-bar" placeholder="Search name, email, roll no..." style="width: 280px; margin: 0;" oninput="filterUsers()">
             </div>
-            <table id="userTable">
-                <thead>
-                    <tr>
-                        <th>Identity</th>
-                        <th>Role</th>
-                        <th>Section</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% allUsers.forEach(u => { %>
-                        <tr>
-                            <td>
-                                <strong><%= u.name %></strong><br>
-                                <small style="color: #636e72;"><%= u.email %> | <%= u.rollNo || 'Faculty' %></small>
-                            </td>
-                            <td><span style="text-transform: capitalize;"><%= u.role %></span></td>
-                            <td><strong><%= u.section || 'N/A' %></strong></td>
-                            <td>
-                                <span class="status-pill <%= u.isApproved ? 'approved' : 'pending' %>">
-                                    <%= u.isApproved ? 'Active' : 'Pending' %>
-                                </span>
-                            </td>
-                            <td>
-                                <div style="display: flex; gap: 8px;">
-                                    <% if(!u.isApproved) { %>
-                                        <form action="/approve-user/<%= u._id %>" method="POST">
-                                            <button class="btn btn-approve">Approve</button>
-                                        </form>
-                                    <% } %>
-                                    <form action="/delete-user/<%= u._id %>" method="POST" onsubmit="return confirm('Permanently delete this user?')">
-                                        <button class="btn btn-delete"><i class="fas fa-trash-alt"></i></button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    <% }) %>
-                </tbody>
-            </table>
+
+            <!-- Division tabs -->
+            <div class="div-tabs">
+                <button class="div-tab active" onclick="showDiv('all', this)">All Divisions</button>
+                <% sections.forEach(function(sec) { %>
+                    <button class="div-tab" onclick="showDiv('<%= sec %>', this)">
+                        <%= sec %>
+                        <span style="background: rgba(0,0,0,0.15); border-radius: 10px; padding: 1px 7px; margin-left: 4px; font-size: 11px;">
+                            <%= usersBySection[sec].length %>
+                        </span>
+                    </button>
+                <% }); %>
+            </div>
+
+            <!-- Division sections -->
+            <% sections.forEach(function(sec) { %>
+                <div class="division-section" data-div="<%= sec %>">
+                    <div class="division-heading">
+                        <span class="div-badge"><%= sec %></span>
+                        <span class="div-count">
+                            <%= usersBySection[sec].length %> user<%= usersBySection[sec].length !== 1 ? 's' : '' %> &nbsp;·&nbsp;
+                            <%= usersBySection[sec].filter(function(u){ return !u.isApproved; }).length %> pending
+                        </span>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% usersBySection[sec].forEach(function(u) { %>
+                                <tr class="user-row">
+                                    <td>
+                                        <strong><%= u.name || '—' %></strong>
+                                        <div style="font-size: 11px; color: #747d8c; margin-top: 2px;"><%= u.email %></div>
+                                        <% if (u.rollNo) { %>
+                                            <div style="font-size: 11px; color: #aaa; font-family: monospace;">Roll: <%= u.rollNo %></div>
+                                        <% } %>
+                                        <% if (u.isClassTeacher) { %>
+                                            <span class="class-teacher-tag"><i class="fas fa-star"></i> Class Teacher · <%= u.classTeacherSection %></span>
+                                        <% } %>
+                                    </td>
+                                    <td>
+                                        <span class="role-badge role-<%= u.role %>"><%= u.role || 'Unassigned' %></span>
+                                    </td>
+                                    <td>
+                                        <span class="status-pill <%= u.isApproved ? 'approved' : 'pending' %>">
+                                            <%= u.isApproved ? 'Active' : 'Pending' %>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                                            <% if (!u.isApproved) { %>
+                                                <form action="/approve-user/<%= u._id %>" method="POST" style="display:inline;">
+                                                    <button class="btn btn-approve"><i class="fas fa-check"></i> Approve</button>
+                                                </form>
+                                            <% } %>
+
+                                            <% if (u.role === 'Lecturer') { %>
+                                                <% if (u.isClassTeacher) { %>
+                                                    <form action="/set-class-teacher/<%= u._id %>" method="POST" style="display:inline;" onsubmit="return confirm('Remove class teacher status?')">
+                                                        <input type="hidden" name="removeClassTeacher" value="true">
+                                                        <button class="btn btn-remove-teacher"><i class="fas fa-star-half-alt"></i> Remove Class Teacher</button>
+                                                    </form>
+                                                <% } else { %>
+                                                    <button class="btn btn-teacher" onclick="openTeacherModal('<%= u._id %>', '<%= u.name %>')">
+                                                        <i class="fas fa-star"></i> Set Class Teacher
+                                                    </button>
+                                                <% } %>
+                                            <% } %>
+
+                                            <form action="/delete-user/<%= u._id %>" method="POST" style="display:inline;" onsubmit="return confirm('Permanently delete this user?')">
+                                                <button class="btn btn-delete"><i class="fas fa-trash-alt"></i></button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+            <% }); %>
         </div>
 
+        <!-- Subject Catalog -->
         <div class="card" id="subjects">
-            <h2>Add Subject to Section</h2>
-            <p style="color: #636e72; font-size: 13px;">Subjects added here will appear in the specific Section Leader's attendance list.</p>
+            <h2>Add Subject to Division</h2>
+            <p style="color: #636e72; font-size: 13px; margin-bottom: 20px;">Subjects added here appear in the Leader's attendance form for that division.</p>
             <form action="/add-subject" method="POST" class="form-grid">
-                <input type="text" name="subjectName" placeholder="Subject Name (e.g. Data Structures)" required>
-                <input type="text" name="subjectCode" placeholder="Code (CS302)" required>
-                <select name="section" required>
-                    <option value="">-- Assign Section --</option>
-                    <option value="CS-A">CS-A</option>
-                    <option value="CS-B">CS-B</option>
-                    <option value="MECH">MECH</option>
-                    <option value="CIVIL">CIVIL</option>
-                </select>
-                <button type="submit" class="btn btn-approve" style="padding: 0 30px;">Add Subject</button>
+                <div>
+                    <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:5px;">Subject Name</label>
+                    <input type="text" name="subjectName" placeholder="e.g. Data Structures" required>
+                </div>
+                <div>
+                    <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:5px;">Code</label>
+                    <input type="text" name="subjectCode" placeholder="CS302">
+                </div>
+                <div>
+                    <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:5px;">Division</label>
+                    <select name="section" required>
+                        <option value="">-- Select Division --</option>
+                        <% sections.filter(function(s){ return s !== 'Unassigned'; }).forEach(function(sec) { %>
+                            <option value="<%= sec %>"><%= sec %></option>
+                        <% }); %>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-approve" style="padding: 10px 20px; align-self: end;">
+                    <i class="fas fa-plus"></i> Add
+                </button>
             </form>
 
-            <h3 style="margin-top: 40px;">Current Subject Catalog</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Code</th>
-                        <th>Subject Name</th>
-                        <th>Assigned Section</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% allSubjects.forEach(sub => { %>
-                        <tr>
-                            <td style="font-family: monospace; font-weight: bold;"><%= sub.code %></td>
-                            <td><%= sub.name %></td>
-                            <td><span class="status-pill approved"><%= sub.section %></span></td>
-                            <td>
-                                <form action="/delete-subject/<%= sub._id %>" method="POST">
-                                    <button class="btn btn-delete"><i class="fas fa-times"></i></button>
-                                </form>
-                            </td>
-                        </tr>
-                    <% }) %>
-                </tbody>
-            </table>
+            <h3 style="margin-top: 35px;">Current Subject Catalog</h3>
+            <%
+                // Group subjects by section
+                var subsBySection = {};
+                allSubjects.forEach(function(s) {
+                    var sec = s.section || 'Unassigned';
+                    if (!subsBySection[sec]) subsBySection[sec] = [];
+                    subsBySection[sec].push(s);
+                });
+                var subSections = Object.keys(subsBySection).sort();
+            %>
+            <% if (allSubjects.length > 0) { %>
+                <% subSections.forEach(function(sec) { %>
+                    <div style="margin-bottom: 20px;">
+                        <div style="font-weight: 700; color: var(--primary); margin-bottom: 8px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">
+                            <i class="fas fa-layer-group" style="color: var(--accent);"></i> <%= sec %>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr><th>Code</th><th>Subject Name</th><th>Action</th></tr>
+                            </thead>
+                            <tbody>
+                                <% subsBySection[sec].forEach(function(sub) { %>
+                                    <tr>
+                                        <td style="font-family: monospace; font-weight: bold; color: var(--accent);"><%= sub.code || '—' %></td>
+                                        <td><%= sub.name %></td>
+                                        <td>
+                                            <form action="/delete-subject/<%= sub._id %>" method="POST" onsubmit="return confirm('Delete this subject?')">
+                                                <button class="btn btn-delete"><i class="fas fa-times"></i> Remove</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                <% }); %>
+                            </tbody>
+                        </table>
+                    </div>
+                <% }); %>
+            <% } else { %>
+                <p style="color: #aaa; text-align: center; padding: 20px;">No subjects added yet.</p>
+            <% } %>
+        </div>
+    </div>
+
+    <!-- Class Teacher Modal -->
+    <div class="modal-overlay" id="teacherModal">
+        <div class="modal">
+            <h3><i class="fas fa-star" style="color: #8e44ad;"></i> Set Class Teacher</h3>
+            <p id="teacherModalDesc" style="color: #666; font-size: 14px; margin-bottom: 20px;"></p>
+            <form id="teacherForm" method="POST">
+                <label>Assign as Class Teacher for Division:</label>
+                <select name="classTeacherSection" required>
+                    <option value="">-- Select Division --</option>
+                    <% sections.filter(function(s){ return s !== 'Unassigned'; }).forEach(function(sec) { %>
+                        <option value="<%= sec %>"><%= sec %></option>
+                    <% }); %>
+                </select>
+                <div class="modal-footer">
+                    <button type="button" onclick="closeTeacherModal()" class="btn" style="background:#eee;color:#333;">Cancel</button>
+                    <button type="submit" class="btn btn-approve"><i class="fas fa-star"></i> Confirm</button>
+                </div>
+            </form>
         </div>
     </div>
 
     <script>
-        function filterTable() {
-            const input = document.getElementById('userSearch').value.toUpperCase();
-            const rows = document.getElementById('userTable').getElementsByTagName('tr');
-            for (let i = 1; i < rows.length; i++) {
-                const text = rows[i].textContent || rows[i].innerText;
-                rows[i].style.display = text.toUpperCase().includes(input) ? "" : "none";
-            }
-        }
+        document.addEventListener('DOMContentLoaded', function() {
+
+            // Division tab switching
+            window.showDiv = function(div, btn) {
+                document.querySelectorAll('.div-tab').forEach(function(b) { b.classList.remove('active'); });
+                btn.classList.add('active');
+                document.querySelectorAll('.division-section').forEach(function(sec) {
+                    sec.classList.toggle('hidden', div !== 'all' && sec.dataset.div !== div);
+                });
+            };
+
+            // Search filter across all visible rows
+            window.filterUsers = function() {
+                var q = document.getElementById('userSearch').value.toLowerCase();
+                document.querySelectorAll('.user-row').forEach(function(row) {
+                    row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+                });
+            };
+
+            // Class teacher modal
+            window.openTeacherModal = function(userId, userName) {
+                document.getElementById('teacherForm').action = '/set-class-teacher/' + userId;
+                document.getElementById('teacherModalDesc').textContent = 'Lecturer: ' + userName;
+                document.getElementById('teacherModal').classList.add('open');
+            };
+            window.closeTeacherModal = function() {
+                document.getElementById('teacherModal').classList.remove('open');
+            };
+            document.getElementById('teacherModal').addEventListener('click', function(e) {
+                if (e.target === this) closeTeacherModal();
+            });
+
+            // Smooth scroll for nav links
+            document.querySelectorAll('.nav-link[href^="#"]').forEach(function(link) {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    var target = document.querySelector(this.getAttribute('href'));
+                    if (target) target.scrollIntoView({ behavior: 'smooth' });
+                    document.querySelectorAll('.nav-link').forEach(function(l) { l.classList.remove('active'); });
+                    link.classList.add('active');
+                });
+            });
+        });
     </script>
 </body>
 </html>

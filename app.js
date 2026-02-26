@@ -179,7 +179,10 @@ const userSchema = new mongoose.Schema({
     role: { type: String, default: 'Student' }, 
     section: { type: String, default: '' },
     isApproved: { type: Boolean, default: false },
-    isPreRegistered: { type: Boolean, default: false }
+    isPreRegistered: { type: Boolean, default: false },
+    // Lecturer who also manages a division as class teacher
+    isClassTeacher: { type: Boolean, default: false },
+    classTeacherSection: { type: String, default: '' }
 });
 
 const User = mongoose.model('User', userSchema);
@@ -342,25 +345,24 @@ app.get('/auth/google/callback',
 
 app.get('/master', async (req, res) => {
     try {
-        // 1. Unified Authentication Check
-        // Checks both Passport (req.user) and manual session (req.session.user)
         const user = req.user || req.session.user;
 
-        if (!user || user.role !== 'Master') {
+        // FIXED: A Lecturer who is also a class teacher (isClassTeacher:true) must be able
+        // to access this dashboard for their assigned division.
+        const isClassTeacher = user && user.role === 'Lecturer' && user.isClassTeacher;
+
+        if (!user || (user.role !== 'Master' && !isClassTeacher)) {
             return res.redirect('/login?error=unauthorized');
         }
 
-        // 2. Data Fetching with Section Isolation
-        const facultySection = user.section;
-        
-        // Use Promise.all for faster performance
+        // Use classTeacherSection for lecturer-class-teachers, section for Masters
+        const facultySection = isClassTeacher ? user.classTeacherSection : user.section;
+
         const [allUsers, masterSubjects] = await Promise.all([
-            User.find({ section: facultySection }).lean(), // .lean() makes queries faster
+            User.find({ section: facultySection }).lean(),
             Subject.find({ section: facultySection }).lean()
         ]);
 
-        // 3. Robust Stats Calculation
-        // Standardizes on 'isApproved' but checks 'approved' as a fallback
         const stats = {
             total: allUsers.length || 0,
             pending: allUsers.filter(u => {
@@ -370,11 +372,9 @@ app.get('/master', async (req, res) => {
             subjects: masterSubjects.length || 0
         };
 
-        // 4. Render with Fallbacks
-        // This ensures master.ejs doesn't crash if arrays are empty
         req.session.save(() => {
             res.render('master', { 
-                user: user, 
+                user: { ...user, section: facultySection }, // pass effective section to template
                 allUsers: allUsers || [], 
                 masterSubjects: masterSubjects || [], 
                 stats: stats 
@@ -386,7 +386,7 @@ app.get('/master', async (req, res) => {
         res.status(500).send(`
             <div style="font-family:sans-serif; text-align:center; padding:50px;">
                 <h2>Internal Server Error</h2>
-                <p>Failed to load faculty portal for section ${req.user?.section || 'Unknown'}</p>
+                <p>Failed to load faculty portal.</p>
                 <a href="/login">Return to Login</a>
             </div>
         `);
@@ -441,33 +441,31 @@ app.get('/leader', async (req, res) => {
 
 app.get('/lecturer', async (req, res) => {
     try {
-        // 1. Unified User Detection (Passport or Session)
         const user = req.user || req.session.user;
 
-        // 2. Security Check
         if (!user || user.role !== 'Lecturer') {
             return res.redirect('/login?error=Unauthorized');
         }
 
-        // 3. Date Handling (YYYY-MM-DD)
         const today = new Date().toISOString().split('T')[0];
 
-        // 4. Optimized Database Query
-        // .lean() makes the query faster and prevents EJS circular reference errors
+        // FIXED: was { section: user.section } — only showed ONE division.
+        // A lecturer teaches multiple divisions; querying by their email shows ALL.
         const todayRecords = await Attendance.find({
-            section: user.section,
-            // Use lean() for read-only dashboard data
-            date: today 
+            lecturerEmail: user.email.toLowerCase(),
+            date: today
         }).lean();
 
-        // 5. Ensure todayRecords is at least an empty array to prevent EJS ".length" errors
+        // Collect the distinct sections this lecturer has taught today for display
+        const sectionsToday = [...new Set(todayRecords.map(r => r.section))];
+
         const safeRecords = todayRecords || [];
 
-        // 6. Force Session Save (Important for Render/Heroku stability)
         req.session.save(() => {
             res.render('lecturer', { 
                 user: user, 
-                todayRecords: safeRecords 
+                todayRecords: safeRecords,
+                sectionsToday: sectionsToday
             });
         });
 
@@ -540,35 +538,39 @@ app.get('/student', async (req, res) => {
 
 app.get('/super-admin-dashboard', async (req, res) => {
     try {
-        // 1. Unified User Retrieval
         const user = req.user || req.session.user;
 
-        // 2. Strict Security Gate
-        // Checks for: Login status, Role, and Approval status
         if (!user || user.role !== 'SuperAdmin' || user.isApproved !== true) {
             console.warn(`🛑 Unauthorized access attempt to SuperAdmin by: ${user ? user.email : 'Unknown'}`);
             return res.redirect('/login?error=Unauthorized Access');
         }
 
-        // 3. Optimized Parallel Data Fetching
-        // Using Promise.all allows both queries to run simultaneously, saving time.
-        // .select('-password') ensures security by excluding hashed passwords.
         const [allUsers, allSubjects] = await Promise.all([
-            User.find({})
-                .select('-password') 
-                .sort({ role: 1, name: 1 })
-                .lean(),
-            Subject.find({})
-                .sort({ section: 1, name: 1 })
-                .lean()
+            User.find({}).select('-password').sort({ section: 1, role: 1, name: 1 }).lean(),
+            Subject.find({}).sort({ section: 1, name: 1 }).lean()
         ]);
 
-        // 4. Render with optimized data
+        // Group users by section for division-wise display
+        const usersBySection = {};
+        allUsers.forEach(u => {
+            const sec = u.section || 'Unassigned';
+            if (!usersBySection[sec]) usersBySection[sec] = [];
+            usersBySection[sec].push(u);
+        });
+
+        // Sorted section keys: Unassigned goes last
+        const sections = Object.keys(usersBySection).sort((a, b) => {
+            if (a === 'Unassigned') return 1;
+            if (b === 'Unassigned') return -1;
+            return a.localeCompare(b);
+        });
+
         res.render('super-admin', { 
             user, 
             allUsers, 
             allSubjects,
-            // Pass current counts for the stat cards
+            usersBySection,
+            sections,
             stats: {
                 totalUsers: allUsers.length,
                 pendingApprovals: allUsers.filter(u => !u.isApproved).length,
@@ -1232,9 +1234,11 @@ app.post('/update-attendance-status', async (req, res) => {
             "students.studentId": studentId 
         };
 
-        // Section Security: Only enforce for Lecturers (Masters can edit across sections)
+        // FIXED: Previously restricted Lecturers to only their one registered section.
+        // A lecturer who teaches multiple divisions must be able to update any record
+        // where they are the assigned lecturer, regardless of section.
         if (user.role === 'Lecturer') {
-            query.section = user.section;
+            query.lecturerEmail = user.email.toLowerCase(); // they can only edit their own records
         }
 
         const update = {
@@ -1334,6 +1338,41 @@ app.post('/delete-subject/:id', async (req, res) => {
     } catch (err) {
         console.error("Delete Subject Error:", err);
         res.status(500).render('error', { message: "Could not remove subject from database." });
+    }
+});
+
+
+// --- Set/Unset Class Teacher for a Lecturer ---
+app.post('/set-class-teacher/:id', async (req, res) => {
+    try {
+        const currentUser = req.session.user || req.user;
+        if (!currentUser || currentUser.role !== 'SuperAdmin') {
+            return res.status(403).render('error', { message: "Unauthorized" });
+        }
+
+        const { classTeacherSection, removeClassTeacher } = req.body;
+
+        if (removeClassTeacher === 'true') {
+            await User.findByIdAndUpdate(req.params.id, {
+                isClassTeacher: false,
+                classTeacherSection: ''
+            });
+        } else {
+            if (!classTeacherSection) {
+                return res.redirect('/super-admin-dashboard?error=Please select a section');
+            }
+            await User.findByIdAndUpdate(req.params.id, {
+                isClassTeacher: true,
+                classTeacherSection: classTeacherSection
+            });
+        }
+
+        req.session.save(() => {
+            res.redirect('/super-admin-dashboard?success=Class teacher status updated');
+        });
+    } catch (err) {
+        console.error("Set Class Teacher Error:", err);
+        res.status(500).render('error', { message: "Failed to update class teacher status." });
     }
 });
 
