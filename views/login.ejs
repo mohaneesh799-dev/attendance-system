@@ -8,47 +8,54 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root { --rku-blue: #003366; --google-blue: #4285F4; --dark-bg: #1a1d20; }
+        * { box-sizing: border-box; }
         body {
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             min-height: 100vh; display: flex; align-items: center; justify-content: center;
-            font-family: 'Inter', 'Segoe UI', sans-serif;
+            font-family: 'Inter', 'Segoe UI', sans-serif; padding: 20px;
         }
         .login-card {
-            background: white; padding: 45px; border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            background: white; padding: 40px 35px; border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.12);
             width: 100%; max-width: 420px; text-align: center;
         }
-        .logo-placeholder { font-size: 2.5rem; color: var(--rku-blue); margin-bottom: 10px; }
+        .logo-placeholder { font-size: 2.8rem; color: var(--rku-blue); margin-bottom: 10px; }
         .btn-sso {
             display: flex; align-items: center; justify-content: center;
             background-color: var(--google-blue); color: white; padding: 14px;
             text-decoration: none; border-radius: 10px; font-weight: 600;
             margin-bottom: 15px; transition: 0.3s; border: none; width: 100%;
+            font-size: 15px;
         }
-        .btn-sso:hover { background-color: #357ae8; color: white; transform: translateY(-2px); }
+        .btn-sso:hover { background-color: #357ae8; color: white; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(66,133,244,0.35); }
         .btn-credential {
             display: flex; align-items: center; justify-content: center;
             background-color: var(--dark-bg); color: white; padding: 14px;
             text-decoration: none; border-radius: 10px; font-weight: 600;
-            width: 100%; transition: 0.3s; border: none; cursor: pointer;
+            width: 100%; transition: 0.3s; border: none; cursor: pointer; font-size: 15px;
         }
-        .btn-credential:hover { background-color: #000; color: #ffc107; transform: translateY(-2px); }
-        .divider { display: flex; align-items: center; text-align: center; margin: 20px 0; color: #adb5bd; }
+        .btn-credential:hover { background-color: #000; color: #ffc107; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.25); }
+        .divider { display: flex; align-items: center; text-align: center; margin: 18px 0; color: #adb5bd; font-size: 13px; }
         .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid #dee2e6; }
         .divider:not(:empty)::before { margin-right: .5em; }
         .divider:not(:empty)::after { margin-left: .5em; }
         .footer-text { font-size: 0.85rem; color: #6c757d; margin-top: 20px; }
-        .alert { border-radius: 10px; border: none; }
+        .alert { border-radius: 10px; border: none; font-size: 14px; }
         .form-control:focus { border-color: var(--rku-blue); box-shadow: 0 0 0 3px rgba(0,51,102,0.15); }
+        .form-label { font-weight: 600; font-size: 13px; color: #444; }
+        .back-link { display: inline-flex; align-items: center; gap: 6px; color: #6c757d; text-decoration: none; font-size: 13px; margin-top: 15px; }
+        .back-link:hover { color: var(--rku-blue); }
+        @media (max-width: 480px) {
+            .login-card { padding: 28px 20px; }
+        }
     </style>
 </head>
 <body>
 <div class="login-card">
     <div class="logo-placeholder"><i class="fas fa-university"></i></div>
-    <h2 class="fw-bold mb-1">RKU Attendance</h2>
+    <h2 class="fw-bold mb-1" style="color: var(--rku-blue);">RKU Attendance</h2>
     <p class="text-muted mb-4 small">Secure Gateway for Students &amp; Faculty</p>
 
-    <%# FIX: Errors/messages shown via EJS rendering, not alert() popups %>
     <% if (typeof error !== 'undefined' && error) { %>
         <div class="alert alert-danger small py-2 mb-3">
             <i class="fas fa-exclamation-circle me-1"></i> <%= error %>
@@ -61,22 +68,21 @@
     <% } %>
 
     <% if (typeof showEmailForm !== 'undefined' && showEmailForm) { %>
-        <%# FIX: Credential login form was missing — only a broken link existed before %>
         <form action="/login" method="POST" novalidate>
             <div class="mb-3 text-start">
-                <label class="form-label small fw-bold">Email Address</label>
+                <label class="form-label">Email Address</label>
                 <input type="email" name="email" class="form-control" placeholder="you@rku.ac.in" required autocomplete="email">
             </div>
             <div class="mb-3 text-start">
-                <label class="form-label small fw-bold">Password</label>
+                <label class="form-label">Password</label>
                 <input type="password" name="password" class="form-control" placeholder="••••••••" required autocomplete="current-password">
             </div>
             <button type="submit" class="btn-credential">
-                <i class="fas fa-sign-in-alt me-2 text-warning"></i> Login
+                <i class="fas fa-sign-in-alt me-2 text-warning"></i> Login to Account
             </button>
         </form>
-        <div class="footer-text mt-3">
-            <a href="/login" class="text-secondary text-decoration-none small">← Back to main login</a>
+        <div class="text-center mt-3">
+            <a href="/login" class="back-link"><i class="fas fa-arrow-left"></i> Back to main login</a>
         </div>
     <% } else { %>
         <a href="/auth/google" class="btn-sso">
@@ -87,17 +93,14 @@
         <div class="divider">OR</div>
 
         <a href="/login-email" class="btn-credential">
-            <i class="fas fa-key me-2 text-warning"></i> Admin / Faculty Login
+            <i class="fas fa-key me-2 text-warning"></i> Login with Email &amp; Password
         </a>
 
-        <div class="footer-text">
-            Don't have an account?<br>
-            <a href="/register" class="text-primary text-decoration-none fw-bold">Create Request</a>
-            &nbsp;·&nbsp;
-            <a href="/register" class="text-secondary text-decoration-none">SuperAdmin</a>
+        <div class="footer-text mt-4">
+            New user? &nbsp;<a href="/register" class="text-primary fw-bold text-decoration-none">Request Access</a>
         </div>
 
-        <p class="small text-secondary mt-4 mb-0" style="font-size: 0.75rem;">
+        <p class="small text-secondary mt-3 mb-0" style="font-size: 0.75rem;">
             <i class="fas fa-shield-alt"></i> Strictly authorized for <strong>@rku.ac.in</strong> users only.
         </p>
     <% } %>

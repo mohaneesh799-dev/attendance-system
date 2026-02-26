@@ -33,6 +33,22 @@
         .alert { padding: 12px 16px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; }
         .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .alert-danger { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        /* Responsive */
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .container { padding: 16px; }
+            .header { flex-direction: column; align-items: flex-start; }
+            .grid-inputs { grid-template-columns: 1fr; }
+            table { font-size: 13px; }
+            th, td { padding: 9px 8px; }
+            .btn { padding: 10px 14px; font-size: 13px; }
+            .quick-mark-area { padding: 14px; }
+        }
+        @media (max-width: 480px) {
+            .header h1 { font-size: 1.2rem; }
+            table { display: block; overflow-x: auto; white-space: nowrap; }
+            .btn-whatsapp { font-size: 14px; }
+        }
     </style>
 </head>
 <body>
@@ -59,11 +75,14 @@
 
     <div class="quick-mark-area">
         <h4 style="margin: 0 0 10px 0;"><i class="fas fa-bolt" style="color: #f1c40f;"></i> Quick Mark Present</h4>
-        <div style="display: flex; gap: 10px;">
-            <input type="text" id="quickInput" placeholder="Paste roll numbers (e.g. 101, 105, 122)...">
-            <button type="button" onclick="applyQuickMark()" class="btn btn-accent" style="white-space: nowrap;">Mark Students</button>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <input type="text" id="quickInput" placeholder="Enter roll no(s) e.g. 101 or 101,105,122" style="flex:1; min-width: 200px;" onkeydown="if(event.key==='Enter'){event.preventDefault();applyQuickMark();}">
+            <button type="button" onclick="applyQuickMark()" class="btn btn-accent" style="white-space: nowrap; flex-shrink:0;"><i class="fas fa-check"></i> Mark Attendance</button>
         </div>
-        <p style="font-size: 12px; color: #5a91c5; margin: 8px 0 0 0;">Tip: Paste a comma-separated list of roll numbers to mark them all Present at once.</p>
+        <p style="font-size: 12px; color: #5a91c5; margin: 8px 0 0 0;">
+            <i class="fas fa-info-circle"></i> Enter a single roll number or comma/space-separated list. Press Enter or click the button.
+        </p>
+        <div id="quickResult" style="display:none; margin-top:8px; padding:8px 12px; border-radius:6px; font-size:13px; font-weight:600;"></div>
     </div>
 
     <form action="/lock-attendance" method="POST" id="attendanceForm">
@@ -238,29 +257,53 @@ function normalizeRoll(r) {
 }
 
 function applyQuickMark() {
-    const input = document.getElementById('quickInput').value;
-    if (!input.trim()) { alert('Please enter roll numbers.'); return; }
-    const rollsToMark = input.split(/[\s,\n]+/).map(normalizeRoll).filter(Boolean);
+    const inputEl = document.getElementById('quickInput');
+    const input = inputEl.value.trim();
+    if (!input) { showQuickResult('error', 'Please enter at least one roll number.'); return; }
+    const rollsToMark = input.split(/[\s,\n;]+/).map(normalizeRoll).filter(Boolean);
     const rows = document.querySelectorAll('#studentTable tbody tr');
     let count = 0;
+    const notFound = [];
     rows.forEach(function(row) {
         const cellEl = row.querySelector('.roll-col');
         if (!cellEl) return;
-        const cellRoll = normalizeRoll(cellEl.innerText);
+        const rawText = cellEl.innerText || cellEl.textContent;
+        if (rawText.trim() === '—' || rawText.trim() === '') return; // skip empty roll
+        const cellRoll = normalizeRoll(rawText);
         const checkbox = row.querySelector('.student-checkbox');
+        if (!checkbox) return;
         if (rollsToMark.includes(cellRoll)) {
             checkbox.checked = true;
             row.style.background = '#e8f5e9';
             count++;
         }
     });
+    // Find not-found rolls
+    const foundRolls = [];
+    document.querySelectorAll('#studentTable .roll-col').forEach(function(cell) {
+        const rawText = cell.innerText || cell.textContent;
+        if (rawText.trim() !== '—' && rawText.trim() !== '') foundRolls.push(normalizeRoll(rawText));
+    });
+    rollsToMark.forEach(function(r) { if (!foundRolls.includes(r)) notFound.push(r); });
     updateCount();
     if (count > 0) {
-        document.getElementById('quickInput').value = '';
-        alert(`✅ ${count} student(s) marked as Present.`);
+        inputEl.value = '';
+        let msg = '✅ ' + count + ' student(s) marked as Present.';
+        if (notFound.length > 0) msg += ' ⚠️ Not found: ' + notFound.join(', ');
+        showQuickResult('success', msg);
     } else {
-        alert('No matching roll numbers found. Check for typos.');
+        showQuickResult('error', '❌ No matching roll numbers found in this section. Entered: ' + rollsToMark.join(', '));
     }
+}
+
+function showQuickResult(type, msg) {
+    const el = document.getElementById('quickResult');
+    if (!el) return;
+    el.style.display = 'block';
+    el.style.background = type === 'success' ? '#d4edda' : '#f8d7da';
+    el.style.color = type === 'success' ? '#155724' : '#721c24';
+    el.textContent = msg;
+    setTimeout(function() { el.style.display = 'none'; }, 5000);
 }
 
 function downloadPDF() {

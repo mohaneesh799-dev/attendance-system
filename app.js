@@ -328,11 +328,26 @@ app.get('/student', async (req, res) => {
             section: user.section, 'students.studentId': user.rollNo
         }).sort({ date: -1 }).lean();
         let presentCount = 0;
+        // Build subject-wise stats from ALL records
+        const subjectMap = {};
         records.forEach(rec => {
             const e = rec.students.find(s => s.studentId === user.rollNo);
             if (e && e.status === 'Present') presentCount++;
+            const sub = rec.subject || 'Unknown';
+            if (!subjectMap[sub]) subjectMap[sub] = { total: 0, present: 0 };
+            subjectMap[sub].total++;
+            if (e && e.status === 'Present') subjectMap[sub].present++;
         });
-        res.render('student', { user, records: records.slice(0,50), presentCount, totalCount: records.length });
+        const subjectStats = Object.keys(subjectMap).sort().map(name => ({
+            name,
+            total: subjectMap[name].total,
+            present: subjectMap[name].present,
+            absent: subjectMap[name].total - subjectMap[name].present,
+            percentage: subjectMap[name].total > 0
+                ? ((subjectMap[name].present / subjectMap[name].total) * 100).toFixed(1)
+                : '0.0'
+        }));
+        res.render('student', { user, records: records.slice(0,50), presentCount, totalCount: records.length, subjectStats });
     } catch(err) {
         res.status(500).render('error', { message: 'Could not load Student portal.' });
     }

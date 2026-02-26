@@ -1,39 +1,118 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" id="htmlRoot">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Account Settings</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --danger: #e74c3c; }
-        body { font-family: 'Inter', sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; }
-        .container { max-width: 600px; margin: 30px auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
-        h2 { color: var(--primary); margin-bottom: 30px; display: flex; align-items: center; gap: 10px; }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; font-weight: 600; color: #444; font-size: 14px; }
-        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 15px; transition: border 0.3s; }
-        input:focus { border-color: var(--accent); outline: none; }
-        input[readonly] { background-color: #f8f9fa; color: #7f8c8d; cursor: not-allowed; }
-        .btn-save { background: var(--accent); color: white; border: none; padding: 14px; border-radius: 8px; cursor: pointer; width: 100%; font-size: 16px; font-weight: bold; margin-top: 10px; }
-        .btn-save:hover { background: #2980b9; transform: translateY(-1px); }
-        .back-link { display: block; text-align: center; margin-top: 25px; text-decoration: none; color: #7f8c8d; font-size: 14px; }
-        .msg { padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; text-align: center; }
+        /* ── Light Mode (default) ── */
+        :root {
+            --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --danger: #e74c3c;
+            --bg: #f0f2f5; --card-bg: #ffffff; --input-bg: #ffffff; --input-border: #ddd;
+            --text: #333; --label: #444; --muted: #7f8c8d; --hr: rgba(0,0,0,0.08);
+            --readonly-bg: #f8f9fa; --readonly-color: #7f8c8d;
+            --toggle-bg: #ddd; --section-bg: #f8f9fa;
+        }
+        /* ── Dark / Eye Comfort Mode ── */
+        html.dark {
+            --bg: #1a1e2a; --card-bg: #242938; --input-bg: #1e2230; --input-border: #3a4060;
+            --text: #d4daf0; --label: #b0bbd5; --muted: #7a87a3; --hr: rgba(255,255,255,0.07);
+            --primary: #7ea8d8; --accent: #5b9fe0;
+            --readonly-bg: #1a1e2a; --readonly-color: #6a7a9b;
+            --toggle-bg: #3a4060; --section-bg: #1e2230;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background-color: var(--bg); margin: 0; padding: 20px;
+            color: var(--text); transition: background 0.3s, color 0.3s;
+        }
+        .container {
+            max-width: 600px; margin: 20px auto;
+            background: var(--card-bg); padding: 36px;
+            border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            transition: background 0.3s;
+        }
+        .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 12px; }
+        .page-header h2 { color: var(--primary); margin: 0; display: flex; align-items: center; gap: 10px; font-size: 1.3rem; }
+
+        /* Theme toggle */
+        .theme-toggle-row { display: flex; align-items: center; gap: 14px; background: var(--section-bg); padding: 14px 18px; border-radius: 10px; margin-bottom: 26px; border: 1px solid var(--input-border); }
+        .theme-toggle-row .tl { flex: 1; }
+        .theme-toggle-row .tl strong { display: block; font-size: 14px; color: var(--text); }
+        .theme-toggle-row .tl span { font-size: 12px; color: var(--muted); }
+        .toggle-switch { position: relative; width: 52px; height: 28px; flex-shrink: 0; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider {
+            position: absolute; cursor: pointer; inset: 0;
+            background: var(--toggle-bg); border-radius: 28px; transition: 0.3s;
+        }
+        .toggle-slider:before {
+            content: ''; position: absolute; width: 22px; height: 22px;
+            left: 3px; top: 3px; background: white; border-radius: 50%; transition: 0.3s;
+        }
+        input:checked + .toggle-slider { background: var(--accent); }
+        input:checked + .toggle-slider:before { transform: translateX(24px); }
+        .theme-icon { font-size: 1.3rem; }
+
+        .form-group { margin-bottom: 18px; }
+        label { display: block; margin-bottom: 7px; font-weight: 600; color: var(--label); font-size: 13px; text-transform: uppercase; letter-spacing: 0.3px; }
+        input {
+            width: 100%; padding: 12px 14px; border: 1.5px solid var(--input-border);
+            border-radius: 8px; font-size: 15px; transition: border 0.3s, background 0.3s;
+            background: var(--input-bg); color: var(--text);
+        }
+        input:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px rgba(52,152,219,0.15); }
+        input[readonly] { background-color: var(--readonly-bg); color: var(--readonly-color); cursor: not-allowed; }
+        .btn-save {
+            background: var(--accent); color: white; border: none;
+            padding: 14px; border-radius: 8px; cursor: pointer; width: 100%;
+            font-size: 16px; font-weight: bold; margin-top: 8px; transition: 0.2s;
+        }
+        .btn-save:hover { filter: brightness(1.1); transform: translateY(-1px); }
+        hr { border: none; border-top: 1px solid var(--hr); margin: 26px 0; }
+        .security-title { color: var(--primary); font-size: 1rem; font-weight: 700; margin: 0 0 18px 0; display: flex; align-items: center; gap: 8px; }
+        .back-link { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 22px; text-decoration: none; color: var(--muted); font-size: 14px; transition: color 0.2s; }
+        .back-link:hover { color: var(--accent); }
+        .msg { padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; text-align: center; }
         .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        html.dark .success { background: #1a3325; color: #7dcea0; border-color: #2e7d52; }
+        html.dark .error { background: #3a1a1e; color: #e08080; border-color: #7d2e30; }
+
+        @media (max-width: 520px) {
+            .container { padding: 24px 16px; }
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2><i class="fas fa-cog"></i> Account Settings</h2>
+    <div class="page-header">
+        <h2><i class="fas fa-cog"></i> Account Settings</h2>
+    </div>
 
     <% if (typeof message !== 'undefined') { %>
         <div class="msg <%= messageType === 'success' ? 'success' : 'error' %>">
             <%= message %>
         </div>
     <% } %>
-    
+
+    <!-- Theme Mode Toggle -->
+    <div class="theme-toggle-row">
+        <span class="theme-icon" id="themeIcon">☀️</span>
+        <div class="tl">
+            <strong id="themeLabel">Light Mode</strong>
+            <span id="themeDesc">Switch to dark mode for eye comfort</span>
+        </div>
+        <label class="toggle-switch">
+            <input type="checkbox" id="darkToggle" onchange="toggleDark()">
+            <span class="toggle-slider"></span>
+        </label>
+    </div>
+
     <form action="/update-settings" method="POST">
         <div class="form-group">
             <label>Full Name</label>
@@ -41,12 +120,12 @@
         </div>
 
         <div class="form-group">
-            <label>Email Address (Primary Identity)</label>
+            <label>Email Address</label>
             <input type="email" value="<%= user.email %>" readonly>
         </div>
 
         <div class="form-group">
-            <label>WhatsApp Number (For Reports)</label>
+            <label>WhatsApp Number</label>
             <input type="text" name="phone" value="<%= user.phone || '' %>" placeholder="e.g. 919876543210">
         </div>
 
@@ -55,10 +134,10 @@
             <input type="text" value="<%= user.role %>" readonly>
         </div>
 
-        <hr style="margin: 30px 0; opacity: 0.1;">
+        <hr>
 
-        <h3><i class="fas fa-lock"></i> Security Update</h3>
-        
+        <p class="security-title"><i class="fas fa-lock"></i> Security Update</p>
+
         <div class="form-group">
             <label>Current Password</label>
             <input type="password" name="currentPassword" placeholder="Required to authorize changes" required>
@@ -69,11 +148,35 @@
             <input type="password" name="newPassword" placeholder="Leave blank to keep current">
         </div>
 
-        <button type="submit" class="btn-save">Update Profile</button>
+        <button type="submit" class="btn-save"><i class="fas fa-save" style="margin-right:8px;"></i>Update Profile</button>
     </form>
 
-    <a href="/<%= user.role.toLowerCase() %>" class="back-link">← Back to <%= user.role %> Dashboard</a>
+    <a href="/<%= user.role.toLowerCase() %>" class="back-link"><i class="fas fa-arrow-left"></i> Back to <%= user.role %> Dashboard</a>
 </div>
 
+<script>
+    // Load saved preference
+    (function() {
+        const saved = localStorage.getItem('rku-theme');
+        if (saved === 'dark') {
+            document.getElementById('htmlRoot').classList.add('dark');
+            document.getElementById('darkToggle').checked = true;
+            updateLabels(true);
+        }
+    })();
+
+    function toggleDark() {
+        const isDark = document.getElementById('darkToggle').checked;
+        document.getElementById('htmlRoot').classList.toggle('dark', isDark);
+        localStorage.setItem('rku-theme', isDark ? 'dark' : 'light');
+        updateLabels(isDark);
+    }
+
+    function updateLabels(isDark) {
+        document.getElementById('themeIcon').textContent = isDark ? '🌙' : '☀️';
+        document.getElementById('themeLabel').textContent = isDark ? 'Dark Mode (Eye Comfort)' : 'Light Mode';
+        document.getElementById('themeDesc').textContent = isDark ? 'Using warm low-contrast colors to reduce eye strain' : 'Switch to dark mode for eye comfort';
+    }
+</script>
 </body>
 </html>
