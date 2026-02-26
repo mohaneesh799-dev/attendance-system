@@ -218,13 +218,19 @@ app.use(express.urlencoded({ extended: true }));
 
 
 // Verify connection configuration on startup
-transporter.verify((error, success) => {
-    if (error) {
-        console.log("❌ Mail Server Error: " + error.message);
-    } else {
-        console.log("✅ Mail Server is ready to send approval links");
-    }
-});
+// FIXED: Wrapped in try-catch — on Render free tier, if Gmail blocks the SMTP
+// connection check, this was throwing and crashing the app before any routes loaded.
+try {
+    transporter.verify((error, success) => {
+        if (error) {
+            console.warn("⚠️ Mail Server Warning (non-fatal): " + error.message);
+        } else {
+            console.log("✅ Mail Server is ready to send approval links");
+        }
+    });
+} catch (e) {
+    console.warn("⚠️ Mail Server could not be verified (non-fatal):", e.message);
+}
 
 
 
@@ -628,24 +634,27 @@ app.post('/login', async (req, res) => {
 
 // --- Logout Route ---
 app.get('/logout', (req, res) => {
-    // 1. Passport.js logout (if you use it)
+    // FIXED: Previously req.logout() ran fire-and-forget while req.session.destroy()
+    // ran in parallel — a race condition that left the session alive, so the redirect
+    // sent the user back with an active session cookie = "logout not working".
+    // Now session destruction is fully nested inside req.logout's callback.
+
+    const destroySession = () => {
+        req.session.destroy((err) => {
+            if (err) console.error("Session destruction error:", err);
+            res.clearCookie('connect.sid');
+            res.redirect('/login?message=Logged out successfully');
+        });
+    };
+
     if (typeof req.logout === 'function') {
         req.logout((err) => {
             if (err) console.error("Passport logout error:", err);
+            destroySession(); // Only destroy session AFTER passport clears its state
         });
+    } else {
+        destroySession();
     }
-
-    // 2. Destroy Express Session
-    req.session.destroy((err) => {
-        if (err) {
-            console.error("Session destruction error:", err);
-            return res.redirect('/'); 
-        }
-        
-        // 3. Clear the cookie and redirect to login
-        res.clearCookie('connect.sid'); 
-        res.redirect('/login?message=Logged out successfully');
-    });
 });
 
 
@@ -1524,4 +1533,37 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server running: http://localhost:${PORT}`);
+
+    // ---------------------------------------------------------------
+    // RENDER FREE TIER FIX: Self-ping every 14 minutes.
+    // Render spins down free services after 15 min of inactivity,
+    // causing a 30-60 second cold-start 503 on the next request.
+    // Pinging ourselves keeps the dyno warm continuously.
+    // ---------------------------------------------------------------
+    if (process.env.NODE_ENV === 'production') {
+        const RENDER_URL = process.env.RENDER_EXTERNAL_URL || `https://attendance-system-g6f8.onrender.com`;
+        setInterval(() => {
+            const https = require('https');
+            https.get(`${RENDER_URL}/ping`, (res) => {
+                console.log(`🏓 Keep-alive ping: ${res.statusCode}`);
+            }).on('error', (err) => {
+                console.warn('Keep-alive ping failed (non-critical):', err.message);
+            });
+        }, 14 * 60 * 1000); // every 14 minutes
+    }
+});
+
+// Health-check endpoint (used by keep-alive ping and Render's own monitor)
+app.get('/ping', (req, res) => res.status(200).send('OK'));
+
+// ---------------------------------------------------------------
+// PREVENT FULL CRASH on unhandled errors (another 503 cause).
+// Without these, a single unhandled Promise rejection crashes the
+// Node process and Render shows 503 until it restarts the dyno.
+// ---------------------------------------------------------------
+process.on('uncaughtException', (err) => {
+    console.error('🔥 Uncaught Exception (server kept alive):', err);
+});
+process.on('unhandledRejection', (reason) => {
+    console.error('🔥 Unhandled Promise Rejection (server kept alive):', reason);
 });
