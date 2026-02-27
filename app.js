@@ -61,17 +61,24 @@ mongoose.connect(mongoURI)
 
 // ── Session ───────────────────────────────────────────────────
 if (!process.env.SESSION_SECRET) { console.error('❌ FATAL: SESSION_SECRET not set.'); process.exit(1); }
+// Render runs behind a proxy — trust it so secure cookies work
 app.set('trust proxy', 1);
+const isProd = process.env.NODE_ENV === 'production';
 app.use(session({
     secret: process.env.SESSION_SECRET,
-    resave: true,
+    resave: false,
     saveUninitialized: false,
     proxy: true,
-    store: MongoStore.create({ mongoUrl: mongoURI, touchAfter: 24 * 3600 }),
+    name: 'rku.sid',
+    store: MongoStore.create({
+        mongoUrl: mongoURI,
+        touchAfter: 24 * 3600,
+        ttl: 24 * 60 * 60
+    }),
     cookie: {
-        secure: process.env.NODE_ENV === 'production',
+        secure: isProd,
         httpOnly: true,
-        sameSite: 'lax',
+        sameSite: isProd ? 'none' : 'lax',
         maxAge: 24 * 60 * 60 * 1000
     }
 }));
@@ -234,31 +241,37 @@ function isSuperAdmin(req, res, next) {
     return next();
 }
 
-// ================================================================
-// GOOGLE OAUTH
-// ================================================================
-passport.use(new GoogleStrategy({
-    clientID:     process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL:  `${process.env.APP_BASE_URL}/auth/google/callback`
-}, async (accessToken, refreshToken, profile, done) => {
-    const email = profile.emails[0].value;
-    try {
-        let user = await User.findOne({ email });
-        if (!user) {
-            user = new User({
-                googleId: profile.id, email, name: profile.displayName,
-                role: 'SuperAdmin', roles: ['SuperAdmin'], isApproved: false
-            });
-            await user.save();
-            transporter.sendMail({
-                from: process.env.EMAIL_USER, to: process.env.DEVELOPER_EMAIL,
-                subject: 'New Admin Request', text: `New Google login: ${email}`
-            }, err => { if (err) console.log('📧 Email failed (non-fatal):', err.message); });
-        }
-        return done(null, user);
-    } catch(err) { return done(err, null); }
-}));
+// ── Google OAuth ──────────────────────────────────────────────
+// Only set up Google OAuth if credentials are configured
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && process.env.APP_BASE_URL) {
+    passport.use(new GoogleStrategy({
+        clientID:     process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        callbackURL:  `${process.env.APP_BASE_URL}/auth/google/callback`
+    }, async (accessToken, refreshToken, profile, done) => {
+        const email = profile.emails[0].value;
+        try {
+            let user = await User.findOne({ email });
+            if (!user) {
+                user = new User({
+                    googleId: profile.id, email, name: profile.displayName,
+                    role: 'SuperAdmin', roles: ['SuperAdmin'], isApproved: false
+                });
+                await user.save();
+                transporter.sendMail({
+                    from: process.env.EMAIL_USER, to: process.env.DEVELOPER_EMAIL,
+                    subject: 'New Admin Request', text: `New Google login: ${email}`
+                }, err => { if (err) console.log('📧 Email failed (non-fatal):', err.message); });
+            } else if (user.googleId !== profile.id) {
+                // Update googleId if missing
+                await User.findByIdAndUpdate(user._id, { googleId: profile.id });
+            }
+            return done(null, user);
+        } catch(err) { return done(err, null); }
+    }));
+} else {
+    console.warn('⚠️ Google OAuth not configured — GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, or APP_BASE_URL missing');
+}
 
 // ================================================================
 // GET ROUTES
@@ -297,28 +310,36 @@ app.get('/select-role', (req, res) => {
         .catch(() => res.redirect('/login'));
 });
 
-// ── Google OAuth ──────────────────────────────────────────────
-app.get('/auth/google', passport.authenticate('google', { scope: ['profile','email'], prompt: 'select_account' }));
-app.get('/auth/google/callback',
-    passport.authenticate('google', { failureRedirect: '/login?error=Google+login+failed' }),
-    async (req, res) => {
-        const u = req.user;
-        if (!u.isApproved) {
-            // Clear passport session to prevent redirect loop, then show pending page
-            req.logout(err => { if(err) console.error(err); });
-            return res.render('pending', { user: u });
+// ── Google OAuth Routes ───────────────────────────────────────
+app.get('/auth/google', (req, res, next) => {
+    if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+        return res.redirect('/login?error=Google+Sign-In+is+not+configured+on+this+server');
+    }
+    passport.authenticate('google', { scope: ['profile', 'email'], prompt: 'select_account' })(req, res, next);
+});
+
+app.get('/auth/google/callback', (req, res, next) => {
+    passport.authenticate('google', { failureRedirect: '/login?error=Google+login+failed' }, async (err, user) => {
+        if (err) {
+            console.error('Google OAuth error:', err.message);
+            return res.redirect('/login?error=Google+authentication+failed.+Check+OAuth+settings.');
         }
-        const roles = u.roles && u.roles.length ? u.roles : [u.role];
+        if (!user) return res.redirect('/login?error=Google+login+failed');
+
+        if (!user.isApproved) {
+            req.logout(e => { if(e) console.error(e); });
+            return res.render('pending', { user });
+        }
+        const roles = user.roles && user.roles.length ? user.roles : [user.role];
         if (roles.length > 1) {
-            req.session.pendingUserId = u._id.toString();
+            req.session.pendingUserId = user._id.toString();
             return req.session.save(() => res.redirect('/select-role'));
         }
-        req.session.user = buildSessionUser(u, roles[0]);
-        // Log out passport after storing in session to prevent dual-auth conflicts
-        req.logout(err => { if(err) console.error(err); });
+        req.session.user = buildSessionUser(user, roles[0]);
+        req.logout(e => { if(e) console.error(e); });
         req.session.save(() => res.redirect(roleToPath(roles[0])));
-    }
-);
+    })(req, res, next);
+});
 
 // ── Dashboards ────────────────────────────────────────────────
 
@@ -575,6 +596,20 @@ app.get('/export-attendance', async (req, res) => {
 
 app.get('/ping', (req, res) => res.status(200).send('OK'));
 
+// ── Debug session (only in non-production, helps diagnose login issues) ──
+app.get('/debug-session', (req, res) => {
+    if (process.env.NODE_ENV === 'production' && !req.query.key) {
+        return res.status(403).json({ error: 'Not available in production without key' });
+    }
+    res.json({
+        sessionID: req.sessionID,
+        sessionUser: req.session.user || null,
+        passportUser: req.user || null,
+        sessionExists: !!req.session,
+        cookie: req.session.cookie
+    });
+});
+
 // ── Role Error (shown when role is unknown — prevents redirect loop) ──
 app.get('/role-error', (req, res) => {
     const u = getUser(req);
@@ -601,30 +636,41 @@ app.get('/clear-session', (req, res) => {
 app.post('/login', loginLimiter, async (req, res) => {
     try {
         const { email, password } = req.body;
+        if (!email || !password) return res.render('login', { error: 'Email and password are required.', message: null });
         const user = await User.findOne({ email: email.toLowerCase().trim() });
-        if (!user) return res.render('login', { error:'Account not found. Please register first.', message:null });
-        if (!user.password) return res.render('login', { error:'This account uses Google Sign-In.', message:null });
+        if (!user) return res.render('login', { error: 'Account not found. Please register first.', message: null });
+        if (!user.password) return res.render('login', { error: 'This account uses Google Sign-In. Use the Google button above.', message: null });
         const ok = await bcrypt.compare(password, user.password);
-        if (!ok) return res.render('login', { error:'Incorrect password.', message:null });
-        if (!user.isApproved && user.role !== 'Master') return res.render('login', { error:'Your account is awaiting admin approval.', message:null });
+        if (!ok) return res.render('login', { error: 'Incorrect password. Please try again.', message: null });
+
+        // Approval check — SuperAdmin is ALWAYS allowed (they self-approve or use email link)
+        // Master is always allowed. Others need approval.
+        const skipApprovalCheck = ['SuperAdmin', 'Master'].includes(user.role);
+        if (!user.isApproved && !skipApprovalCheck) {
+            return res.render('login', { error: 'Your account is awaiting admin approval. Please contact your administrator.', message: null });
+        }
 
         // ── Multi-role: if user has multiple roles, ask which to use ──
         const roles = user.roles && user.roles.length > 0 ? user.roles : [user.role];
         if (roles.length > 1) {
             req.session.pendingUserId = user._id.toString();
             return req.session.save(err => {
-                if (err) return res.status(500).send('Session error.');
+                if (err) { console.error('Session save error:', err); return res.status(500).send('Session error.'); }
                 res.redirect('/select-role');
             });
         }
 
         // ── Single role: go directly ──
         req.session.user = buildSessionUser(user, roles[0]);
+        console.log(`✅ Login: ${user.email} as ${roles[0]}, isApproved: ${user.isApproved}`);
         req.session.save(err => {
-            if (err) return res.status(500).send('Login failed.');
+            if (err) { console.error('Session save error:', err); return res.status(500).send('Login failed — session could not be saved.'); }
             res.redirect(roleToPath(roles[0]));
         });
-    } catch(err) { res.status(500).render('error', { message: 'Internal Server Error during login.' }); }
+    } catch(err) {
+        console.error('Login error:', err);
+        res.status(500).render('error', { message: 'Internal Server Error during login.' });
+    }
 });
 
 // ── Select Role (POST) ────────────────────────────────────────
