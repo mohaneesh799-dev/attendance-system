@@ -81,8 +81,12 @@ app.use(passport.initialize());
 app.use(passport.session());
 passport.serializeUser((user, done) => done(null, user._id.toString()));
 passport.deserializeUser(async (id, done) => {
-    try { done(null, await User.findById(id).lean()); }
-    catch(e) { done(e, null); }
+    try {
+        const user = await User.findById(id).lean();
+        // If user was deleted from DB, return null (not error) — clears stale passport session
+        done(null, user || null);
+    }
+    catch(e) { done(null, null); } // On any error, return null to avoid crashes
 });
 
 // ── Nodemailer ────────────────────────────────────────────────
@@ -162,7 +166,14 @@ const Division = mongoose.model('Division', divisionSchema);
 // HELPERS
 // ================================================================
 
-function getUser(req) { return req.session.user || req.user; }
+function getUser(req) {
+    // Prefer session.user (set after credential login / role selection)
+    // Fall back to passport req.user (set after Google OAuth)
+    // Always validate it has the minimum required fields
+    const u = req.session.user || req.user;
+    if (!u || !u.role) return null;
+    return u;
+}
 
 // Build session user object — includes ALL roles for role-switcher
 function buildSessionUser(user, activeRole) {
@@ -189,19 +200,23 @@ const ROLE_PATHS = {
 };
 
 function roleToPath(role) {
-    return ROLE_PATHS[(role || '').toLowerCase()] || '/login?error=RoleNotAssigned';
+    // NEVER return /login here — that causes redirect loops.
+    // If role is unknown, send to /role-error which shows a helpful page.
+    return ROLE_PATHS[(role || '').toLowerCase()] || '/role-error';
 }
 
-// ── Middleware ────────────────────────────────────────────────
 function isAdmin(req, res, next) {
     const u = getUser(req);
     if (u && (u.role === 'Master' || u.role === 'SuperAdmin')) return next();
+    // Don't redirect to /login if already there — show error page instead
+    if (req.path === '/login') return res.status(403).render('error', { message: 'Access Denied' });
     return res.redirect('/login?error=Access+Denied');
 }
 
 function isSuperAdmin(req, res, next) {
     const u = getUser(req);
     if (u && u.role === 'SuperAdmin' && u.isApproved) return next();
+    if (req.path === '/login') return res.status(403).render('error', { message: 'Unauthorized' });
     return res.redirect('/login?error=Unauthorized');
 }
 
@@ -239,7 +254,14 @@ app.get('/', (req, res) => res.redirect('/login'));
 
 app.get('/login', (req, res) => {
     const u = getUser(req);
-    if (u) return res.redirect(roleToPath(u.role));
+    // Only redirect if user is truly valid — has an approved account and a known role
+    if (u && u.role && ROLE_PATHS[(u.role || '').toLowerCase()]) {
+        return res.redirect(roleToPath(u.role));
+    }
+    // If session exists but is corrupt/invalid, destroy it before showing login
+    if (u) {
+        req.session.destroy(() => {});
+    }
     res.render('login', { error: req.query.error || null, message: req.query.message || null });
 });
 
@@ -252,7 +274,8 @@ app.get('/select-role', (req, res) => {
         .then(user => {
             if (!user) return res.redirect('/login?error=User+not+found');
             const roles = user.roles && user.roles.length ? user.roles : [user.role];
-            res.render('role-select', { user, roles });
+            // File is choose-role.ejs (not role-select.ejs)
+            res.render('choose-role', { user, roles });
         })
         .catch(() => res.redirect('/login'));
 });
@@ -263,13 +286,19 @@ app.get('/auth/google/callback',
     passport.authenticate('google', { failureRedirect: '/login?error=Google+login+failed' }),
     async (req, res) => {
         const u = req.user;
-        if (!u.isApproved) return res.render('pending', { user: u });
+        if (!u.isApproved) {
+            // Clear passport session to prevent redirect loop, then show pending page
+            req.logout(err => { if(err) console.error(err); });
+            return res.render('pending', { user: u });
+        }
         const roles = u.roles && u.roles.length ? u.roles : [u.role];
         if (roles.length > 1) {
             req.session.pendingUserId = u._id.toString();
             return req.session.save(() => res.redirect('/select-role'));
         }
         req.session.user = buildSessionUser(u, roles[0]);
+        // Log out passport after storing in session to prevent dual-auth conflicts
+        req.logout(err => { if(err) console.error(err); });
         req.session.save(() => res.redirect(roleToPath(roles[0])));
     }
 );
@@ -528,6 +557,24 @@ app.get('/export-attendance', async (req, res) => {
 });
 
 app.get('/ping', (req, res) => res.status(200).send('OK'));
+
+// ── Role Error (shown when role is unknown — prevents redirect loop) ──
+app.get('/role-error', (req, res) => {
+    const u = getUser(req);
+    res.status(400).render('error', {
+        message: `Your account role "${u ? u.role : 'unknown'}" is not configured. Please contact your administrator to assign a valid role (Student, Leader, Lecturer, Master, or SuperAdmin).`
+    });
+});
+
+// ── Emergency session clear (allows user to escape redirect loops) ──
+app.get('/clear-session', (req, res) => {
+    const destroy = () => res.redirect('/login?message=Session+cleared.+Please+log+in+again.');
+    req.session.destroy(err => {
+        if(err) console.error('Session destroy error:', err);
+        res.clearCookie('connect.sid');
+        destroy();
+    });
+});
 
 // ================================================================
 // POST ROUTES
