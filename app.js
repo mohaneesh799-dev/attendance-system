@@ -185,6 +185,7 @@ function buildSessionUser(user, activeRole) {
         name: user.name,
         section: user.section,
         rollNo: user.rollNo,
+        isApproved: user.isApproved,          // ← CRITICAL: was missing, caused isSuperAdmin loop
         isClassTeacher: user.isClassTeacher,
         classTeacherSection: user.classTeacherSection
     };
@@ -208,16 +209,29 @@ function roleToPath(role) {
 function isAdmin(req, res, next) {
     const u = getUser(req);
     if (u && (u.role === 'Master' || u.role === 'SuperAdmin')) return next();
-    // Don't redirect to /login if already there — show error page instead
-    if (req.path === '/login') return res.status(403).render('error', { message: 'Access Denied' });
     return res.redirect('/login?error=Access+Denied');
 }
 
 function isSuperAdmin(req, res, next) {
     const u = getUser(req);
-    if (u && u.role === 'SuperAdmin' && u.isApproved) return next();
-    if (req.path === '/login') return res.status(403).render('error', { message: 'Unauthorized' });
-    return res.redirect('/login?error=Unauthorized');
+    if (!u) return res.redirect('/login?error=Please+log+in');
+    if (u.role !== 'SuperAdmin') return res.redirect('/login?error=SuperAdmin+access+required');
+    // If isApproved is missing from session (stale session), check DB directly
+    if (u.isApproved === undefined || u.isApproved === null) {
+        User.findById(u._id).lean()
+            .then(dbUser => {
+                if (!dbUser || !dbUser.isApproved) {
+                    return res.redirect('/login?error=Account+not+approved');
+                }
+                // Patch session with isApproved so future requests don't need DB check
+                if (req.session.user) req.session.user.isApproved = true;
+                req.session.save(() => next());
+            })
+            .catch(() => res.redirect('/login?error=Session+error'));
+        return;
+    }
+    if (!u.isApproved) return res.redirect('/login?error=Account+not+approved');
+    return next();
 }
 
 // ================================================================
@@ -254,14 +268,17 @@ app.get('/', (req, res) => res.redirect('/login'));
 
 app.get('/login', (req, res) => {
     const u = getUser(req);
-    // Only redirect if user is truly valid — has an approved account and a known role
     if (u && u.role && ROLE_PATHS[(u.role || '').toLowerCase()]) {
+        // For SuperAdmin, only redirect if explicitly approved
+        // (prevents loop when isApproved is missing from old session)
+        if (u.role === 'SuperAdmin' && !u.isApproved) {
+            req.session.destroy(() => {});
+            return res.render('login', { error: 'Your SuperAdmin account is not yet approved.', message: null });
+        }
         return res.redirect(roleToPath(u.role));
     }
-    // If session exists but is corrupt/invalid, destroy it before showing login
-    if (u) {
-        req.session.destroy(() => {});
-    }
+    // Session exists but role is unknown/invalid — destroy it
+    if (u) req.session.destroy(() => {});
     res.render('login', { error: req.query.error || null, message: req.query.message || null });
 });
 
