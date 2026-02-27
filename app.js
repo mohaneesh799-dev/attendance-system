@@ -203,14 +203,14 @@ function isSuperAdmin(req, res, next) {
 // GET ROUTES
 // ================================================================
 
-app.get('/',         (req, res) => res.render('login', { showEmailForm: false, error: null, message: null }));
-app.get('/login',    (req, res) => {
+app.get('/',      (req, res) => res.redirect('/login'));
+app.get('/login', (req, res) => {
     const u = getUser(req);
     if (u) return res.redirect(`/${u.role.toLowerCase()}`);
-    res.render('login', { showEmailForm: false, error: req.query.error || null, message: req.query.message || null });
+    res.render('login', { error: req.query.error || null, message: req.query.message || null });
 });
 app.get('/login-email', (req, res) =>
-    res.render('login', { showEmailForm: true, error: req.query.error || null, message: req.query.message || null }));
+    res.redirect('/login'));
 app.get('/register', (req, res) => res.render('register', { error: null }));
 
 // Google OAuth
@@ -327,27 +327,33 @@ app.get('/student', async (req, res) => {
         const records = await Attendance.find({
             section: user.section, 'students.studentId': user.rollNo
         }).sort({ date: -1 }).lean();
+
         let presentCount = 0;
-        // Build subject-wise stats from ALL records
         const subjectMap = {};
         records.forEach(rec => {
-            const e = rec.students.find(s => s.studentId === user.rollNo);
-            if (e && e.status === 'Present') presentCount++;
-            const sub = rec.subject || 'Unknown';
-            if (!subjectMap[sub]) subjectMap[sub] = { total: 0, present: 0 };
+            const sub = (rec.subject || 'Unknown').trim();
+            if (!subjectMap[sub]) subjectMap[sub] = { present: 0, total: 0 };
             subjectMap[sub].total++;
-            if (e && e.status === 'Present') subjectMap[sub].present++;
+            const entry = rec.students.find(s => s.studentId === user.rollNo);
+            if (entry && entry.status === 'Present') {
+                presentCount++;
+                subjectMap[sub].present++;
+            }
         });
-        const subjectStats = Object.keys(subjectMap).sort().map(name => ({
-            name,
-            total: subjectMap[name].total,
-            present: subjectMap[name].present,
-            absent: subjectMap[name].total - subjectMap[name].present,
-            percentage: subjectMap[name].total > 0
-                ? ((subjectMap[name].present / subjectMap[name].total) * 100).toFixed(1)
-                : '0.0'
-        }));
-        res.render('student', { user, records: records.slice(0,50), presentCount, totalCount: records.length, subjectStats });
+        const subjectStats = Object.entries(subjectMap)
+            .map(([subject, d]) => ({
+                subject,
+                present: d.present,
+                total: d.total,
+                absent: d.total - d.present,
+                percentage: d.total > 0 ? +((d.present / d.total) * 100).toFixed(1) : 0
+            }))
+            .sort((a, b) => a.subject.localeCompare(b.subject));
+
+        res.render('student', {
+            user, records: records.slice(0, 50),
+            presentCount, totalCount: records.length, subjectStats
+        });
     } catch(err) {
         res.status(500).render('error', { message: 'Could not load Student portal.' });
     }

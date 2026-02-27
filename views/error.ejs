@@ -1,91 +1,69 @@
 <!DOCTYPE html>
-<html lang="en" id="htmlRoot">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Error | RKU Attendance Portal</title>
+    <title>System Error | Attendance Portal</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root {
-            --danger: #e74c3c; --primary: #2c3e50; --bg: #f0f2f5;
-            --card: #ffffff; --text: #2c3e50; --muted: #7f8c8d;
-            --border: #eee; --code-bg: #f8f9fa;
+        :root { --danger: #e74c3c; --primary: #2c3e50; --bg: #f8f9fa; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: var(--bg); 
+            height: 100vh; display: flex; align-items: center; justify-content: center; 
+            margin: 0; 
         }
-        html.dark {
-            --bg: #1a1e2a; --card: #242938; --text: #d4daf0;
-            --muted: #7a87a3; --border: #303550; --code-bg: #1e2230;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: var(--bg); color: var(--text);
-            min-height: 100vh; display: flex; align-items: center;
-            justify-content: center; padding: 20px;
-            transition: background 0.3s, color 0.3s;
-        }
-        .error-card {
-            background: var(--card);
-            padding: 48px 40px;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.12);
-            max-width: 500px; width: 100%;
+        .error-card { 
+            background: white; 
+            padding: 50px; 
+            border-radius: 16px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
+            max-width: 500px; width: 90%; 
             text-align: center;
             border-top: 6px solid var(--danger);
-            position: relative;
-            animation: slideUp 0.4s ease;
         }
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(24px); }
-            to   { opacity: 1; transform: translateY(0); }
+        .error-icon { 
+            font-size: 80px; 
+            color: var(--danger); 
+            margin-bottom: 20px; 
         }
-        .error-icon {
-            font-size: 72px; color: var(--danger);
-            margin-bottom: 22px; display: block;
-            animation: shake 0.6s ease 0.3s both;
-        }
-        @keyframes shake {
-            0%,100% { transform: translateX(0); }
-            20%,60% { transform: translateX(-6px); }
-            40%,80% { transform: translateX(6px); }
-        }
-        h1 { color: var(--text); margin: 0 0 14px; font-size: 1.5rem; font-weight: 700; }
-        .error-message {
-            color: var(--muted); line-height: 1.7; margin-bottom: 32px;
-            font-size: 15px; background: var(--code-bg);
-            padding: 14px 18px; border-radius: 10px;
-            border-left: 4px solid var(--danger);
-            text-align: left;
-        }
-        .btn-group { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
-        .btn {
-            padding: 12px 26px; border-radius: 10px; text-decoration: none;
-            font-weight: 700; transition: 0.25s; font-size: 14px;
-            display: inline-flex; align-items: center; gap: 8px; border: none; cursor: pointer;
+        h1 { color: var(--primary); margin: 0 0 15px 0; font-size: 24px; }
+        p { color: #7f8c8d; line-height: 1.6; margin-bottom: 30px; }
+        
+        .btn-group { display: flex; gap: 10px; justify-content: center; }
+        .btn { 
+            padding: 12px 25px; 
+            border-radius: 8px; 
+            text-decoration: none; 
+            font-weight: bold; 
+            transition: 0.3s; 
+            font-size: 14px;
         }
         .btn-home { background: var(--primary); color: white; }
-        .btn-home:hover { filter: brightness(1.15); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.2); }
-        .btn-back { background: var(--code-bg); color: var(--text); border: 1.5px solid var(--border); }
-        .btn-back:hover { border-color: var(--primary); }
-        html.dark .btn-home { background: #4a7fb5; }
-        .error-code {
-            margin-top: 28px; font-family: monospace; font-size: 11px;
-            color: var(--muted); opacity: 0.6;
-        }
-        @media (max-width: 480px) {
-            .error-card { padding: 36px 22px; }
-            h1 { font-size: 1.25rem; }
-            .error-icon { font-size: 54px; }
+        .btn-home:hover { background: #34495e; transform: translateY(-2px); }
+        .btn-back { background: #ecf0f1; color: var(--primary); cursor: pointer; border: none; }
+        .btn-back:hover { background: #bdc3c7; }
+
+        .error-code { 
+            margin-top: 25px; 
+            font-family: monospace; 
+            font-size: 12px; 
+            color: #bdc3c7; 
+            text-transform: uppercase; 
         }
     </style>
 </head>
 <body>
+
 <div class="error-card">
-    <i class="fas fa-exclamation-circle error-icon"></i>
-    <h1>Oops! Something Went Wrong</h1>
-    <div class="error-message">
-        <i class="fas fa-info-circle" style="margin-right:6px;color:var(--danger);"></i>
-        <%= typeof message !== 'undefined' && message ? message : "The server encountered an internal error or misconfiguration and was unable to complete your request." %>
+    <div class="error-icon">
+        <i class="fas fa-exclamation-circle"></i>
     </div>
+    <h1>Oops! Something went wrong</h1>
+    <p>
+        <%= typeof message !== 'undefined' ? message : "The server encountered an internal error or misconfiguration and was unable to complete your request." %>
+    </p>
+
     <div class="btn-group">
         <button onclick="window.history.back()" class="btn btn-back">
             <i class="fas fa-arrow-left"></i> Go Back
@@ -94,14 +72,11 @@
             <i class="fas fa-sign-in-alt"></i> Back to Login
         </a>
     </div>
+
     <div class="error-code">
-        <i class="fas fa-clock"></i> Error at: <%= new Date().toLocaleTimeString() %> &nbsp;|&nbsp; RKU Attendance System
+        Error Logged: <%= new Date().toLocaleTimeString() %>
     </div>
 </div>
-<script>
-    if (localStorage.getItem('rku-theme') === 'dark') {
-        document.getElementById('htmlRoot').classList.add('dark');
-    }
-</script>
+
 </body>
 </html>

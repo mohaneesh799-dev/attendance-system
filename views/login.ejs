@@ -3,107 +3,166 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RKU Attendance Portal | Login</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>RKU Attendance Portal — Login</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --rku-blue: #003366; --google-blue: #4285F4; --dark-bg: #1a1d20; }
-        * { box-sizing: border-box; }
-        body {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            min-height: 100vh; display: flex; align-items: center; justify-content: center;
-            font-family: 'Inter', 'Segoe UI', sans-serif; padding: 20px;
+        *{box-sizing:border-box;margin:0;padding:0;}
+        body{
+            min-height:100vh;
+            background:linear-gradient(135deg,#1a2a6c,#b21f1f,#fdbb2d);
+            background-size:400% 400%;
+            animation:bgMove 12s ease infinite;
+            display:flex;align-items:center;justify-content:center;
+            font-family:'Segoe UI',system-ui,sans-serif;padding:16px;
         }
-        .login-card {
-            background: white; padding: 40px 35px; border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.12);
-            width: 100%; max-width: 420px; text-align: center;
+        @keyframes bgMove{0%{background-position:0 50%}50%{background-position:100% 50%}100%{background-position:0 50%}}
+
+        .card{
+            background:#fff;width:100%;max-width:420px;
+            border-radius:24px;box-shadow:0 24px 60px rgba(0,0,0,0.25);
+            overflow:hidden;
         }
-        .logo-placeholder { font-size: 2.8rem; color: var(--rku-blue); margin-bottom: 10px; }
-        .btn-sso {
-            display: flex; align-items: center; justify-content: center;
-            background-color: var(--google-blue); color: white; padding: 14px;
-            text-decoration: none; border-radius: 10px; font-weight: 600;
-            margin-bottom: 15px; transition: 0.3s; border: none; width: 100%;
-            font-size: 15px;
+        .card-head{
+            background:linear-gradient(135deg,#0f2557,#1e3a8a);
+            padding:32px 32px 24px;text-align:center;color:#fff;
         }
-        .btn-sso:hover { background-color: #357ae8; color: white; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(66,133,244,0.35); }
-        .btn-credential {
-            display: flex; align-items: center; justify-content: center;
-            background-color: var(--dark-bg); color: white; padding: 14px;
-            text-decoration: none; border-radius: 10px; font-weight: 600;
-            width: 100%; transition: 0.3s; border: none; cursor: pointer; font-size: 15px;
+        .card-head .icon{font-size:2.6rem;margin-bottom:10px;opacity:.9;}
+        .card-head h1{font-size:1.45rem;font-weight:800;letter-spacing:-.4px;}
+        .card-head p{font-size:.82rem;opacity:.7;margin-top:5px;}
+        .card-body{padding:28px 32px 32px;}
+
+        /* Alerts */
+        .alert{
+            display:flex;align-items:center;gap:9px;
+            padding:11px 14px;border-radius:10px;font-size:13px;margin-bottom:18px;
         }
-        .btn-credential:hover { background-color: #000; color: #ffc107; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.25); }
-        .divider { display: flex; align-items: center; text-align: center; margin: 18px 0; color: #adb5bd; font-size: 13px; }
-        .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid #dee2e6; }
-        .divider:not(:empty)::before { margin-right: .5em; }
-        .divider:not(:empty)::after { margin-left: .5em; }
-        .footer-text { font-size: 0.85rem; color: #6c757d; margin-top: 20px; }
-        .alert { border-radius: 10px; border: none; font-size: 14px; }
-        .form-control:focus { border-color: var(--rku-blue); box-shadow: 0 0 0 3px rgba(0,51,102,0.15); }
-        .form-label { font-weight: 600; font-size: 13px; color: #444; }
-        .back-link { display: inline-flex; align-items: center; gap: 6px; color: #6c757d; text-decoration: none; font-size: 13px; margin-top: 15px; }
-        .back-link:hover { color: var(--rku-blue); }
-        @media (max-width: 480px) {
-            .login-card { padding: 28px 20px; }
+        .alert-err{background:#fff0f0;color:#b91c1c;border:1px solid #fecaca;}
+        .alert-ok {background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;}
+
+        /* Google btn */
+        .btn-google{
+            display:flex;align-items:center;justify-content:center;gap:10px;
+            width:100%;padding:13px 16px;border-radius:12px;
+            font-size:14px;font-weight:600;text-decoration:none;
+            background:#fff;color:#3c4043;border:1.5px solid #dadce0;
+            transition:.2s;cursor:pointer;
+        }
+        .btn-google:hover{border-color:#4285f4;box-shadow:0 2px 12px rgba(66,133,244,.2);transform:translateY(-1px);}
+        .btn-google:active{transform:none;}
+        .g-logo{width:20px;height:20px;flex-shrink:0;}
+
+        /* Divider */
+        .divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:#9ca3af;font-size:12px;}
+        .divider::before,.divider::after{content:'';flex:1;height:1px;background:#e5e7eb;}
+
+        /* Form */
+        .fg{margin-bottom:14px;}
+        .fg label{display:block;font-size:11.5px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.45px;margin-bottom:6px;}
+        .input-wrap{position:relative;}
+        .input-wrap i{position:absolute;right:13px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:14px;}
+        .fc{
+            width:100%;padding:11px 38px 11px 14px;border-radius:10px;
+            border:1.5px solid #e5e7eb;font-size:14px;font-family:inherit;
+            background:#f9fafb;outline:none;transition:.2s;color:#111827;
+        }
+        .fc:focus{border-color:#1e3a8a;background:#fff;box-shadow:0 0 0 3px rgba(30,58,138,.1);}
+        .eye-toggle{cursor:pointer;}
+
+        /* Submit button */
+        .btn-login{
+            width:100%;padding:13px;border:none;border-radius:12px;
+            font-size:15px;font-weight:700;cursor:pointer;transition:.2s;
+            background:linear-gradient(135deg,#1e3a8a,#1d4ed8);color:#fff;
+            display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px;
+        }
+        .btn-login:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(29,78,216,.3);}
+        .btn-login:active{transform:none;}
+
+        /* Footer */
+        .footer{text-align:center;margin-top:20px;font-size:12px;color:#9ca3af;}
+        .footer a{color:#1d4ed8;font-weight:600;text-decoration:none;}
+        .footer a:hover{text-decoration:underline;}
+        .secure{display:flex;align-items:center;justify-content:center;gap:5px;font-size:11px;color:#9ca3af;margin-top:14px;}
+
+        @media(max-width:440px){
+            .card-head{padding:24px 20px 18px;}
+            .card-body{padding:20px 20px 24px;}
         }
     </style>
 </head>
 <body>
-<div class="login-card">
-    <div class="logo-placeholder"><i class="fas fa-university"></i></div>
-    <h2 class="fw-bold mb-1" style="color: var(--rku-blue);">RKU Attendance</h2>
-    <p class="text-muted mb-4 small">Secure Gateway for Students &amp; Faculty</p>
+<div class="card">
+    <div class="card-head">
+        <div class="icon"><i class="fas fa-university"></i></div>
+        <h1>RKU Attendance Portal</h1>
+        <p>Sign in — Students, Faculty &amp; Administrators</p>
+    </div>
+    <div class="card-body">
 
-    <% if (typeof error !== 'undefined' && error) { %>
-        <div class="alert alert-danger small py-2 mb-3">
-            <i class="fas fa-exclamation-circle me-1"></i> <%= error %>
-        </div>
-    <% } %>
-    <% if (typeof message !== 'undefined' && message) { %>
-        <div class="alert alert-success small py-2 mb-3">
-            <i class="fas fa-check-circle me-1"></i> <%= message %>
-        </div>
-    <% } %>
+        <% if (typeof error !== 'undefined' && error) { %>
+            <div class="alert alert-err"><i class="fas fa-exclamation-circle"></i> <%= error %></div>
+        <% } %>
+        <% if (typeof message !== 'undefined' && message) { %>
+            <div class="alert alert-ok"><i class="fas fa-check-circle"></i> <%= message %></div>
+        <% } %>
 
-    <% if (typeof showEmailForm !== 'undefined' && showEmailForm) { %>
+        <!-- Google SSO -->
+        <a href="/auth/google" class="btn-google">
+            <svg class="g-logo" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+            Continue with Google
+        </a>
+
+        <div class="divider">or sign in with email &amp; password</div>
+
+        <!-- Unified email/password form — works for ALL roles (Student, Lecturer, Leader, Master, SuperAdmin) -->
         <form action="/login" method="POST" novalidate>
-            <div class="mb-3 text-start">
-                <label class="form-label">Email Address</label>
-                <input type="email" name="email" class="form-control" placeholder="you@rku.ac.in" required autocomplete="email">
+            <div class="fg">
+                <label>Email Address</label>
+                <div class="input-wrap">
+                    <input type="email" name="email" class="fc" placeholder="you@rku.ac.in" required autocomplete="email">
+                    <i class="fas fa-envelope"></i>
+                </div>
             </div>
-            <div class="mb-3 text-start">
-                <label class="form-label">Password</label>
-                <input type="password" name="password" class="form-control" placeholder="••••••••" required autocomplete="current-password">
+            <div class="fg">
+                <label>Password</label>
+                <div class="input-wrap">
+                    <input type="password" name="password" id="pwdField" class="fc" placeholder="••••••••" required autocomplete="current-password">
+                    <i class="fas fa-eye eye-toggle" id="eyeIcon" onclick="toggleEye()"></i>
+                </div>
             </div>
-            <button type="submit" class="btn-credential">
-                <i class="fas fa-sign-in-alt me-2 text-warning"></i> Login to Account
+            <button type="submit" class="btn-login">
+                <i class="fas fa-sign-in-alt"></i> Sign In
             </button>
         </form>
-        <div class="text-center mt-3">
-            <a href="/login" class="back-link"><i class="fas fa-arrow-left"></i> Back to main login</a>
-        </div>
-    <% } else { %>
-        <a href="/auth/google" class="btn-sso">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" width="18" height="18" class="me-2 bg-white rounded-circle p-1" alt="Google">
-            Sign in with Google
-        </a>
 
-        <div class="divider">OR</div>
-
-        <a href="/login-email" class="btn-credential">
-            <i class="fas fa-key me-2 text-warning"></i> Login with Email &amp; Password
-        </a>
-
-        <div class="footer-text mt-4">
-            New user? &nbsp;<a href="/register" class="text-primary fw-bold text-decoration-none">Request Access</a>
+        <div class="footer">
+            New user? <a href="/register">Register Account</a>
         </div>
 
-        <p class="small text-secondary mt-3 mb-0" style="font-size: 0.75rem;">
-            <i class="fas fa-shield-alt"></i> Strictly authorized for <strong>@rku.ac.in</strong> users only.
-        </p>
-    <% } %>
+        <div class="secure">
+            <i class="fas fa-shield-alt" style="color:#16a34a;"></i>
+            Strictly authorized for <strong>&nbsp;@rku.ac.in&nbsp;</strong> users only
+        </div>
+    </div>
 </div>
+
+<script>
+function toggleEye() {
+    var f = document.getElementById('pwdField');
+    var i = document.getElementById('eyeIcon');
+    if (f.type === 'password') {
+        f.type = 'text';
+        i.classList.replace('fa-eye', 'fa-eye-slash');
+    } else {
+        f.type = 'password';
+        i.classList.replace('fa-eye-slash', 'fa-eye');
+    }
+}
+</script>
 </body>
 </html>
