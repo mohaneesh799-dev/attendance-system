@@ -143,6 +143,17 @@
         <div class="topbar-btns">
             <a href="/attendance-history" class="tb-btn tb-white"><i class="fas fa-history"></i> History</a>
             <a href="/settings" class="tb-btn tb-white"><i class="fas fa-cog"></i> Settings</a>
+                        <% var _allRoles = (user.roles && user.roles.length > 1) ? user.roles : null; %>
+            <% if (_allRoles) { %>
+            <form action="/switch-role" method="POST" class="role-switcher">
+                <span class="role-switcher-label"><i class="fas fa-exchange-alt"></i></span>
+                <select name="targetRole" onchange="this.form.submit()" title="Switch Role">
+                    <% _allRoles.forEach(function(r){ %>
+                    <option value="<%= r %>" <%= r===user.role?'selected':'' %>><%= r %></option>
+                    <% }); %>
+                </select>
+            </form>
+            <% } %>
             <a href="/logout" class="tb-btn tb-danger"><i class="fas fa-sign-out-alt"></i> Logout</a>
         </div>
     </div>

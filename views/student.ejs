@@ -123,6 +123,17 @@
     <div class="topbar-right">
         <span class="chip"><i class="fas fa-layer-group"></i> <%= user.section %></span>
         <a href="/settings" class="chip-btn"><i class="fas fa-cog"></i></a>
+                <% var _allRoles = (user.roles && user.roles.length > 1) ? user.roles : null; %>
+        <% if (_allRoles) { %>
+        <form action="/switch-role" method="POST" class="role-switcher">
+            <span style="font-size:11px;color:rgba(255,255,255,.6);font-weight:700;white-space:nowrap;"><i class="fas fa-exchange-alt"></i></span>
+            <select name="targetRole" onchange="this.form.submit()" title="Switch Role">
+                <% _allRoles.forEach(function(r){ %>
+                <option value="<%= r %>" <%= r===user.role?'selected':'' %>><%= r %></option>
+                <% }); %>
+            </select>
+        </form>
+        <% } %>
         <a href="/logout" class="chip-btn"><i class="fas fa-sign-out-alt"></i></a>
     </div>
 </div>

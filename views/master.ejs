@@ -268,15 +268,24 @@ tbody tr:hover td{background:rgba(59,127,244,.03);}
           var _roles = (user.roles && user.roles.length > 0) ? user.roles : [user.role];
           if (_roles.length > 1) {
         %>
-        <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:9px;padding:9px 12px;margin-bottom:12px;">
-            <div style="font-size:10px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;"><i class="fas fa-exchange-alt"></i> Switch Role</div>
-            <form action="/switch-role" method="POST" style="display:flex;gap:6px;align-items:center;">
-                <select name="targetRole" style="flex:1;font-size:11.5px;padding:5px 8px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);color:#fff;border-radius:6px;outline:none;">
-                    <% _roles.forEach(function(r){ %>
-                    <option value="<%= r %>" <%= r===user.role?'selected':'' %> style="background:#1a2740;color:#fff;"><%= r %></option>
-                    <% }); %>
-                </select>
-                <button type="submit" style="padding:5px 10px;background:var(--acc);color:#fff;border:none;border-radius:6px;font-size:11px;cursor:pointer;font-weight:700;white-space:nowrap;">Go</button>
+        <div style="margin-bottom:14px;">
+            <div style="font-size:10px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px;display:flex;align-items:center;gap:5px;">
+                <i class="fas fa-exchange-alt"></i> Switch Role
+            </div>
+            <form action="/switch-role" method="POST">
+                <div style="display:flex;gap:6px;align-items:center;">
+                    <select name="targetRole"
+                        style="flex:1;font-size:12px;padding:7px 10px;background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.15);color:#fff;border-radius:8px;outline:none;font-family:inherit;font-weight:600;cursor:pointer;-webkit-appearance:none;appearance:none;">
+                        <% _roles.forEach(function(r){ %>
+                        <option value="<%= r %>" <%= r===user.role?'selected':'' %> style="background:#0f1624;color:#fff;"><%= r %></option>
+                        <% }); %>
+                    </select>
+                    <button type="submit"
+                        style="padding:7px 13px;background:var(--acc);color:#fff;border:none;border-radius:8px;font-size:12px;cursor:pointer;font-weight:800;transition:.18s;white-space:nowrap;font-family:inherit;"
+                        onmouseover="this.style.opacity='.82'" onmouseout="this.style.opacity='1'">
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
             </form>
         </div>
         <% } %>

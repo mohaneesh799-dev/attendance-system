@@ -319,14 +319,25 @@ app.get('/register', (req, res) => res.render('register', { error: null }));
 
 // ── Role Selection (shown when user has multiple roles) ───────
 app.get('/select-role', (req, res) => {
-    if (!req.session.pendingUserId) return res.redirect('/login?error=Session+expired.+Please+log+in+again.');
-    User.findById(req.session.pendingUserId).lean()
-        .then(user => {
-            if (!user) return res.redirect('/login?error=User+not+found');
-            const roles = user.roles && user.roles.length ? user.roles : [user.role];
-            res.render('choose-role', { user, roles, error: req.query.error || null });
-        })
-        .catch(() => res.redirect('/login?error=Session+error'));
+    // choose-role page removed — role selection is now done via the sidebar switch widget
+    // If a pendingUserId exists (edge case), auto-select first role and redirect
+    if (req.session.pendingUserId) {
+        return User.findById(req.session.pendingUserId).lean()
+            .then(user => {
+                if (!user) return res.redirect('/login?error=User+not+found');
+                const roles = user.roles && user.roles.length ? user.roles : [user.role];
+                delete req.session.pendingUserId;
+                req.session.user = buildSessionUser(user, roles[0]);
+                return req.session.save(err => {
+                    if (err) return res.redirect('/login?error=Session+error');
+                    res.redirect(roleToPath(roles[0]));
+                });
+            })
+            .catch(() => res.redirect('/login?error=Session+error'));
+    }
+    const u = getUser(req);
+    if (u) return res.redirect(roleToPath(u.role));
+    res.redirect('/login');
 });
 
 // ── Google OAuth Routes ───────────────────────────────────────
@@ -352,18 +363,8 @@ app.get('/auth/google/callback', (req, res, next) => {
             });
         }
         const roles = user.roles && user.roles.length ? user.roles : [user.role];
-        if (roles.length > 1) {
-            // req.logout is async — MUST nest everything inside its callback
-            // or passport will clear the session AFTER we've already redirected
-            return req.logout(e => {
-                if (e) console.error('OAuth logout error (non-fatal):', e);
-                req.session.pendingUserId = user._id.toString();
-                req.session.save(err => {
-                    if (err) return res.redirect('/login?error=Session+error');
-                    res.redirect('/select-role');
-                });
-            });
-        }
+        // Multi-role: go directly to first role — user can switch via sidebar widget
+        // (no choose-role page needed)
         const sessionUser = buildSessionUser(user, roles[0]);
         req.logout(e => {
             if (e) console.error('OAuth logout error (non-fatal):', e);
@@ -739,15 +740,9 @@ app.post('/login', loginLimiter, async (req, res) => {
             return res.render('login', { error: 'Your account is awaiting admin approval. Please contact your administrator.', message: null });
         }
 
-        // ── Multi-role: if user has multiple roles, ask which to use ──
+        // ── Multi-role: go directly to first role — user can switch via sidebar widget ──
         const roles = user.roles && user.roles.length > 0 ? user.roles : [user.role];
-        if (roles.length > 1) {
-            req.session.pendingUserId = user._id.toString();
-            return req.session.save(err => {
-                if (err) { console.error('Session save error:', err); return res.status(500).send('Session error.'); }
-                res.redirect('/select-role');
-            });
-        }
+        // No choose-role page — always go to first role directly; switch via sidebar
 
         // ── Single role: go directly ──
         req.session.user = buildSessionUser(user, roles[0]);
