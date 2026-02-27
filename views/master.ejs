@@ -220,6 +220,12 @@ tbody tr:hover td{background:rgba(59,127,244,.03);}
     .stats-grid{grid-template-columns:1fr;}
     .subject-form{flex-direction:column;}
 }
+
+/* ── Role filter tabs ── */
+.tab-btn{padding:6px 14px;border:2px solid var(--input-bd);border-radius:20px;cursor:pointer;font-size:12.5px;font-weight:700;background:var(--card);color:var(--muted);transition:.18s;font-family:inherit;}
+.tab-btn:hover,.tab-btn.active{background:var(--acc);color:#fff;border-color:var(--acc);}
+.tab-btn.warn{border-color:rgba(245,158,11,.4);color:var(--war);}
+.tab-btn.warn.active,.tab-btn.warn:hover{background:var(--war);color:#fff;border-color:var(--war);}
 </style>
 </head>
 <body>
@@ -379,6 +385,27 @@ tbody tr:hover td{background:rgba(59,127,244,.03);}
                 </div>
             </div>
 
+            <!-- Role tabs for division-wise view -->
+            <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px" id="roleTabs">
+                <button type="button" class="tab-btn active" onclick="filterRole('all',this)">
+                    All (<%= stats.total %>)
+                </button>
+                <button type="button" class="tab-btn" onclick="filterRole('Student',this)">
+                    <i class="fas fa-graduation-cap" style="color:var(--acc)"></i> Students (<%= stats.students %>)
+                </button>
+                <% var _pendUsers = allUsers.filter(function(u){ return !u.isApproved; }); %>
+                <% if (_pendUsers.length > 0) { %>
+                <button type="button" class="tab-btn warn" onclick="filterRole('pending',this)">
+                    ⏳ Pending (<%= _pendUsers.length %>)
+                </button>
+                <% } %>
+                <% ['Leader','Lecturer','Master'].forEach(function(r){
+                   var _rc = allUsers.filter(function(u){ return u.role===r; }).length;
+                   if(_rc > 0) { %>
+                <button type="button" class="tab-btn" onclick="filterRole('<%= r %>',this)"><%= r %>s (<%= _rc %>)</button>
+                <% }}); %>
+            </div>
+
             <form action="/bulk-approve" method="POST">
                 <input type="hidden" name="section" value="<%= user.section %>">
 
@@ -411,7 +438,7 @@ tbody tr:hover td{background:rgba(59,127,244,.03);}
                         <tbody>
                             <% if (allUsers && allUsers.length > 0) { %>
                                 <% allUsers.forEach(function(u) { %>
-                                <tr>
+                                <tr class="u-row" data-role="<%= u.role %>" data-pend="<%= !u.isApproved ? 'y' : 'n' %>">
                                     <td>
                                         <input type="checkbox" name="userIds[]" value="<%= u._id %>" class="user-cb"
                                                style="width:16px;height:16px;accent-color:var(--acc);cursor:pointer;">
@@ -546,15 +573,30 @@ tbody tr:hover td{background:rgba(59,127,244,.03);}
         updateClock();
         setInterval(updateClock,1000);
 
+
+        /* Role tab filter */
+        var _curRole = 'all';
+        function filterRole(role, btn) {
+            _curRole = role;
+            document.querySelectorAll('#roleTabs .tab-btn').forEach(function(b){ b.classList.remove('active'); });
+            if (btn) btn.classList.add('active');
+            applyRoleFilter();
+        }
+        function applyRoleFilter() {
+            var q = (document.getElementById('userSearch') ? document.getElementById('userSearch').value : '').toLowerCase();
+            document.querySelectorAll('#userTable tbody tr.u-row, #userTable tbody tr[data-role]').forEach(function(r) {
+                var rm = _curRole === 'all'
+                    || (_curRole === 'pending' && r.dataset.pend === 'y')
+                    || r.dataset.role === _curRole;
+                var qm = !q || r.textContent.toLowerCase().includes(q);
+                r.style.display = (rm && qm) ? '' : 'none';
+            });
+        }
+
         /* Search */
         var searchEl=document.getElementById('userSearch');
         if(searchEl){
-            searchEl.addEventListener('input',function(){
-                var q=this.value.toLowerCase();
-                document.querySelectorAll('#userTable tbody tr').forEach(function(r){
-                    r.style.display=r.textContent.toLowerCase().includes(q)?'':'none';
-                });
-            });
+            searchEl.addEventListener('input', applyRoleFilter);
         }
 
         /* Select All */

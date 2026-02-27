@@ -188,9 +188,21 @@
                     <input type="text" name="phone" class="fc" value="<%= user.phone || '' %>" placeholder="e.g. 919876543210">
                 </div>
                 <div class="fg">
-                    <label>Role</label>
+                    <label>Active Role (this session)</label>
                     <input type="text" class="fc" value="<%= user.role %>" readonly>
                 </div>
+                <% var _allRoles = (user.roles && user.roles.length > 0) ? user.roles : [user.role]; %>
+                <% if (_allRoles.length > 1) { %>
+                <div class="fg">
+                    <label>All Your Roles</label>
+                    <div style="display:flex;flex-wrap:wrap;gap:7px;padding:10px 12px;background:var(--input-bg);border:1.5px solid var(--input-bd);border-radius:10px">
+                        <% _allRoles.forEach(function(r){ %>
+                        <span style="padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;background:rgba(59,130,246,.1);color:var(--accent);border:1px solid rgba(59,130,246,.2)"><%= r %></span>
+                        <% }); %>
+                    </div>
+                    <small style="color:var(--muted);font-size:11px;margin-top:5px">You have multiple roles. <a href="/" style="color:var(--accent)">Switch role on next login</a>.</small>
+                </div>
+                <% } %>
                 <% if (user.section) { %>
                 <div class="fg">
                     <label>Division / Section</label>

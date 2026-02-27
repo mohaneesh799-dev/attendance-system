@@ -1,27 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Leader Dashboard — Attendance</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-
-    <%#
-    ──────────────────────────────────────────────────────────
-    BUG FIXED #1 (THEME — same as settings.ejs):
-      Removed hardcoded data-theme="light" from <html> tag.
-      Applied theme synchronously via blocking <script> in
-      <head> so the correct theme is applied before first
-      paint (no Flash-Of-Wrong-Theme on reload).
-    ──────────────────────────────────────────────────────────
-    %>
-    <script>
-        (function () {
-            var t = localStorage.getItem('rku-theme') || 'light';
-            document.documentElement.setAttribute('data-theme', t);
-        })();
-    </script>
-
     <style>
         :root{
             --primary:#1a2a4a;--accent:#3b82f6;--success:#16a34a;
@@ -146,6 +129,7 @@
             .qm-box{padding:14px;}
         }
     </style>
+    <script>(function(){var t=localStorage.getItem('rku-theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
 </head>
 <body>
 <div class="page">
@@ -175,11 +159,8 @@
     <div class="qm-box">
         <h4><i class="fas fa-bolt" style="color:#f59e0b;"></i> Quick Mark Present by Roll Numbers</h4>
         <div class="qm-row">
-            <%# BUG FIXED #2: id was correct but button had no type="button"
-                inside the form — could accidentally submit the form on Enter.
-                Added type="button" explicitly. %>
             <input type="text" id="quickInput" class="fc" placeholder="e.g. 101, 102, 105 or paste a list…">
-            <button type="button" class="btn btn-accent" id="quickMarkBtn">
+            <button type="button" class="btn btn-accent" onclick="applyQuickMark()">
                 <i class="fas fa-check-double"></i> Mark Present
             </button>
         </div>
@@ -237,6 +218,7 @@
             </div>
 
             <% if (allUsers && allUsers.length > 0) { %>
+                <!-- Desktop table -->
                 <div class="tbl-wrap">
                     <table id="studentTable">
                         <thead>
@@ -248,20 +230,11 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <%#
-                            BUG FIXED #3: The original used `let idx = 0` declared
-                            inside the scriptlet but incremented outside the forEach
-                            callback — this works in EJS but is fragile because EJS
-                            inlines scriptlets into a single function and `let` has
-                            block scope. Changed to `var` which is function-scoped and
-                            safe across EJS scriptlet boundaries.
-                            %>
-                            <% var idx = 0;
+                            <% let idx = 0;
                                allUsers.forEach(function(u){
-                                 if(u.role==='Master'||u.role==='Lecturer'||u.role==='SuperAdmin') return;
-                                 var rowIdx = idx; %>
-                            <tr id="row-<%= rowIdx %>">
-                                <td style="color:var(--muted);font-size:12px;"><%= rowIdx + 1 %></td>
+                                 if(u.role==='Master'||u.role==='Lecturer'||u.role==='SuperAdmin') return; %>
+                            <tr id="row-<%= idx %>">
+                                <td style="color:var(--muted);font-size:12px;"><%= idx + 1 %></td>
                                 <td class="roll-col" style="font-family:monospace;font-weight:700;color:var(--accent);">
                                     <%= u.rollNo || u.rollno || '—' %>
                                 </td>
@@ -272,14 +245,15 @@
                                     <% } %>
                                 </td>
                                 <td>
-                                    <input type="hidden" name="students[<%= rowIdx %>][id]"   value="<%= u.rollNo || u.rollno || '' %>">
-                                    <input type="hidden" name="students[<%= rowIdx %>][name]" value="<%= u.name %>">
+                                    <input type="hidden" name="students[<%= idx %>][id]"   value="<%= u.rollNo || u.rollno || '' %>">
+                                    <input type="hidden" name="students[<%= idx %>][name]" value="<%= u.name %>">
                                     <label class="cb-wrap">
                                         <input type="checkbox"
-                                               name="students[<%= rowIdx %>][status]"
+                                               name="students[<%= idx %>][status]"
                                                value="Present"
                                                class="student-checkbox"
-                                               data-row="<%= rowIdx %>">
+                                               data-row="<%= idx %>"
+                                               onchange="updateCount()">
                                         <span>Present</span>
                                     </label>
                                 </td>
@@ -290,10 +264,10 @@
                 </div>
 
                 <div class="action-bar">
-                    <button type="button" class="btn btn-success" id="markAllBtn">
+                    <button type="button" class="btn btn-success" onclick="markAll(true)">
                         <i class="fas fa-check-double"></i> Mark All Present
                     </button>
-                    <button type="button" class="btn btn-ghost" id="clearAllBtn">
+                    <button type="button" class="btn btn-ghost" onclick="markAll(false)">
                         <i class="fas fa-times"></i> Clear All
                     </button>
                 </div>
@@ -327,12 +301,12 @@
             </div>
             <div class="fg" style="justify-content:flex-end;">
                 <label>&nbsp;</label>
-                <button type="button" class="btn btn-accent" id="downloadPdfBtn">
+                <button type="button" class="btn btn-accent" onclick="downloadPDF()">
                     <i class="fas fa-file-pdf"></i> Download PDF
                 </button>
             </div>
         </div>
-        <button type="button" class="btn btn-wa btn-full" style="margin-top:12px;" id="whatsappBtn">
+        <button type="button" class="btn btn-wa btn-full" style="margin-top:12px;" onclick="submitToWhatsApp()">
             <i class="fab fa-whatsapp"></i> Share Report via WhatsApp
         </button>
     </div>
@@ -340,109 +314,27 @@
 </div><!-- /page -->
 
 <script>
-<%#
-════════════════════════════════════════════════════════════
-BUG FIXES in JavaScript:
-
-BUG #4 — DUPLICATE DOMContentLoaded listeners:
-  Original had TWO separate DOMContentLoaded listeners.
-  The second one (Enter-key for quickInput) was always
-  registered fine but it's cleaner and safer to have ONE.
-  FIXED: merged into a single DOMContentLoaded listener.
-
-BUG #5 — rollsToMark filter operator-precedence bug:
-  Original: .filter(function(r){ return r && r !== '0' || r === '0'; })
-  Due to JS operator precedence this is parsed as:
-    (r && r !== '0') || (r === '0')
-  Which passes '0' AND any truthy non-'0' string — fine by
-  accident, but it also lets through '' because: '' is falsy
-  so ('' && ...) → false, ('' === '0') → false → correctly
-  filtered... actually it works but is confusing.
-  FIXED: replaced with a clear, explicit check:
-    r !== ''   (normalizeRoll() never returns undefined)
-
-BUG #6 — Inline onclick handlers on buttons inside <form>:
-  All action buttons (Mark All, Clear All, Quick Mark,
-  Download PDF, WhatsApp) used inline onclick="fn()".
-  Any unhandled exception in those functions propagates to
-  the HTML parser and can silently kill the handler.
-  More importantly, a button without type="button" defaults
-  to type="submit" inside a <form>, which would submit the
-  attendance form unexpectedly.
-  FIXED: all buttons now have type="button" and listeners
-  are wired via addEventListener inside DOMContentLoaded.
-
-BUG #7 — onchange="updateCount()" inline on every checkbox:
-  Works, but means updateCount() is called before the
-  script block is parsed if the page renders fast enough
-  (race condition on some embedded browsers).
-  FIXED: use event delegation on the table instead.
-════════════════════════════════════════════════════════════
-%>
-
-document.addEventListener('DOMContentLoaded', function () {
-
-    // ── Initial count ──
+document.addEventListener('DOMContentLoaded', function() {
     updateCount();
 
-    // ── Event delegation for checkboxes (FIX #7) ──
-    var studentTable = document.getElementById('studentTable');
-    if (studentTable) {
-        studentTable.addEventListener('change', function (e) {
-            if (e.target && e.target.classList.contains('student-checkbox')) {
-                updateCount();
-            }
-        });
-    }
-
-    // ── Mark All / Clear All buttons (FIX #6) ──
-    var markAllBtn = document.getElementById('markAllBtn');
-    var clearAllBtn = document.getElementById('clearAllBtn');
-    if (markAllBtn)  markAllBtn.addEventListener('click',  function () { markAll(true);  });
-    if (clearAllBtn) clearAllBtn.addEventListener('click', function () { markAll(false); });
-
-    // ── Quick Mark button (FIX #6) ──
-    var quickMarkBtn = document.getElementById('quickMarkBtn');
-    if (quickMarkBtn) quickMarkBtn.addEventListener('click', applyQuickMark);
-
-    // ── Quick input Enter key ──
-    var qi = document.getElementById('quickInput');
-    if (qi) {
-        qi.addEventListener('keydown', function (e) {
-            if (e.key === 'Enter') { e.preventDefault(); applyQuickMark(); }
-        });
-    }
-
     // ── Form submit: append Absent for unchecked students ──
-    var attendanceForm = document.getElementById('attendanceForm');
-    if (attendanceForm) {
-        attendanceForm.addEventListener('submit', function (e) {
-            if (!confirm('Lock this attendance? This cannot be undone.')) {
-                e.preventDefault();
-                return;
+    document.getElementById('attendanceForm').addEventListener('submit', function(e) {
+        if (!confirm('Lock this attendance? This cannot be undone.')) {
+            e.preventDefault();
+            return;
+        }
+        var form = this;
+        document.querySelectorAll('.student-checkbox').forEach(function(cb) {
+            if (!cb.checked) {
+                var h = document.createElement('input');
+                h.type  = 'hidden';
+                h.name  = cb.name;
+                h.value = 'Absent';
+                form.appendChild(h);
             }
-            var form = this;
-            document.querySelectorAll('.student-checkbox').forEach(function (cb) {
-                if (!cb.checked) {
-                    var h = document.createElement('input');
-                    h.type  = 'hidden';
-                    h.name  = cb.name;
-                    h.value = 'Absent';
-                    form.appendChild(h);
-                }
-            });
         });
-    }
-
-    // ── Download PDF button (FIX #6) ──
-    var dlBtn = document.getElementById('downloadPdfBtn');
-    if (dlBtn) dlBtn.addEventListener('click', downloadPDF);
-
-    // ── WhatsApp button (FIX #6) ──
-    var waBtn = document.getElementById('whatsappBtn');
-    if (waBtn) waBtn.addEventListener('click', submitToWhatsApp);
-
-}); // end DOMContentLoaded
+    });
+});
 
 // ── Live present counter ──
 function updateCount() {
@@ -454,7 +346,7 @@ function updateCount() {
 
 // ── Mark All / Clear All ──
 function markAll(val) {
-    document.querySelectorAll('.student-checkbox').forEach(function (cb) {
+    document.querySelectorAll('.student-checkbox').forEach(function(cb) {
         cb.checked = val;
         var row = cb.closest('tr');
         if (row) row.classList.toggle('qm-hit', val);
@@ -469,7 +361,7 @@ function normalizeRoll(r) {
 
 // ── Quick Mark ──
 function applyQuickMark() {
-    var input    = (document.getElementById('quickInput').value || '').trim();
+    var input = (document.getElementById('quickInput').value || '').trim();
     var feedback = document.getElementById('qmFeedback');
 
     // Reset feedback
@@ -482,16 +374,13 @@ function applyQuickMark() {
         return;
     }
 
-    // Parse — supports commas, spaces, newlines, semicolons, pipes, tabs
-    var rollsToMark = input.split(/[\s,;|\n\t]+/).map(function (r) {
-        return normalizeRoll(r);
-    });
-
-    // BUG FIXED #5: clear, correct empty-string filter
-    rollsToMark = rollsToMark.filter(function (r) { return r !== ''; });
+    // Parse input — supports commas, spaces, newlines as separators
+    var rollsToMark = input.split(/[\s,;|\n\t]+/)
+        .map(function(r){ return normalizeRoll(r); })
+        .filter(function(r){ return r && r !== '0' || r === '0'; });
 
     // Remove duplicates
-    rollsToMark = rollsToMark.filter(function (v, i, a) { return a.indexOf(v) === i; });
+    rollsToMark = rollsToMark.filter(function(v, i, a){ return a.indexOf(v) === i; });
 
     if (rollsToMark.length === 0) {
         feedback.className = 'qm-feedback show no';
@@ -499,18 +388,16 @@ function applyQuickMark() {
         return;
     }
 
-    var rows         = document.querySelectorAll('#studentTable tbody tr');
+    var rows = document.querySelectorAll('#studentTable tbody tr');
     var matchedCount = 0;
-    var foundRolls   = [];
+    var notFound = [];
 
-    rows.forEach(function (row) {
+    rows.forEach(function(row) {
         var cellEl = row.querySelector('.roll-col');
         if (!cellEl) return;
-
-        var cellRoll = normalizeRoll(cellEl.textContent || '');
+        // Use textContent (more reliable than innerText) and normalize
+        var cellRoll = normalizeRoll(cellEl.textContent || cellEl.innerText || '');
         if (!cellRoll || cellRoll === '—' || cellRoll === '-') return;
-
-        foundRolls.push(cellRoll);
 
         var checkbox = row.querySelector('.student-checkbox');
         if (!checkbox) return;
@@ -522,7 +409,13 @@ function applyQuickMark() {
         }
     });
 
-    var notFound = rollsToMark.filter(function (r) { return foundRolls.indexOf(r) === -1; });
+    // Find which rolls were NOT found in the table
+    var foundRolls = [];
+    rows.forEach(function(row) {
+        var cellEl = row.querySelector('.roll-col');
+        if (cellEl) foundRolls.push(normalizeRoll(cellEl.textContent || ''));
+    });
+    notFound = rollsToMark.filter(function(r){ return foundRolls.indexOf(r) === -1; });
 
     updateCount();
 
@@ -539,9 +432,21 @@ function applyQuickMark() {
         feedback.innerHTML = '<i class="fas fa-times-circle"></i> No matching roll numbers found. Entered: ' + rollsToMark.join(', ');
     }
 
-    // Auto-hide after 5 s
-    setTimeout(function () { feedback.className = 'qm-feedback'; }, 5000);
+    // Auto-hide feedback after 5 seconds
+    setTimeout(function() {
+        feedback.className = 'qm-feedback';
+    }, 5000);
 }
+
+// ── Allow pressing Enter in quick input ──
+document.addEventListener('DOMContentLoaded', function() {
+    var qi = document.getElementById('quickInput');
+    if (qi) {
+        qi.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') { e.preventDefault(); applyQuickMark(); }
+        });
+    }
+});
 
 function downloadPDF() {
     var date   = document.getElementById('currentDate').value;
@@ -555,7 +460,7 @@ function submitToWhatsApp() {
     var filter = document.getElementById('reportFilter').value;
     if (!date) { alert('Please select a date first.'); return; }
     var pdfUrl = window.location.origin + '/generate-day-pdf/' + date + '?filter=' + encodeURIComponent(filter);
-    var msg    = '*Attendance Report — ' + date + '*\nSection: <%= user.section %>\nType: ' + (filter || 'Full List') + '\n\nPDF Link:\n' + pdfUrl;
+    var msg = '*Attendance Report — ' + date + '*\nSection: <%= user.section %>\nType: ' + (filter || 'Full List') + '\n\nPDF Link:\n' + pdfUrl;
     window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(msg), '_blank');
 }
 </script>

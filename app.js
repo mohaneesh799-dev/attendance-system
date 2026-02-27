@@ -73,7 +73,11 @@ app.use(session({
     store: MongoStore.create({
         mongoUrl: mongoURI,
         touchAfter: 24 * 3600,
-        ttl: 24 * 60 * 60
+        ttl: 24 * 60 * 60,
+        autoRemove: 'interval',
+        autoRemoveInterval: 60, // clean expired sessions every 60 minutes
+        stringify: false,
+        crypto: { secret: false }
     }),
     cookie: {
         secure: isProd,
@@ -299,15 +303,18 @@ app.get('/register', (req, res) => res.render('register', { error: null }));
 
 // ── Role Selection (shown when user has multiple roles) ───────
 app.get('/select-role', (req, res) => {
-    if (!req.session.pendingUserId) return res.redirect('/login?error=Session+expired');
+    if (!req.session.pendingUserId) return res.redirect('/login?error=Session+expired.+Please+log+in+again.');
     User.findById(req.session.pendingUserId).lean()
         .then(user => {
             if (!user) return res.redirect('/login?error=User+not+found');
             const roles = user.roles && user.roles.length ? user.roles : [user.role];
-            // File is choose-role.ejs (not role-select.ejs)
-            res.render('choose-role', { user, roles });
+            res.render('choose-role', {
+                user,
+                roles,
+                error: req.query.error || null   // pass error for redirect-back scenarios
+            });
         })
-        .catch(() => res.redirect('/login'));
+        .catch(() => res.redirect('/login?error=Session+error'));
 });
 
 // ── Google OAuth Routes ───────────────────────────────────────
@@ -333,11 +340,26 @@ app.get('/auth/google/callback', (req, res, next) => {
         const roles = user.roles && user.roles.length ? user.roles : [user.role];
         if (roles.length > 1) {
             req.session.pendingUserId = user._id.toString();
-            return req.session.save(() => res.redirect('/select-role'));
+            // req.logout must finish BEFORE session.save, otherwise passport clears session after we save
+            return req.logout(e => {
+                if (e) console.error('Logout error (non-fatal):', e);
+                req.session.pendingUserId = user._id.toString(); // restore after logout clears it
+                req.session.save(err => {
+                    if (err) { console.error('Session save error:', err); return res.redirect('/login?error=Session+error'); }
+                    res.redirect('/select-role');
+                });
+            });
         }
-        req.session.user = buildSessionUser(user, roles[0]);
-        req.logout(e => { if(e) console.error(e); });
-        req.session.save(() => res.redirect(roleToPath(roles[0])));
+        // Single role: set session user, then clear passport state, then redirect
+        const sessionUser = buildSessionUser(user, roles[0]);
+        req.logout(e => {
+            if (e) console.error('Logout error (non-fatal):', e);
+            req.session.user = sessionUser; // set after logout so passport doesn't overwrite
+            req.session.save(err => {
+                if (err) { console.error('Session save error:', err); return res.redirect('/login?error=Session+error'); }
+                res.redirect(roleToPath(roles[0]));
+            });
+        });
     })(req, res, next);
 });
 
@@ -620,11 +642,11 @@ app.get('/role-error', (req, res) => {
 
 // ── Emergency session clear (allows user to escape redirect loops) ──
 app.get('/clear-session', (req, res) => {
-    const destroy = () => res.redirect('/login?message=Session+cleared.+Please+log+in+again.');
     req.session.destroy(err => {
         if(err) console.error('Session destroy error:', err);
+        res.clearCookie('rku.sid');
         res.clearCookie('connect.sid');
-        destroy();
+        res.redirect('/login?message=Session+cleared.+Please+log+in+again.');
     });
 });
 
@@ -674,24 +696,33 @@ app.post('/login', loginLimiter, async (req, res) => {
 });
 
 // ── Select Role (POST) ────────────────────────────────────────
-app.post('/select-role', async (req, res) => {
+// Handles BOTH /select-role and /choose-role (choose-role.ejs posts to /choose-role)
+async function handleRoleSelection(req, res) {
     try {
-        if (!req.session.pendingUserId) return res.redirect('/login?error=Session+expired');
+        if (!req.session.pendingUserId) return res.redirect('/login?error=Session+expired.+Please+log+in+again.');
         const { selectedRole } = req.body;
+        if (!selectedRole) return res.redirect('/select-role?error=Please+select+a+role');
         const user = await User.findById(req.session.pendingUserId);
         if (!user) return res.redirect('/login?error=User+not+found');
 
         const roles = user.roles && user.roles.length ? user.roles : [user.role];
-        if (!roles.includes(selectedRole)) return res.redirect('/select-role?error=Invalid+role+selection');
+        if (!roles.includes(selectedRole)) {
+            return res.redirect('/select-role?error=Invalid+role+selection.+Please+choose+from+your+assigned+roles.');
+        }
 
         delete req.session.pendingUserId;
         req.session.user = buildSessionUser(user, selectedRole);
         req.session.save(err => {
-            if (err) return res.status(500).send('Session error.');
+            if (err) { console.error('Session save error:', err); return res.status(500).send('Session error.'); }
             res.redirect(roleToPath(selectedRole));
         });
-    } catch(err) { res.status(500).render('error', { message: 'Role selection failed.' }); }
-});
+    } catch(err) {
+        console.error('Role selection error:', err);
+        res.status(500).render('error', { message: 'Role selection failed. Please try again.' });
+    }
+}
+app.post('/select-role', handleRoleSelection);
+app.post('/choose-role', handleRoleSelection);   // ← alias: choose-role.ejs form posts here
 
 // ── Switch Role (while logged in) ────────────────────────────
 app.post('/switch-role', async (req, res) => {
@@ -748,7 +779,8 @@ app.post('/register-super-admin', async (req, res) => {
 app.get('/logout', (req, res) => {
     const destroy = () => req.session.destroy(err => {
         if (err) console.error('Session destroy error:', err);
-        res.clearCookie('connect.sid');
+        res.clearCookie('rku.sid');        // must match session name above
+        res.clearCookie('connect.sid');    // clear legacy name too
         res.redirect('/login?message=Logged out successfully');
     });
     if (typeof req.logout === 'function') req.logout(err => { if(err) console.error(err); destroy(); });
