@@ -10,7 +10,9 @@ const bcrypt     = require('bcrypt');
 const multer     = require('multer');
 const fileUpload = require('express-fileupload');
 const session    = require('express-session');
-const MongoStore = require('connect-mongo');
+// connect-mongo: handle v3 (legacy), v4/v5/v6 (.create), and ESM-default export
+const _connectMongo = require('connect-mongo');
+const MongoStore = _connectMongo.default || _connectMongo;
 const mongoose   = require('mongoose');
 const helmet     = require('helmet');
 const nodemailer = require('nodemailer');
@@ -70,14 +72,21 @@ app.use(session({
     saveUninitialized: false,
     proxy: true,
     name: 'rku.sid',
-    store: MongoStore.create({
-        mongoUrl: mongoURI,
-        touchAfter: 24 * 3600,
-        ttl:        24 * 60 * 60,
-        autoRemove: 'interval',
-        autoRemoveInterval: 60,
-        stringify: false  // CRITICAL: prevents double-serialization that causes "[object Object] is not valid JSON"
-    }),
+    store: (() => {
+        // Support connect-mongo v3 (MongoStore(session)) AND v4/v5/v6 (MongoStore.create())
+        const opts = {
+            mongoUrl: mongoURI,
+            touchAfter: 24 * 3600,
+            ttl: 24 * 60 * 60,
+            autoRemove: 'interval',
+            autoRemoveInterval: 60,
+            stringify: false // CRITICAL: prevents "[object Object] is not valid JSON" on ObjectId serialization
+        };
+        if (typeof MongoStore.create === 'function') return MongoStore.create(opts);
+        // v3 legacy fallback
+        const connectMongov3 = require('connect-mongo')(session);
+        return new connectMongov3(opts);
+    })(),
     cookie: {
         secure: isProd,
         httpOnly: true,
