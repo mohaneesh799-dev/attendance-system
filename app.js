@@ -422,17 +422,32 @@ app.get('/master', async (req, res) => {
         // Multi-section support: Master may manage many sections
         let masterSections;
         if (isClassTeacher) {
-            masterSections = [user.classTeacherSection];
+            masterSections = [user.classTeacherSection].filter(Boolean);
         } else {
             masterSections = (user.sections && user.sections.length > 0)
-                ? user.sections
+                ? user.sections.filter(Boolean)
                 : (user.section ? [user.section] : []);
         }
-        if (masterSections.length === 0) masterSections = [''];
+        // Filter out any empty strings to avoid bad DB queries
+        masterSections = masterSections.filter(Boolean);
+        // If still empty, fetch from DB directly (handles stale sessions)
+        if (masterSections.length === 0) {
+            const dbUser = await User.findById(user._id).lean();
+            if (dbUser) {
+                masterSections = (dbUser.sections && dbUser.sections.length > 0)
+                    ? dbUser.sections.filter(Boolean)
+                    : (dbUser.section ? [dbUser.section] : []);
+            }
+        }
+
+        // Build DB query — if still no sections, fetch ALL users (SuperAdmin-style fallback)
+        const sectionQuery = masterSections.length > 0
+            ? { section: { $in: masterSections } }
+            : {};  // no section filter = show all pending users
 
         const [allUsers, masterSubjects, allDivisions] = await Promise.all([
-            User.find({ section: { $in: masterSections } }).lean(),
-            Subject.find({ section: { $in: masterSections } }).lean(),
+            User.find(sectionQuery).lean(),
+            masterSections.length > 0 ? Subject.find({ section: { $in: masterSections } }).lean() : Subject.find({}).lean(),
             Division.find({}).sort({ name:1 }).lean()
         ]);
 
@@ -1142,9 +1157,8 @@ app.use((err, req, res, next) => {
         return res.redirect('/login?message=Please+log+in+again.');
     }
 
-    const message = (process.env.NODE_ENV === 'production')
-        ? 'An unexpected error occurred. Please try again.'
-        : (err.message || 'Internal Server Error');
+    // Show real error so users can report the exact issue
+    const message = err.message || 'Internal Server Error';
 
     try {
         res.status(500).render('error', { message });

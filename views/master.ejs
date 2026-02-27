@@ -395,7 +395,7 @@ tbody tr:hover td{background:rgba(59,127,244,.03);}
                           <tr>
                             <td><strong><%= sub.name %></strong><% if(sub.code){ %><span style="font-size:11.5px;color:var(--muted);margin-left:8px;">(<%=sub.code%>)</span><% } %></td>
                             <td style="text-align:right;">
-                              <form action="/delete-subject/<%= sub._id %>" method="POST" style="display:inline;" onsubmit="return confirm('Delete <%= sub.name %>?')">
+                              <form action="/delete-subject/<%= sub._id %>" method="POST" style="display:inline;" onsubmit="return confirm('Delete ' + this.dataset.name + '?')" data-name="<%= sub.name %>">
                                 <button type="submit" class="btn btn-dan" style="padding:6px 12px;font-size:12px;"><i class="fas fa-trash-alt"></i></button>
                               </form>
                             </td>
@@ -418,7 +418,7 @@ tbody tr:hover td{background:rgba(59,127,244,.03);}
                             <tr>
                                 <td><strong><%= sub.name %></strong><% if(sub.code){ %><span style="font-size:11.5px;color:var(--muted);margin-left:8px;">(<%=sub.code%>)</span><% } %></td>
                                 <td style="text-align:right;">
-                                    <form action="/delete-subject/<%= sub._id %>" method="POST" style="display:inline;" onsubmit="return confirm('Delete subject: <%= sub.name %>?')">
+                                    <form action="/delete-subject/<%= sub._id %>" method="POST" style="display:inline;" onsubmit="return confirm('Delete subject: ' + this.dataset.name + '?')" data-name="<%= sub.name %>">
                                         <button type="submit" class="btn btn-dan" style="padding:7px 13px;font-size:12px;">
                                             <i class="fas fa-trash-alt"></i> Remove
                                         </button>
@@ -520,7 +520,7 @@ tbody tr:hover td{background:rgba(59,127,244,.03);}
                                     <td><span style="font-size:11.5px;background:rgba(59,127,244,.1);color:var(--acc);padding:2px 9px;border-radius:20px;font-weight:700;"><%= u.section||'—' %></span></td>
                                     <% } %>
                                     <td style="text-align:center;">
-                                        <form action="/delete-user/<%= u._id %>" method="POST" style="display:inline;" onsubmit="return confirm('Permanently delete <%= (u.name||'').replace(/'/g,\"\\\\\'\") %>?')">
+                                        <form action="/delete-user/<%= u._id %>" method="POST" style="display:inline;" onsubmit="return confirmDelete(this)" data-name="<%= (u.name||'Unknown').replace(/&/g,'&amp;').replace(/"/g,'&quot;') %>">
                                             <button type="submit" class="btn btn-dan" style="padding:7px 12px;font-size:12px;" title="Delete"><i class="fas fa-trash-alt"></i></button>
                                         </form>
                                     </td>
@@ -688,6 +688,12 @@ tbody tr:hover td{background:rgba(59,127,244,.03);}
             },5000);
         });
     });
+
+    /* confirmDelete: safely handles names with quotes */
+    window.confirmDelete = function(form) {
+        var name = form.getAttribute('data-name') || 'this user';
+        return confirm('Permanently delete ' + name + '?');
+    };
 
     /* Run syncIcons immediately if DOM already ready */
     if(document.readyState!=='loading') syncIcons(document.documentElement.getAttribute('data-theme'));
