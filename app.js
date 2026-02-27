@@ -1,5 +1,5 @@
 // ============================================================
-// RKU Attendance System — app.js  (fully updated)
+// RKU Attendance System — app.js  (multi-role update)
 // ============================================================
 
 require('dotenv').config();
@@ -29,10 +29,9 @@ const storage = multer.diskStorage({
     filename:    (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
 });
 const upload = multer({ storage });
-
 const app = express();
 
-// ── Helmet (CSP allows inline scripts for EJS) ───────────────
+// ── Helmet ───────────────────────────────────────────────────
 app.use(helmet({
     contentSecurityPolicy: {
         directives: {
@@ -46,12 +45,9 @@ app.use(helmet({
     }
 }));
 
-// ── Body parsers ─────────────────────────────────────────────
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(fileUpload());
-
-// ── View engine ───────────────────────────────────────────────
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static('public'));
@@ -96,10 +92,10 @@ const transporter = nodemailer.createTransport({
 });
 try {
     transporter.verify(err => {
-        if (err) console.warn('⚠️ Mail server warning (non-fatal):', err.message);
+        if (err) console.warn('⚠️ Mail warning (non-fatal):', err.message);
         else console.log('✅ Mail server ready');
     });
-} catch(e) { console.warn('⚠️ Mail verify failed (non-fatal):', e.message); }
+} catch(e) { console.warn('⚠️ Mail verify failed:', e.message); }
 
 // ── Rate limit ────────────────────────────────────────────────
 const loginLimiter = rateLimit({
@@ -116,7 +112,11 @@ const userSchema = new mongoose.Schema({
     email:              { type: String, required: true, unique: true, index: true },
     rollNo:             { type: String, index: true, default: '' },
     password:           { type: String },
+    // ── Multi-role support ──
+    // `roles` = all assigned roles (array), `role` = currently active / primary role
     role:               { type: String, default: 'Student' },
+    roles:              { type: [String], default: [] },
+    // ─────────────────────────
     section:            { type: String, default: '' },
     phone:              { type: String, default: '' },
     isApproved:         { type: Boolean, default: false },
@@ -128,13 +128,13 @@ const userSchema = new mongoose.Schema({
 const User = mongoose.model('User', userSchema);
 
 const attendanceSchema = new mongoose.Schema({
-    date:        { type: String, required: true },
-    manualTime:  String,
-    subject:     String,
-    lecturerEmail:String,
-    leaderEmail: String,
-    section:     { type: String, required: true, index: true },
-    students:    [{ studentId: String, studentName: String, status: String }],
+    date:             { type: String, required: true },
+    manualTime:       String,
+    subject:          String,
+    lecturerEmail:    String,
+    leaderEmail:      String,
+    section:          { type: String, required: true, index: true },
+    students:         [{ studentId: String, studentName: String, status: String }],
     isLockedByLeader: { type: Boolean, default: false },
     lastModifiedBy:   String,
     lastModifiedDate: Date,
@@ -151,7 +151,6 @@ const subjectSchema = new mongoose.Schema({
 });
 const Subject = mongoose.model('Subject', subjectSchema);
 
-// ── NEW: Division model ───────────────────────────────────────
 const divisionSchema = new mongoose.Schema({
     name:        { type: String, required: true, unique: true, trim: true },
     description: { type: String, default: '' },
@@ -160,33 +159,40 @@ const divisionSchema = new mongoose.Schema({
 const Division = mongoose.model('Division', divisionSchema);
 
 // ================================================================
-// GOOGLE OAUTH
+// HELPERS
 // ================================================================
-passport.use(new GoogleStrategy({
-    clientID:     process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL:  `${process.env.APP_BASE_URL}/auth/google/callback`
-}, async (accessToken, refreshToken, profile, done) => {
-    const email = profile.emails[0].value;
-    try {
-        let user = await User.findOne({ email });
-        if (!user) {
-            user = new User({ googleId: profile.id, email, name: profile.displayName, role: 'SuperAdmin', isApproved: false });
-            await user.save();
-            transporter.sendMail({
-                from: process.env.EMAIL_USER, to: process.env.DEVELOPER_EMAIL,
-                subject: 'New Admin Request', text: `New Google login: ${email}`
-            }, err => { if (err) console.log('📧 Email failed (non-fatal):', err.message); });
-        }
-        return done(null, user);
-    } catch(err) { return done(err, null); }
-}));
 
-// ================================================================
-// MIDDLEWARE HELPERS
-// ================================================================
 function getUser(req) { return req.session.user || req.user; }
 
+// Build session user object — includes ALL roles for role-switcher
+function buildSessionUser(user, activeRole) {
+    return {
+        _id: user._id,
+        email: user.email.toLowerCase(),
+        role: activeRole || user.role,
+        roles: user.roles && user.roles.length ? user.roles : [user.role],
+        name: user.name,
+        section: user.section,
+        rollNo: user.rollNo,
+        isClassTeacher: user.isClassTeacher,
+        classTeacherSection: user.classTeacherSection
+    };
+}
+
+// Role → dashboard URL map
+const ROLE_PATHS = {
+    superadmin: '/super-admin-dashboard',
+    master:     '/master',
+    leader:     '/leader',
+    lecturer:   '/lecturer',
+    student:    '/student'
+};
+
+function roleToPath(role) {
+    return ROLE_PATHS[(role || '').toLowerCase()] || '/login?error=RoleNotAssigned';
+}
+
+// ── Middleware ────────────────────────────────────────────────
 function isAdmin(req, res, next) {
     const u = getUser(req);
     if (u && (u.role === 'Master' || u.role === 'SuperAdmin')) return next();
@@ -200,34 +206,71 @@ function isSuperAdmin(req, res, next) {
 }
 
 // ================================================================
+// GOOGLE OAUTH
+// ================================================================
+passport.use(new GoogleStrategy({
+    clientID:     process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL:  `${process.env.APP_BASE_URL}/auth/google/callback`
+}, async (accessToken, refreshToken, profile, done) => {
+    const email = profile.emails[0].value;
+    try {
+        let user = await User.findOne({ email });
+        if (!user) {
+            user = new User({
+                googleId: profile.id, email, name: profile.displayName,
+                role: 'SuperAdmin', roles: ['SuperAdmin'], isApproved: false
+            });
+            await user.save();
+            transporter.sendMail({
+                from: process.env.EMAIL_USER, to: process.env.DEVELOPER_EMAIL,
+                subject: 'New Admin Request', text: `New Google login: ${email}`
+            }, err => { if (err) console.log('📧 Email failed (non-fatal):', err.message); });
+        }
+        return done(null, user);
+    } catch(err) { return done(err, null); }
+}));
+
+// ================================================================
 // GET ROUTES
 // ================================================================
 
-app.get('/',      (req, res) => res.redirect('/login'));
+app.get('/', (req, res) => res.redirect('/login'));
+
 app.get('/login', (req, res) => {
     const u = getUser(req);
-    if (u) {
-        const roleMap = { superadmin: '/super-admin-dashboard', master: '/master', leader: '/leader', lecturer: '/lecturer', student: '/student' };
-        return res.redirect(roleMap[(u.role||'').toLowerCase()] || '/login?error=RoleNotAssigned');
-    }
+    if (u) return res.redirect(roleToPath(u.role));
     res.render('login', { error: req.query.error || null, message: req.query.message || null });
 });
-app.get('/login-email', (req, res) =>
-    res.redirect('/login'));
+
 app.get('/register', (req, res) => res.render('register', { error: null }));
 
-// Google OAuth
+// ── Role Selection (shown when user has multiple roles) ───────
+app.get('/select-role', (req, res) => {
+    if (!req.session.pendingUserId) return res.redirect('/login?error=Session+expired');
+    User.findById(req.session.pendingUserId).lean()
+        .then(user => {
+            if (!user) return res.redirect('/login?error=User+not+found');
+            const roles = user.roles && user.roles.length ? user.roles : [user.role];
+            res.render('role-select', { user, roles });
+        })
+        .catch(() => res.redirect('/login'));
+});
+
+// ── Google OAuth ──────────────────────────────────────────────
 app.get('/auth/google', passport.authenticate('google', { scope: ['profile','email'], prompt: 'select_account' }));
 app.get('/auth/google/callback',
     passport.authenticate('google', { failureRedirect: '/login?error=Google+login+failed' }),
-    (req, res) => {
-        req.session.save(err => {
-            if (err) return res.redirect('/login');
-            const u = req.user;
-            if (!u.isApproved) return res.render('pending', { user: u });
-            const map = { superadmin:'/super-admin-dashboard', master:'/master', leader:'/leader', lecturer:'/lecturer', student:'/student' };
-            res.redirect(map[(u.role||'').toLowerCase()] || '/login?error=RoleNotAssigned');
-        });
+    async (req, res) => {
+        const u = req.user;
+        if (!u.isApproved) return res.render('pending', { user: u });
+        const roles = u.roles && u.roles.length ? u.roles : [u.role];
+        if (roles.length > 1) {
+            req.session.pendingUserId = u._id.toString();
+            return req.session.save(() => res.redirect('/select-role'));
+        }
+        req.session.user = buildSessionUser(u, roles[0]);
+        req.session.save(() => res.redirect(roleToPath(roles[0])));
     }
 );
 
@@ -274,19 +317,36 @@ app.get('/master', async (req, res) => {
         const isClassTeacher = user && user.role === 'Lecturer' && user.isClassTeacher;
         if (!user || (user.role !== 'Master' && !isClassTeacher)) return res.redirect('/login?error=Unauthorized');
         const facultySection = isClassTeacher ? user.classTeacherSection : user.section;
-        const [allUsers, masterSubjects] = await Promise.all([
+        const [allUsers, masterSubjects, allDivisions] = await Promise.all([
             User.find({ section: facultySection }).lean(),
-            Subject.find({ section: facultySection }).lean()
+            Subject.find({ section: facultySection }).lean(),
+            Division.find({}).sort({ name:1 }).lean()
         ]);
+
+        // Group users by role within section
+        const usersByRole = {};
+        allUsers.forEach(u => {
+            const r = u.role || 'Unknown';
+            if (!usersByRole[r]) usersByRole[r] = [];
+            usersByRole[r].push(u);
+        });
+
         const stats = {
             total: allUsers.length,
             pending: allUsers.filter(u => !u.isApproved).length,
-            subjects: masterSubjects.length
+            subjects: masterSubjects.length,
+            students: allUsers.filter(u => u.role === 'Student').length
         };
+
         req.session.save(() => res.render('master', {
             user: { ...user, section: facultySection },
-            allUsers: allUsers || [], masterSubjects: masterSubjects || [], stats,
-            success: req.query.success || null, error: req.query.error || null
+            allUsers: allUsers || [],
+            usersByRole,
+            masterSubjects: masterSubjects || [],
+            allDivisions,
+            stats,
+            success: req.query.success || null,
+            error: req.query.error || null
         }));
     } catch(err) {
         console.error('Master Error:', err);
@@ -300,7 +360,7 @@ app.get('/leader', async (req, res) => {
     try {
         const [studentsOnly, lecturers, masterSubjects] = await Promise.all([
             User.find({ section: user.section, $or: [{ role:'Student' }, { role:'Leader' }] }).sort({ rollNo:1 }).lean(),
-            User.find({ role: 'Lecturer', isApproved: true }).select('name email').lean(),
+            User.find({ $or: [{ role:'Lecturer' }, { roles: 'Lecturer' }], isApproved: true }).select('name email').lean(),
             Subject.find({ section: user.section }).lean()
         ]);
         res.render('leader', { user, allUsers: studentsOnly, lecturers, masterSubjects,
@@ -345,9 +405,7 @@ app.get('/student', async (req, res) => {
         });
         const subjectStats = Object.entries(subjectMap)
             .map(([subject, d]) => ({
-                subject,
-                present: d.present,
-                total: d.total,
+                subject, present: d.present, total: d.total,
                 absent: d.total - d.present,
                 percentage: d.total > 0 ? +((d.present / d.total) * 100).toFixed(1) : 0
             }))
@@ -387,7 +445,7 @@ app.get('/attendance-history', async (req, res) => {
             const d = new Date(); d.setDate(d.getDate() - 30);
             query.date = { $gte: d.toISOString().split('T')[0] };
         }
-        if (user.role === 'Student')  { query['students.studentId'] = user.rollNo; query.section = user.section; }
+        if (user.role === 'Student')   { query['students.studentId'] = user.rollNo; query.section = user.section; }
         else if (user.role === 'Lecturer') { query.lecturerEmail = user.email; }
         else if (user.role === 'Leader')   { query.section = user.section; }
         const history = await Attendance.find(query).sort({ date: -1 }).lean();
@@ -480,23 +538,64 @@ app.post('/login', loginLimiter, async (req, res) => {
     try {
         const { email, password } = req.body;
         const user = await User.findOne({ email: email.toLowerCase().trim() });
-        if (!user) return res.render('login', { showEmailForm:true, error:'Account not found. Please register first.', message:null });
-        if (!user.password) return res.render('login', { showEmailForm:true, error:'This account uses Google Sign-In.', message:null });
+        if (!user) return res.render('login', { error:'Account not found. Please register first.', message:null });
+        if (!user.password) return res.render('login', { error:'This account uses Google Sign-In.', message:null });
         const ok = await bcrypt.compare(password, user.password);
-        if (!ok) return res.render('login', { showEmailForm:true, error:'Incorrect password.', message:null });
-        if (user.role !== 'Master' && !user.isApproved) return res.render('login', { showEmailForm:true, error:'Your account is awaiting admin approval.', message:null });
+        if (!ok) return res.render('login', { error:'Incorrect password.', message:null });
+        if (!user.isApproved && user.role !== 'Master') return res.render('login', { error:'Your account is awaiting admin approval.', message:null });
 
-        req.session.user = {
-            _id: user._id, email: user.email.toLowerCase(), role: user.role,
-            name: user.name, section: user.section, rollNo: user.rollNo,
-            isClassTeacher: user.isClassTeacher, classTeacherSection: user.classTeacherSection
-        };
+        // ── Multi-role: if user has multiple roles, ask which to use ──
+        const roles = user.roles && user.roles.length > 0 ? user.roles : [user.role];
+        if (roles.length > 1) {
+            req.session.pendingUserId = user._id.toString();
+            return req.session.save(err => {
+                if (err) return res.status(500).send('Session error.');
+                res.redirect('/select-role');
+            });
+        }
+
+        // ── Single role: go directly ──
+        req.session.user = buildSessionUser(user, roles[0]);
         req.session.save(err => {
             if (err) return res.status(500).send('Login failed.');
-            const map = { master:'/master', lecturer:'/lecturer', leader:'/leader', student:'/student', superadmin:'/super-admin-dashboard' };
-            res.redirect(map[user.role.toLowerCase()] || '/login?error=RoleNotAssigned');
+            res.redirect(roleToPath(roles[0]));
         });
     } catch(err) { res.status(500).render('error', { message: 'Internal Server Error during login.' }); }
+});
+
+// ── Select Role (POST) ────────────────────────────────────────
+app.post('/select-role', async (req, res) => {
+    try {
+        if (!req.session.pendingUserId) return res.redirect('/login?error=Session+expired');
+        const { selectedRole } = req.body;
+        const user = await User.findById(req.session.pendingUserId);
+        if (!user) return res.redirect('/login?error=User+not+found');
+
+        const roles = user.roles && user.roles.length ? user.roles : [user.role];
+        if (!roles.includes(selectedRole)) return res.redirect('/select-role?error=Invalid+role+selection');
+
+        delete req.session.pendingUserId;
+        req.session.user = buildSessionUser(user, selectedRole);
+        req.session.save(err => {
+            if (err) return res.status(500).send('Session error.');
+            res.redirect(roleToPath(selectedRole));
+        });
+    } catch(err) { res.status(500).render('error', { message: 'Role selection failed.' }); }
+});
+
+// ── Switch Role (while logged in) ────────────────────────────
+app.post('/switch-role', async (req, res) => {
+    try {
+        const user = getUser(req);
+        if (!user) return res.redirect('/login');
+        const { targetRole } = req.body;
+        const dbUser = await User.findById(user._id);
+        if (!dbUser) return res.redirect('/login');
+        const roles = dbUser.roles && dbUser.roles.length ? dbUser.roles : [dbUser.role];
+        if (!roles.includes(targetRole)) return res.redirect('/login?error=Role+not+assigned');
+        req.session.user = buildSessionUser(dbUser, targetRole);
+        req.session.save(() => res.redirect(roleToPath(targetRole)));
+    } catch(err) { res.redirect('/login?error=Switch+failed'); }
 });
 
 // ── Register ──────────────────────────────────────────────────
@@ -507,7 +606,7 @@ app.post('/register', async (req, res) => {
         if (!email.endsWith(`@${domain}`)) return res.status(400).render('register', { error: `Use your official @${domain} email.` });
         if (await User.findOne({ email: email.toLowerCase() })) return res.status(400).render('register', { error: 'Email already registered.' });
         const hashed = await bcrypt.hash(password, 10);
-        await new User({ name, email: email.toLowerCase(), password: hashed, role, section, rollNo: rollNo||'', isApproved: false }).save();
+        await new User({ name, email: email.toLowerCase(), password: hashed, role, roles: [role], section, rollNo: rollNo||'', isApproved: false }).save();
         try {
             await transporter.sendMail({
                 from: process.env.EMAIL_USER, to: process.env.DEVELOPER_EMAIL,
@@ -530,7 +629,7 @@ app.post('/register-super-admin', async (req, res) => {
     try {
         if (await User.findOne({ email: email.toLowerCase() })) return res.status(400).render('register', { error: 'Email already registered.' });
         const hashed = await bcrypt.hash(password, 10);
-        await new User({ name, email: email.toLowerCase(), password: hashed, role: 'SuperAdmin', isApproved: true }).save();
+        await new User({ name, email: email.toLowerCase(), password: hashed, role: 'SuperAdmin', roles: ['SuperAdmin'], isApproved: true }).save();
         res.redirect('/login?message=SuperAdmin account created. You can now log in.');
     } catch(err) { res.status(500).render('register', { error: 'Registration failed: ' + err.message }); }
 });
@@ -546,6 +645,7 @@ app.get('/logout', (req, res) => {
     else destroy();
 });
 
+// ── Settings Update ───────────────────────────────────────────
 app.post('/update-settings', async (req, res) => {
     const { name, phone, currentPassword, newPassword } = req.body;
     const su = getUser(req);
@@ -553,8 +653,6 @@ app.post('/update-settings', async (req, res) => {
     try {
         const user = await User.findById(su._id);
         if (!user) return res.redirect('/login');
-
-        // Google OAuth users — no password, just update profile fields
         if (!user.password) {
             user.name = (name || user.name).trim();
             user.phone = phone || '';
@@ -562,17 +660,11 @@ app.post('/update-settings', async (req, res) => {
             if (req.session.user) req.session.user.name = user.name;
             return res.render('settings', { user: user.toObject(), message: 'Profile updated successfully!', messageType: 'success' });
         }
-
-        // Credential users — verify current password
-        if (!currentPassword) {
-            return res.render('settings', { user: user.toObject(), message: 'Please enter your current password to save changes.', messageType: 'error' });
-        }
+        if (!currentPassword) return res.render('settings', { user: user.toObject(), message: 'Please enter your current password to save changes.', messageType: 'error' });
         const ok = await bcrypt.compare(currentPassword, user.password);
         if (!ok) return res.render('settings', { user: user.toObject(), message: 'Incorrect current password.', messageType: 'error' });
-
         user.name = (name || user.name).trim();
         user.phone = phone || '';
-
         if (newPassword && newPassword.trim()) {
             if (newPassword.trim().length < 6) return res.render('settings', { user: user.toObject(), message: 'New password must be at least 6 characters.', messageType: 'error' });
             user.password = await bcrypt.hash(newPassword.trim(), 10);
@@ -581,7 +673,6 @@ app.post('/update-settings', async (req, res) => {
         if (req.session.user) req.session.user.name = user.name;
         res.render('settings', { user: user.toObject(), message: 'Profile updated successfully!', messageType: 'success' });
     } catch(err) {
-        console.error('Settings update error:', err);
         res.status(500).render('error', { message: 'Error updating settings.' });
     }
 });
@@ -633,65 +724,71 @@ app.post('/update-attendance-status', async (req, res) => {
 });
 
 // ================================================================
-// NEW: DIVISION MANAGEMENT ROUTES (SuperAdmin only)
+// DIVISION MANAGEMENT (SuperAdmin only)
 // ================================================================
 
-// ── Create Division ───────────────────────────────────────────
 app.post('/create-division', isSuperAdmin, async (req, res) => {
     const { divisionName, description } = req.body;
     if (!divisionName || !divisionName.trim())
         return res.redirect('/super-admin-dashboard?error=Division+name+is+required.');
     try {
         const name = divisionName.trim().toUpperCase();
-        const existing = await Division.findOne({ name });
-        if (existing) return res.redirect('/super-admin-dashboard?error=Division+already+exists.');
+        if (await Division.findOne({ name })) return res.redirect('/super-admin-dashboard?error=Division+already+exists.');
         await new Division({ name, description: description||'' }).save();
-        res.redirect('/super-admin-dashboard?success=Division+' + encodeURIComponent(name) + '+created+successfully.');
+        res.redirect('/super-admin-dashboard?success=Division+' + encodeURIComponent(name) + '+created.');
     } catch(err) {
         if (err.code === 11000) return res.redirect('/super-admin-dashboard?error=Division+already+exists.');
         res.redirect('/super-admin-dashboard?error=Failed+to+create+division.');
     }
 });
 
-// ── Delete Division ───────────────────────────────────────────
 app.post('/delete-division/:id', isSuperAdmin, async (req, res) => {
     try {
         const div = await Division.findByIdAndDelete(req.params.id);
         if (!div) return res.redirect('/super-admin-dashboard?error=Division+not+found.');
-        // Move users in this division to Unassigned
         await User.updateMany({ section: div.name }, { $set: { section: '' } });
         res.redirect('/super-admin-dashboard?success=Division+deleted.+Users+moved+to+Unassigned.');
     } catch(err) { res.redirect('/super-admin-dashboard?error=Failed+to+delete+division.'); }
 });
 
 // ================================================================
-// NEW: ASSIGN USER ROLE + DIVISION (SuperAdmin only)
+// ASSIGN USER — SUPPORTS MULTIPLE ROLES
 // ================================================================
 
 app.post('/assign-user/:id', isSuperAdmin, async (req, res) => {
-    const { role, section, rollNo } = req.body;
     try {
+        // `roles` is now an array of checkboxes; `role` (hidden) is the primary/active role
+        let { roles, primaryRole, section, rollNo } = req.body;
+
+        // Handle both checkbox array and old single-select fallback
+        let rolesArray = Array.isArray(roles) ? roles : (roles ? [roles] : []);
+        if (rolesArray.length === 0 && primaryRole) rolesArray = [primaryRole];
+        if (rolesArray.length === 0) rolesArray = ['Student'];
+
+        // Primary role = explicitly selected primary, or first in array
+        const activePrimaryRole = primaryRole && rolesArray.includes(primaryRole) ? primaryRole : rolesArray[0];
+
         const updateData = {
-            role: role,
+            roles: rolesArray,
+            role: activePrimaryRole,
             section: section || '',
-            isApproved: true   // Assigning always approves the user
+            isApproved: true
         };
-        // Only set rollNo for Students/Leaders
-        if (role === 'Student' || role === 'Leader') {
+        if (activePrimaryRole === 'Student' || activePrimaryRole === 'Leader') {
             if (rollNo && rollNo.trim()) updateData.rollNo = rollNo.trim();
         }
+
         const updatedUser = await User.findByIdAndUpdate(req.params.id, { $set: updateData }, { new: true });
         if (!updatedUser) return res.redirect('/super-admin-dashboard?error=User+not+found.');
 
-        const divLabel = section ? `in division ${section}` : '(no division)';
-        res.redirect(`/super-admin-dashboard?success=User+${encodeURIComponent(updatedUser.name)}+assigned+as+${role}+${encodeURIComponent(divLabel)}.`);
+        res.redirect(`/super-admin-dashboard?success=User+${encodeURIComponent(updatedUser.name)}+assigned+as+${rolesArray.join('+')}+${section ? 'in+' + encodeURIComponent(section) : ''}.`);
     } catch(err) {
         console.error('Assign user error:', err);
         res.redirect('/super-admin-dashboard?error=Failed+to+assign+user.');
     }
 });
 
-// ── Approve User (single) ─────────────────────────────────────
+// ── Approve User ──────────────────────────────────────────────
 app.post('/approve-user/:id', isAdmin, async (req, res) => {
     try {
         const cu = getUser(req);
@@ -719,7 +816,7 @@ app.post('/bulk-approve', isAdmin, async (req, res) => {
         let { userIds, targetRole } = req.body;
         if (!userIds) return res.redirect('/master?error=No+users+selected');
         const ids = Array.isArray(userIds) ? userIds : [userIds];
-        await User.updateMany({ _id: { $in: ids } }, { $set: { role: targetRole, isApproved: true } });
+        await User.updateMany({ _id: { $in: ids } }, { $set: { role: targetRole, roles: [targetRole], isApproved: true } });
         const redirect = cu.role === 'SuperAdmin' ? '/super-admin-dashboard' : '/master';
         req.session.save(() => res.redirect(`${redirect}?success=Users+approved`));
     } catch(err) { res.redirect('/master?error=Approval+failed'); }
@@ -778,7 +875,7 @@ app.post('/upload-users', isAdmin, async (req, res) => {
             const [name, email, studentId] = lines[i].split(',').map(s => s.trim());
             if (email && email.includes('@')) {
                 await User.updateOne({ email: email.toLowerCase() },
-                    { $set: { name, rollNo: studentId, section, role: 'Student', isApproved: true, isPreRegistered: true } },
+                    { $set: { name, rollNo: studentId, section, role: 'Student', roles: ['Student'], isApproved: true, isPreRegistered: true } },
                     { upsert: true }
                 );
             }
@@ -793,13 +890,17 @@ app.get('/approve-super-admin', async (req, res) => {
     if (!secret || secret !== process.env.ADMIN_APPROVAL_SECRET)
         return res.status(403).render('error', { message: 'Invalid Secret Key' });
     try {
-        const u = await User.findOneAndUpdate({ email: email.toLowerCase() }, { role:'SuperAdmin', isApproved:true }, { new:true });
+        const u = await User.findOneAndUpdate(
+            { email: email.toLowerCase() },
+            { role:'SuperAdmin', roles:['SuperAdmin'], isApproved:true },
+            { new:true }
+        );
         if (!u) return res.status(404).render('error', { message: 'User not found' });
         res.send(`<div style="font-family:sans-serif;text-align:center;padding:50px;"><h1 style="color:#27ae60">Access Granted!</h1><p><b>${email}</b> promoted to SuperAdmin.</p><a href="/login">Go to Portal</a></div>`);
     } catch(err) { res.status(500).render('error', { message: 'DB error during promotion.' }); }
 });
 
-// ── Fix Database (SuperAdmin protected) ──────────────────────
+// ── Fix Database ──────────────────────────────────────────────
 app.get('/fix-database', isSuperAdmin, async (req, res) => {
     try {
         const users = await User.find({});
@@ -808,14 +909,13 @@ app.get('/fix-database', isSuperAdmin, async (req, res) => {
             let changed = false;
             if (u.rollno && !u.rollNo) { u.rollNo = u.rollno; changed = true; }
             if (!u.role) { u.role = 'Student'; changed = true; }
+            // Migrate: ensure roles array is populated
+            if (!u.roles || u.roles.length === 0) { u.roles = [u.role]; changed = true; }
             if (changed) { await u.save(); count++; }
         }
         res.send(`Database fixed. Updated ${count} users.`);
     } catch(err) { res.status(500).send('Error: ' + err.message); }
 });
-
-// ── Health check ──────────────────────────────────────────────
-app.get('/ping', (req, res) => res.status(200).send('OK'));
 
 // ================================================================
 // ERROR HANDLER

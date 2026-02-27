@@ -264,6 +264,24 @@ select.fc option{background:var(--card);color:var(--text);}
     table{min-width:360px;}
     .modal{padding:18px;}
 }
+
+/* ── Multi-role badges ── */
+.multi-badge{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);color:var(--war);padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;margin-left:4px;}
+.role-checks{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px;}
+.rci{display:flex;align-items:center;gap:8px;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:.18s;background:var(--input-bg);}
+.rci:hover{border-color:var(--acc);}
+.rci.checked{border-color:var(--acc);background:rgba(59,127,244,.06);}
+.rci input{width:15px;height:15px;accent-color:var(--acc);cursor:pointer;flex-shrink:0;}
+.rci-lbl{font-size:12.5px;font-weight:700;}
+.primary-sel{margin-top:12px;padding-top:12px;border-top:1px solid var(--border);}
+.primary-sel label{font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:5px;}
+.sb-role-switch{background:rgba(255,255,255,.05);border-radius:var(--radius-sm);padding:8px 10px;margin-bottom:10px;}
+.sb-role-switch small{font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;display:block;margin-bottom:5px;}
+.sb-role-switch form{display:flex;gap:6px;align-items:center;}
+.sb-role-switch select{flex:1;font-size:11.5px;padding:5px 8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:6px;outline:none;}
+.sb-role-switch button{font-size:11px;padding:5px 10px;white-space:nowrap;}
+@media(max-width:480px){.role-checks{grid-template-columns:1fr;}}
+
 </style>
 </head>
 <body>
@@ -300,7 +318,23 @@ select.fc option{background:var(--card);color:var(--text);}
         </div>
     </div>
 
-    <div class="nav-lbl">Menu</div>
+    <div class="nav-lbl">Menu
+    <!-- Role Switcher (shown when user has multiple roles) -->
+    <% var _sRoles = (user.roles && user.roles.length > 0) ? user.roles : [user.role]; %>
+    <% if (_sRoles.length > 1) { %>
+    <div class="sb-role-switch">
+        <small><i class="fas fa-exchange-alt"></i> Switch Role</small>
+        <form action="/switch-role" method="POST">
+            <select name="targetRole">
+                <% _sRoles.forEach(function(r){ %>
+                    <option value="<%= r %>" <%= r===user.role?'selected':'' %>><%= r %></option>
+                <% }); %>
+            </select>
+            <button type="submit" class="btn btn-acc" style="padding:5px 9px;font-size:11px"><i class="fas fa-arrow-right"></i></button>
+        </form>
+    </div>
+    <% } %>
+    </div>
     <nav id="sideNav" style="padding:0 10px 12px;">
         <%
             var pendCount = 0;
@@ -406,7 +440,7 @@ select.fc option{background:var(--card);color:var(--text);}
                             <td>
                                 <button type="button" class="btn btn-acc btn-assign"
                                     data-id="<%= u._id %>" data-name="<%= uNm %>"
-                                    data-email="<%= u.email %>" data-role="<%= u.role %>" data-sec="<%= uSec %>">
+                                    data-email="<%= u.email %>" data-roles="<%= (u.roles&&u.roles.length?u.roles:[u.role]).join(',') %>" data-sec="<%= uSec %>">
                                     <i class="fas fa-user-cog"></i> Assign & Approve
                                 </button>
                             </td>
@@ -576,7 +610,7 @@ select.fc option{background:var(--card);color:var(--text);}
                                 <div style="display:flex;gap:5px;flex-wrap:wrap;">
                                     <button type="button" class="btn btn-ghost btn-assign"
                                         data-id="<%= u._id %>" data-name="<%= uNm %>"
-                                        data-email="<%= u.email %>" data-role="<%= u.role %>" data-sec="<%= uSec %>">
+                                        data-email="<%= u.email %>" data-roles="<%= (u.roles&&u.roles.length?u.roles:[u.role]).join(',') %>" data-sec="<%= uSec %>">
                                         <i class="fas fa-user-cog"></i> Assign
                                     </button>
                                     <% if(u.role==='Lecturer' && !u.isClassTeacher){ %>
@@ -659,7 +693,7 @@ select.fc option{background:var(--card);color:var(--text);}
                                     <div style="display:flex;gap:5px;flex-wrap:wrap;">
                                         <button type="button" class="btn btn-ghost btn-assign"
                                             data-id="<%= u._id %>" data-name="<%= uNm %>"
-                                            data-email="<%= u.email %>" data-role="<%= u.role %>" data-sec="<%= uSec %>">
+                                            data-email="<%= u.email %>" data-roles="<%= (u.roles&&u.roles.length?u.roles:[u.role]).join(',') %>" data-sec="<%= uSec %>">
                                             <i class="fas fa-user-cog"></i> Edit
                                         </button>
                                         <form action="/delete-user/<%= u._id %>" method="POST" style="display:inline;"
@@ -699,7 +733,7 @@ select.fc option{background:var(--card);color:var(--text);}
                                 <td>
                                     <button type="button" class="btn btn-acc btn-assign"
                                         data-id="<%= u._id %>" data-name="<%= uNm %>"
-                                        data-email="<%= u.email %>" data-role="<%= u.role %>" data-sec="">
+                                        data-email="<%= u.email %>" data-roles="<%= (u.roles&&u.roles.length?u.roles:[u.role]).join(',') %>" data-sec="">
                                         <i class="fas fa-user-cog"></i> Assign Division
                                     </button>
                                 </td>
@@ -805,15 +839,22 @@ select.fc option{background:var(--card);color:var(--text);}
         <div class="modal-title"><i class="fas fa-user-cog" style="color:var(--acc);"></i> Assign Role &amp; Division</div>
         <div class="modal-sub" id="aModalDesc"></div>
         <form id="aForm" method="POST">
-            <div class="fg"><label>Role</label>
-                <select name="role" id="aRole" class="fc" required>
-                    <option value="Student">Student</option>
-                    <option value="Leader">Leader</option>
-                    <option value="Lecturer">Lecturer</option>
-                    <option value="Master">Master</option>
-                    <option value="SuperAdmin">SuperAdmin</option>
+            <div class="fg">
+                <label>Assign Roles <span style="font-weight:400;text-transform:none;font-size:11px">(select one or more)</span></label>
+                <div class="role-checks" id="roleCheckGrp">
+                    <label class="rci" id="rci-SuperAdmin"><input type="checkbox" name="roles" value="SuperAdmin" id="rcb-SuperAdmin" onchange="updatePrimSel()"><i class="fas fa-shield-alt" style="color:var(--pur);font-size:13px;width:14px"></i><span class="rci-lbl">SuperAdmin</span></label>
+                    <label class="rci" id="rci-Master"><input type="checkbox" name="roles" value="Master" id="rcb-Master" onchange="updatePrimSel()"><i class="fas fa-user-tie" style="color:var(--dan);font-size:13px;width:14px"></i><span class="rci-lbl">Master</span></label>
+                    <label class="rci" id="rci-Lecturer"><input type="checkbox" name="roles" value="Lecturer" id="rcb-Lecturer" onchange="updatePrimSel()"><i class="fas fa-chalkboard-teacher" style="color:var(--suc);font-size:13px;width:14px"></i><span class="rci-lbl">Lecturer</span></label>
+                    <label class="rci" id="rci-Leader"><input type="checkbox" name="roles" value="Leader" id="rcb-Leader" onchange="updatePrimSel()"><i class="fas fa-clipboard-check" style="color:var(--war);font-size:13px;width:14px"></i><span class="rci-lbl">Leader</span></label>
+                    <label class="rci" id="rci-Student"><input type="checkbox" name="roles" value="Student" id="rcb-Student" onchange="updatePrimSel()"><i class="fas fa-graduation-cap" style="color:var(--acc);font-size:13px;width:14px"></i><span class="rci-lbl">Student</span></label>
+                </div>
+                <small style="color:var(--muted);font-size:11px;margin-top:6px;display:block"><i class="fas fa-info-circle"></i> Multi-role users choose which role to use at each login.</small>
+            </div>
+            <div class="primary-sel" id="primSelGrp">
+                <label>Primary / Default Role</label>
+                <select name="primaryRole" id="primRoleSel" class="fc">
+                    <option value="">— Select primary role —</option>
                 </select>
-                <small style="color:var(--muted);font-size:11.5px;margin-top:4px;">Master &amp; Lecturer can be in any division.</small>
             </div>
             <div class="fg"><label>Division</label>
                 <select name="section" id="aSection" class="fc">
@@ -942,19 +983,35 @@ function filterUsers(){
 window.filterUsers=filterUsers;
 
 /* ══ MODAL ══ */
-function openAssign(id,name,email,role,section){
+function openAssign(id,name,email,roles,section){
+    var rolesArr = (roles||'Student').split(',').map(function(r){return r.trim();});
     document.getElementById('aForm').action='/assign-user/'+id;
-    document.getElementById('aModalDesc').textContent=name+'  ·  '+email;
-    document.getElementById('aRole').value=role||'Student';
+    document.getElementById('aModalDesc').innerHTML='<strong>'+name+'</strong><br><span style="font-size:12px;color:var(--muted)">'+email+'</span>';
+    // Reset checkboxes
+    document.querySelectorAll('#roleCheckGrp input[type="checkbox"]').forEach(function(cb){
+        cb.checked=rolesArr.includes(cb.value);
+        var lbl=document.getElementById('rci-'+cb.value);
+        if(lbl) lbl.classList.toggle('checked',cb.checked);
+    });
     document.getElementById('aSection').value=section||'';
-    toggleRoll();
+    updatePrimSel(rolesArr[0]);
     document.getElementById('aModal').classList.add('open');
 }
 function closeAssign(){ document.getElementById('aModal').classList.remove('open'); }
-function toggleRoll(){
-    var r=document.getElementById('aRole').value;
-    document.getElementById('rollGrp').style.display=(r==='Student'||r==='Leader')?'flex':'none';
+function updatePrimSel(def){
+    var sel=document.getElementById('primRoleSel');
+    var submitBtn=document.querySelector('#aModal [type="submit"]');
+    var checked=[];
+    document.querySelectorAll('#roleCheckGrp input:checked').forEach(function(cb){checked.push(cb.value);});
+    sel.innerHTML='<option value="">— Select primary role —</option>';
+    checked.forEach(function(r){var o=document.createElement('option');o.value=r;o.textContent=r;sel.appendChild(o);});
+    if(def&&checked.includes(def)) sel.value=def;
+    else if(checked.length===1) sel.value=checked[0];
+    var showRoll=checked.includes('Student')||checked.includes('Leader');
+    document.getElementById('rollGrp').style.display=showRoll?'flex':'none';
+    if(submitBtn) submitBtn.disabled=checked.length===0;
 }
+function toggleRoll(){ updatePrimSel(); }
 function openCT(id,name){
     document.getElementById('ctForm').action='/set-class-teacher/'+id;
     document.getElementById('ctDesc').textContent='Lecturer: '+name;
@@ -1008,7 +1065,7 @@ document.addEventListener('DOMContentLoaded',function(){
     /* Event delegation for assign/setct buttons */
     document.body.addEventListener('click',function(e){
         var ab=e.target.closest('.btn-assign');
-        if(ab){ openAssign(ab.dataset.id,ab.dataset.name,ab.dataset.email,ab.dataset.role,ab.dataset.sec); return; }
+        if(ab){ openAssign(ab.dataset.id,ab.dataset.name,ab.dataset.email,ab.dataset.roles||ab.dataset.role,ab.dataset.sec); return; }
         var cb=e.target.closest('.btn-setct');
         if(cb){ openCT(cb.dataset.id,cb.dataset.name); }
     });
@@ -1026,6 +1083,17 @@ document.addEventListener('DOMContentLoaded',function(){
         },5000);
     });
 });
+
+
+function showDL(dv,btn){
+    document.querySelectorAll('#dlTabs .tab').forEach(function(t){t.classList.remove('active');});
+    if(btn) btn.classList.add('active');
+    document.querySelectorAll('.dl-block').forEach(function(b){b.classList.toggle('hidden',dv!=='all'&&b.dataset.dv!==dv);});
+}
+function filterDL(){
+    var q=(document.getElementById('dlSearch')?document.getElementById('dlSearch').value:'').toLowerCase();
+    document.querySelectorAll('.dl-row').forEach(function(r){r.style.display=(!q||r.dataset.s.includes(q))?'':'none';});
+}
 
 if(document.readyState!=='loading') syncThemeIcons(document.documentElement.getAttribute('data-theme'));
 })();
