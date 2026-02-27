@@ -3,27 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SuperAdmin Control Center</title>
+    <title>SuperAdmin — RKU Attendance</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root {
-            --primary:#1a2a3a; --accent:#1e90ff; --success:#2ed573;
-            --danger:#ff4757; --warning:#ffa502; --purple:#8e44ad;
-            --bg:#f1f2f6; --text:#2f3542;
+        :root{
+            --primary:#1a2a3a;--accent:#1e90ff;--success:#2ed573;
+            --danger:#ff4757;--warning:#ffa502;--purple:#8e44ad;
+            --bg:#f1f2f6;--text:#2f3542;
         }
         *{box-sizing:border-box;margin:0;padding:0;}
         body{font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;}
 
         /* ── SIDEBAR ── */
-        .sidebar{width:240px;background:var(--primary);color:white;height:100vh;position:fixed;top:0;left:0;display:flex;flex-direction:column;padding:24px 16px;z-index:200;overflow-y:auto;transition:transform .3s;}
+        .sidebar{width:240px;background:var(--primary);color:#fff;height:100vh;position:fixed;top:0;left:0;
+                 display:flex;flex-direction:column;padding:24px 16px;z-index:200;overflow-y:auto;transition:transform .3s;}
         .sidebar h2{font-size:1.1rem;color:var(--accent);display:flex;align-items:center;gap:8px;margin-bottom:4px;}
-        .admin-tag{font-size:12px;color:#8892a4;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,.07);margin-bottom:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-        .nav-btn{color:#a4b0be;display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:8px;transition:.2s;margin-bottom:3px;font-size:13.5px;cursor:pointer;border:none;background:none;width:100%;text-align:left;text-decoration:none;}
+        .admin-tag{font-size:12px;color:#8892a4;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,.07);
+                   margin-bottom:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+        .nav-btn{color:#a4b0be;display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:8px;
+                 transition:.2s;margin-bottom:3px;font-size:13.5px;cursor:pointer;border:none;
+                 background:none;width:100%;text-align:left;text-decoration:none;}
         .nav-btn:hover,.nav-btn.active{background:rgba(255,255,255,.1);color:#fff;}
         .nav-btn .badge{background:var(--danger);color:#fff;border-radius:10px;padding:0 7px;font-size:11px;margin-left:auto;line-height:18px;}
 
-        /* hamburger */
-        .ham{display:none;position:fixed;top:14px;left:14px;z-index:300;background:var(--primary);border:none;color:#fff;padding:8px 12px;border-radius:8px;font-size:18px;cursor:pointer;}
+        .ham{display:none;position:fixed;top:14px;left:14px;z-index:300;background:var(--primary);
+             border:none;color:#fff;padding:8px 12px;border-radius:8px;font-size:18px;cursor:pointer;}
         .overlay-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:150;}
 
         /* ── MAIN ── */
@@ -44,34 +48,40 @@
 
         /* Card */
         .card{background:#fff;border-radius:14px;box-shadow:0 4px 16px rgba(0,0,0,.05);margin-bottom:22px;overflow:hidden;}
-        .card-hdr{padding:18px 22px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+        .card-hdr{padding:18px 22px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;
+                  justify-content:space-between;flex-wrap:wrap;gap:10px;}
         .card-hdr h3{font-size:.95rem;font-weight:700;display:flex;align-items:center;gap:9px;}
         .card-body{padding:22px;}
 
-        /* Getting started */
-        .setup-guide{background:linear-gradient(135deg,#e8f4fd,#f0e6ff);border:2px dashed var(--accent);border-radius:14px;padding:28px;text-align:center;margin-bottom:22px;}
+        /* Setup guide */
+        .setup-guide{background:linear-gradient(135deg,#e8f4fd,#f0e6ff);border:2px dashed var(--accent);
+                     border-radius:14px;padding:28px;text-align:center;margin-bottom:22px;}
         .setup-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-top:20px;text-align:left;}
         .setup-step{background:#fff;border-radius:10px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);}
-        .step-num{width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;margin-bottom:10px;}
+        .step-num{width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;
+                  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;margin-bottom:10px;}
         .step-title{font-weight:700;font-size:13px;margin-bottom:5px;}
         .step-desc{font-size:12px;color:#8892a4;line-height:1.5;}
 
         /* Buttons */
-        .btn{padding:7px 13px;border-radius:7px;cursor:pointer;border:none;font-weight:600;font-size:12px;transition:.2s;display:inline-flex;align-items:center;gap:5px;text-decoration:none;white-space:nowrap;}
+        .btn{padding:7px 13px;border-radius:7px;cursor:pointer;border:none;font-weight:600;font-size:12px;
+             transition:.2s;display:inline-flex;align-items:center;gap:5px;text-decoration:none;white-space:nowrap;}
+        .btn:hover{opacity:.85;}
         .btn-a{background:#e3fcef;color:#00875a;border:1px solid #b7ebd4;}
-        .btn-a:hover{background:var(--success);color:#fff;}
+        .btn-a:hover{background:var(--success);color:#fff;opacity:1;}
         .btn-e{background:#e8f4fd;color:var(--accent);border:1px solid #c5e3f7;}
-        .btn-e:hover{background:var(--accent);color:#fff;}
+        .btn-e:hover{background:var(--accent);color:#fff;opacity:1;}
         .btn-d{background:#fff0f0;color:var(--danger);border:1px solid #ffd0d0;}
-        .btn-d:hover{background:var(--danger);color:#fff;}
+        .btn-d:hover{background:var(--danger);color:#fff;opacity:1;}
         .btn-t{background:#f3e5f5;color:var(--purple);border:1px solid #dbb6ed;}
-        .btn-t:hover{background:var(--purple);color:#fff;}
+        .btn-t:hover{background:var(--purple);color:#fff;opacity:1;}
         .btn-g{background:var(--success);color:#fff;padding:10px 18px;font-size:13px;}
         .btn-b{background:var(--accent);color:#fff;padding:10px 18px;font-size:13px;}
 
         /* Table */
         table{width:100%;border-collapse:collapse;}
-        th{text-align:left;padding:11px 14px;background:#f8f9fa;font-size:11px;color:#8892a4;text-transform:uppercase;border-bottom:2px solid #eee;white-space:nowrap;}
+        th{text-align:left;padding:11px 14px;background:#f8f9fa;font-size:11px;color:#8892a4;
+           text-transform:uppercase;border-bottom:2px solid #eee;white-space:nowrap;}
         td{padding:11px 14px;border-bottom:1px solid #f5f5f5;font-size:13px;vertical-align:middle;}
         tr:last-child td{border-bottom:none;}
         tr:hover td{background:#fafbff;}
@@ -99,15 +109,17 @@
 
         /* Tabs */
         .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;}
-        .tab{padding:7px 17px;border:2px solid #ddd;border-radius:20px;cursor:pointer;font-weight:600;font-size:13px;background:#fff;color:#555;transition:.2s;}
+        .tab{padding:7px 17px;border:2px solid #ddd;border-radius:20px;cursor:pointer;font-weight:600;
+             font-size:13px;background:#fff;color:#555;transition:.2s;}
         .tab.active,.tab:hover{background:var(--accent);color:#fff;border-color:var(--accent);}
         .tab.warn{border-color:var(--warning);color:var(--warning);}
-        .tab.warn.active,.tab.warn:hover{background:var(--warning);color:#fff;}
+        .tab.warn.active,.tab.warn:hover{background:var(--warning);color:#fff;border-color:var(--warning);}
 
-        /* Div blocks (All Users page) */
+        /* Div blocks */
         .div-block{margin-bottom:24px;}
         .div-block.hidden{display:none;}
-        .div-heading{display:flex;align-items:center;gap:12px;background:#f8f9fa;padding:13px 18px;border-radius:10px;margin-bottom:10px;border-left:4px solid var(--accent);}
+        .div-heading{display:flex;align-items:center;gap:12px;background:#f8f9fa;padding:13px 18px;
+                     border-radius:10px;margin-bottom:10px;border-left:4px solid var(--accent);}
         .div-badge{background:var(--primary);color:#fff;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;text-transform:uppercase;}
         .div-table-wrap{background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.05);}
 
@@ -115,7 +127,8 @@
         .form-row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;}
         .fg{display:flex;flex-direction:column;gap:5px;flex:1;min-width:130px;}
         .fg label{font-size:11px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.4px;}
-        .fc{padding:10px 13px;border:1.5px solid #ddd;border-radius:8px;font-size:13.5px;outline:none;width:100%;transition:border .2s;background:#fff;color:var(--text);}
+        .fc{padding:10px 13px;border:1.5px solid #ddd;border-radius:8px;font-size:13.5px;outline:none;
+            width:100%;transition:border .2s;background:#fff;color:var(--text);}
         .fc:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(30,144,255,.1);}
 
         /* Search */
@@ -124,17 +137,19 @@
         .sw .fc{padding-left:33px;}
 
         /* Modal */
-        .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;align-items:center;justify-content:center;padding:16px;}
+        .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;
+                 align-items:center;justify-content:center;padding:16px;}
         .overlay.open{display:flex;}
-        .modal{background:#fff;border-radius:14px;padding:28px;max-width:460px;width:100%;box-shadow:0 25px 50px rgba(0,0,0,.25);max-height:90vh;overflow-y:auto;}
+        .modal{background:#fff;border-radius:14px;padding:28px;max-width:460px;width:100%;
+               box-shadow:0 25px 50px rgba(0,0,0,.25);max-height:90vh;overflow-y:auto;}
         .modal h3{font-size:1rem;margin-bottom:4px;}
-        .modal p{color:#636e72;font-size:13px;margin-bottom:18px;}
+        .modal p.modal-sub{color:#636e72;font-size:13px;margin-bottom:18px;}
         .modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;}
+        .modal .fg{margin-bottom:14px;}
 
         .empty{text-align:center;padding:50px 20px;color:#b2bec3;}
         .empty i{font-size:3rem;opacity:.3;display:block;margin-bottom:12px;}
 
-        /* Responsive */
         @media(max-width:768px){
             .sidebar{transform:translateX(-100%);}
             .sidebar.open{transform:translateX(0);}
@@ -142,11 +157,9 @@
             .ham{display:block;}
             .overlay-bg.open{display:block;}
             .stats-grid{grid-template-columns:repeat(2,1fr);}
-            .setup-steps{grid-template-columns:1fr;}
         }
         @media(max-width:480px){
             .stats-grid{grid-template-columns:1fr 1fr;}
-            .card-hdr{flex-direction:column;align-items:flex-start;}
             table{font-size:12px;}
             th,td{padding:9px 10px;}
         }
@@ -154,11 +167,10 @@
 </head>
 <body>
 
-<!-- Hamburger (mobile) -->
 <button class="ham" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
 <div class="overlay-bg" id="overlayBg" onclick="closeSidebar()"></div>
 
-<!-- SIDEBAR -->
+<!-- ══════════ SIDEBAR ══════════ -->
 <div class="sidebar" id="sidebar">
     <h2><i class="fas fa-shield-alt"></i> SuperAdmin</h2>
     <div class="admin-tag"><i class="fas fa-user-circle"></i>&nbsp; <%= user.name %></div>
@@ -167,8 +179,11 @@
         <button class="nav-btn" onclick="showPage('divisions',this)"><i class="fas fa-layer-group"></i> Divisions</button>
         <button class="nav-btn" onclick="showPage('assign',this)">
             <i class="fas fa-user-cog"></i> Assign Roles
-            <% var pc=allUsers.filter(function(u){return !u.isApproved;}).length; %>
-            <% if(pc>0){%><span class="badge"><%=pc%></span><%}%>
+            <%
+                var pendCount = 0;
+                for(var pi=0; pi<allUsers.length; pi++){ if(!allUsers[pi].isApproved) pendCount++; }
+            %>
+            <% if(pendCount > 0){ %><span class="badge"><%= pendCount %></span><% } %>
         </button>
         <button class="nav-btn" onclick="showPage('users',this)"><i class="fas fa-users"></i> All Users</button>
         <button class="nav-btn" onclick="showPage('subjects',this)"><i class="fas fa-book"></i> Subjects</button>
@@ -177,30 +192,38 @@
     </nav>
 </div>
 
-<!-- MAIN -->
+<!-- ══════════ MAIN ══════════ -->
 <div class="main">
 
-    <% if(typeof success!=='undefined'&&success){ %>
-        <div class="alert alert-s"><i class="fas fa-check-circle"></i> <%=success%></div>
+    <% if(typeof success !== 'undefined' && success){ %>
+        <div class="alert alert-s"><i class="fas fa-check-circle"></i> <%= success %></div>
     <% } %>
-    <% if(typeof error!=='undefined'&&error){ %>
-        <div class="alert alert-e"><i class="fas fa-exclamation-circle"></i> <%=error%></div>
+    <% if(typeof error !== 'undefined' && error){ %>
+        <div class="alert alert-e"><i class="fas fa-exclamation-circle"></i> <%= error %></div>
     <% } %>
 
-    <!-- ═══ OVERVIEW ═══ -->
+    <!-- ══ OVERVIEW ══ -->
     <div id="pg-overview" class="page active">
         <h1 style="font-size:1.5rem;margin-bottom:4px;">System Overview</h1>
         <p style="color:#8892a4;font-size:13px;margin-bottom:22px;">Full visibility across all divisions and users</p>
 
         <div class="stats-grid">
-            <div class="stat"><h4>Total Users</h4><div class="val"><%=stats.totalUsers%></div></div>
-            <div class="stat" style="border-left-color:var(--danger);"><h4>Pending Approvals</h4><div class="val" style="color:var(--danger);"><%=stats.pendingApprovals%></div></div>
-            <div class="stat" style="border-left-color:var(--success);"><h4>Active Subjects</h4><div class="val" style="color:var(--success);"><%=stats.totalSubjects%></div></div>
-            <div class="stat" style="border-left-color:var(--purple);"><h4>Divisions</h4><div class="val" style="color:var(--purple);"><%=allDivisions.length%></div></div>
+            <div class="stat"><h4>Total Users</h4><div class="val"><%= stats.totalUsers %></div></div>
+            <div class="stat" style="border-left-color:var(--danger);">
+                <h4>Pending Approvals</h4>
+                <div class="val" style="color:var(--danger);"><%= stats.pendingApprovals %></div>
+            </div>
+            <div class="stat" style="border-left-color:var(--success);">
+                <h4>Active Subjects</h4>
+                <div class="val" style="color:var(--success);"><%= stats.totalSubjects %></div>
+            </div>
+            <div class="stat" style="border-left-color:var(--purple);">
+                <h4>Divisions</h4>
+                <div class="val" style="color:var(--purple);"><%= allDivisions.length %></div>
+            </div>
         </div>
 
-        <!-- Getting started guide when no divisions -->
-        <% if(allDivisions.length===0){ %>
+        <% if(allDivisions.length === 0){ %>
         <div class="setup-guide">
             <i class="fas fa-rocket" style="font-size:2.5rem;color:var(--accent);margin-bottom:12px;display:block;"></i>
             <h2 style="margin-bottom:8px;font-size:1.2rem;">Welcome! Let's set up your system</h2>
@@ -214,60 +237,69 @@
                 <div class="setup-step">
                     <div class="step-num">2</div>
                     <div class="step-title">Assign Users</div>
-                    <div class="step-desc">In <strong>Assign Roles</strong> tab, set each user's role (Master, Lecturer, Leader, Student) and assign to a division</div>
+                    <div class="step-desc">In <strong>Assign Roles</strong> tab, set each user's role and assign to a division</div>
                 </div>
                 <div class="setup-step">
                     <div class="step-num">3</div>
                     <div class="step-title">Add Subjects</div>
-                    <div class="step-desc">In <strong>Subjects</strong> tab, add subjects for each division so Leaders can take attendance</div>
+                    <div class="step-desc">In <strong>Subjects</strong> tab, add subjects so Leaders can take attendance</div>
                 </div>
                 <div class="setup-step">
                     <div class="step-num">4</div>
                     <div class="step-title">Done!</div>
-                    <div class="step-desc">Leaders can now take attendance, Lecturers can review, Masters can manage their division</div>
+                    <div class="step-desc">Leaders take attendance, Lecturers review, Masters manage their division</div>
                 </div>
             </div>
-            <button class="btn btn-b" style="margin-top:20px;font-size:14px;padding:12px 24px;" onclick="showPage('divisions',document.querySelectorAll('.nav-btn')[1])">
+            <button class="btn btn-b" style="margin-top:20px;font-size:14px;padding:12px 24px;"
+                    onclick="showPage('divisions', document.querySelectorAll('.nav-btn')[1])">
                 <i class="fas fa-plus"></i> Create First Division
             </button>
         </div>
         <% } %>
 
-        <!-- Pending approvals quick action -->
-        <% var pendingU=allUsers.filter(function(u){return !u.isApproved;}); %>
-        <% if(pendingU.length>0){ %>
+        <%
+            var pendingUsers = [];
+            for(var i=0; i<allUsers.length; i++){
+                if(!allUsers[i].isApproved) pendingUsers.push(allUsers[i]);
+            }
+        %>
+        <% if(pendingUsers.length > 0){ %>
         <div class="card">
             <div class="card-hdr">
                 <h3><i class="fas fa-user-clock" style="color:var(--warning);"></i> Pending Approvals</h3>
-                <span style="font-size:12px;color:#8892a4;"><%=pendingU.length%> user(s) waiting</span>
+                <span style="font-size:12px;color:#8892a4;"><%= pendingUsers.length %> user(s) waiting</span>
             </div>
             <div style="overflow-x:auto;">
                 <table>
                     <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Action</th></tr></thead>
                     <tbody>
-                        <% pendingU.forEach(u=>{ %>
+                        <% for(var pu=0; pu<pendingUsers.length; pu++){
+                               var u = pendingUsers[pu];
+                               var uSection = u.section || '';
+                               var uName = (u.name || '').replace(/'/g, "\\'");
+                        %>
                         <tr>
-                            <td><strong><%=u.name||'—'%></strong></td>
-                            <td style="color:#636e72;font-size:12px;"><%=u.email%></td>
-                            <td><span class="rb rb-<%=u.role%>"><%=u.role%></span></td>
+                            <td><strong><%= u.name || '—' %></strong></td>
+                            <td style="color:#636e72;font-size:12px;"><%= u.email %></td>
+                            <td><span class="rb rb-<%= u.role %>"><%= u.role %></span></td>
                             <td>
-                                <button class="btn btn-e" onclick="openAssign('<%=u._id%>','<%=u.name.replace(/'/g,"\\'")%>','<%=u.email%>','<%=u.role%>','<%=u.section||""%>')">
+                                <button class="btn btn-e"
+                                    onclick="openAssign('<%= u._id %>','<%= uName %>','<%= u.email %>','<%= u.role %>','<%= uSection %>')">
                                     <i class="fas fa-user-cog"></i> Assign &amp; Approve
                                 </button>
                             </td>
                         </tr>
-                        <% }) %>
+                        <% } %>
                     </tbody>
                 </table>
             </div>
         </div>
         <% } %>
 
-        <!-- All users summary when no divisions -->
         <div class="card">
             <div class="card-hdr">
-                <h3><i class="fas fa-users" style="color:var(--accent);"></i> All Users (<%=allUsers.length%>)</h3>
-                <button class="btn btn-e" onclick="showPage('assign',document.querySelectorAll('.nav-btn')[2])">
+                <h3><i class="fas fa-users" style="color:var(--accent);"></i> All Users (<%= allUsers.length %>)</h3>
+                <button class="btn btn-e" onclick="showPage('assign', document.querySelectorAll('.nav-btn')[2])">
                     <i class="fas fa-user-cog"></i> Manage All
                 </button>
             </div>
@@ -275,28 +307,43 @@
                 <table>
                     <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Division</th><th>Status</th><th>Action</th></tr></thead>
                     <tbody>
-                        <% allUsers.slice(0,10).forEach(u=>{ %>
+                        <% for(var ai=0; ai<Math.min(allUsers.length,10); ai++){
+                               var au = allUsers[ai];
+                               var auName = (au.name || '').replace(/'/g, "\\'");
+                               var auSection = au.section || '';
+                        %>
                         <tr>
                             <td>
-                                <strong><%=u.name||'—'%></strong>
-                                <% if(u.rollNo){%><div style="font-size:11px;color:#aaa;font-family:monospace;"><%=u.rollNo%></div><%}%>
-                                <% if(u.isClassTeacher){%><span class="ct-tag"><i class="fas fa-star"></i> CT</span><%}%>
+                                <strong><%= au.name || '—' %></strong>
+                                <% if(au.rollNo){ %><div style="font-size:11px;color:#aaa;font-family:monospace;"><%= au.rollNo %></div><% } %>
+                                <% if(au.isClassTeacher){ %><span class="ct-tag"><i class="fas fa-star"></i> CT</span><% } %>
                             </td>
-                            <td style="font-size:12px;color:#636e72;"><%=u.email%></td>
-                            <td><span class="rb rb-<%=u.role%>"><%=u.role||'—'%></span></td>
-                            <td><%=u.section?`<span class="sec-pill">${u.section}</span>`:'<span style="color:#bbb;font-size:12px;">—</span>'%></td>
-                            <td><span class="pill <%=u.isApproved?'pill-a':'pill-p'%>"><%=u.isApproved?'✓ Active':'⏳ Pending'%></span></td>
+                            <td style="font-size:12px;color:#636e72;"><%= au.email %></td>
+                            <td><span class="rb rb-<%= au.role %>"><%= au.role || '—' %></span></td>
                             <td>
-                                <button class="btn btn-e" onclick="openAssign('<%=u._id%>','<%=u.name.replace(/'/g,"\\'")%>','<%=u.email%>','<%=u.role%>','<%=u.section||""%>')">
+                                <% if(au.section){ %>
+                                    <span class="sec-pill"><%= au.section %></span>
+                                <% } else { %>
+                                    <span style="color:#bbb;font-size:12px;">—</span>
+                                <% } %>
+                            </td>
+                            <td><span class="pill <%= au.isApproved ? 'pill-a' : 'pill-p' %>"><%= au.isApproved ? '✓ Active' : '⏳ Pending' %></span></td>
+                            <td>
+                                <button class="btn btn-e"
+                                    onclick="openAssign('<%= au._id %>','<%= auName %>','<%= au.email %>','<%= au.role %>','<%= auSection %>')">
                                     <i class="fas fa-edit"></i> Edit
                                 </button>
                             </td>
                         </tr>
-                        <% }) %>
-                        <% if(allUsers.length>10){ %>
-                        <tr><td colspan="6" style="text-align:center;padding:14px;color:#8892a4;font-size:12px;">
-                            + <%=allUsers.length-10%> more users — <a href="#" onclick="showPage('assign',document.querySelectorAll('.nav-btn')[2]);return false;" style="color:var(--accent);">View all in Assign Roles</a>
-                        </td></tr>
+                        <% } %>
+                        <% if(allUsers.length > 10){ %>
+                        <tr>
+                            <td colspan="6" style="text-align:center;padding:14px;color:#8892a4;font-size:12px;">
+                                + <%= allUsers.length - 10 %> more —
+                                <a href="#" onclick="showPage('assign',document.querySelectorAll('.nav-btn')[2]);return false;"
+                                   style="color:var(--accent);">View all in Assign Roles</a>
+                            </td>
+                        </tr>
                         <% } %>
                     </tbody>
                 </table>
@@ -304,50 +351,78 @@
         </div>
     </div>
 
-    <!-- ═══ DIVISIONS ═══ -->
+    <!-- ══ DIVISIONS ══ -->
     <div id="pg-divisions" class="page">
         <h1 style="font-size:1.5rem;margin-bottom:4px;">Division Management</h1>
-        <p style="color:#8892a4;font-size:13px;margin-bottom:22px;">Create class divisions — each has its own students, subjects, Leaders and Masters.</p>
+        <p style="color:#8892a4;font-size:13px;margin-bottom:22px;">
+            Create class divisions — each has its own students, subjects, Leaders and Masters.
+            <strong>Masters &amp; Lecturers can be assigned to any division.</strong>
+        </p>
 
         <div class="card">
             <div class="card-hdr"><h3><i class="fas fa-plus-circle" style="color:var(--success);"></i> Create New Division</h3></div>
             <div class="card-body">
                 <form action="/create-division" method="POST" class="form-row">
-                    <div class="fg" style="flex:.8;"><label>Division Name</label><input type="text" name="divisionName" class="fc" placeholder="e.g. CS-A, IT-B" required></div>
-                    <div class="fg" style="flex:1.5;"><label>Description (optional)</label><input type="text" name="description" class="fc" placeholder="e.g. Computer Science Sem 5"></div>
-                    <div style="align-self:flex-end;"><button type="submit" class="btn btn-g"><i class="fas fa-plus"></i> Create</button></div>
+                    <div class="fg" style="flex:.8;">
+                        <label>Division Name</label>
+                        <input type="text" name="divisionName" class="fc" placeholder="e.g. CS-A, IT-B" required>
+                    </div>
+                    <div class="fg" style="flex:1.5;">
+                        <label>Description (optional)</label>
+                        <input type="text" name="description" class="fc" placeholder="e.g. Computer Science Sem 5">
+                    </div>
+                    <div style="align-self:flex-end;">
+                        <button type="submit" class="btn btn-g"><i class="fas fa-plus"></i> Create</button>
+                    </div>
                 </form>
             </div>
         </div>
 
         <div class="card">
             <div class="card-hdr">
-                <h3><i class="fas fa-layer-group" style="color:var(--accent);"></i> All Divisions (<%=allDivisions.length%>)</h3>
+                <h3><i class="fas fa-layer-group" style="color:var(--accent);"></i> All Divisions (<%= allDivisions.length %>)</h3>
             </div>
             <div class="card-body">
-                <% if(allDivisions.length>0){ %>
+                <% if(allDivisions.length > 0){ %>
                 <div class="div-grid">
-                    <% allDivisions.forEach(div=>{ %>
-                    <% const du=allUsers.filter(u=>u.section===div.name); %>
+                    <% for(var di=0; di<allDivisions.length; di++){
+                           var div = allDivisions[di];
+                           var divUsers = [];
+                           for(var dui=0; dui<allUsers.length; dui++){
+                               if(allUsers[dui].section === div.name) divUsers.push(allUsers[dui]);
+                           }
+                           var divStudents=0, divMasters=0, divLecturers=0;
+                           for(var dci=0; dci<divUsers.length; dci++){
+                               if(divUsers[dci].role==='Student') divStudents++;
+                               else if(divUsers[dci].role==='Master') divMasters++;
+                               else if(divUsers[dci].role==='Lecturer') divLecturers++;
+                           }
+                           var divSubjects=0;
+                           for(var dsi=0; dsi<allSubjects.length; dsi++){
+                               if(allSubjects[dsi].section===div.name) divSubjects++;
+                           }
+                    %>
                     <div class="div-card">
-                        <form action="/delete-division/<%=div._id%>" method="POST" class="del" onsubmit="return confirm('Delete division <%=div.name%>?')">
-                            <button class="btn btn-d" style="padding:3px 8px;"><i class="fas fa-times"></i></button>
+                        <form action="/delete-division/<%= div._id %>" method="POST" class="del"
+                              onsubmit="return confirm('Delete division <%= div.name %>? Users will become Unassigned.')">
+                            <button class="btn btn-d" type="submit" style="padding:3px 8px;"><i class="fas fa-times"></i></button>
                         </form>
-                        <div class="dcn"><i class="fas fa-layer-group" style="color:var(--accent);margin-right:6px;"></i><%=div.name%></div>
-                        <% if(div.description){%><div style="font-size:11px;color:#aaa;margin-bottom:6px;"><%=div.description%></div><%}%>
+                        <div class="dcn"><i class="fas fa-layer-group" style="color:var(--accent);margin-right:6px;"></i><%= div.name %></div>
+                        <% if(div.description){ %><div style="font-size:11px;color:#aaa;margin-bottom:6px;"><%= div.description %></div><% } %>
                         <div class="dcs">
-                            <span><i class="fas fa-users" style="color:var(--accent);width:14px;"></i> <%=du.filter(u=>u.role==='Student').length%> Students</span><br>
-                            <span><i class="fas fa-shield-alt" style="color:#1565c0;width:14px;"></i> <%=du.filter(u=>u.role==='Master').length%> Master(s)</span><br>
-                            <span><i class="fas fa-chalkboard-teacher" style="color:#2e7d32;width:14px;"></i> <%=du.filter(u=>u.role==='Lecturer').length%> Lecturer(s)</span><br>
-                            <span><i class="fas fa-book" style="color:var(--purple);width:14px;"></i> <%=allSubjects.filter(s=>s.section===div.name).length%> Subjects</span>
+                            <span><i class="fas fa-users" style="color:var(--accent);width:14px;"></i> <%= divStudents %> Students</span><br>
+                            <span><i class="fas fa-shield-alt" style="color:#1565c0;width:14px;"></i> <%= divMasters %> Master(s)</span><br>
+                            <span><i class="fas fa-chalkboard-teacher" style="color:#2e7d32;width:14px;"></i> <%= divLecturers %> Lecturer(s)</span><br>
+                            <span><i class="fas fa-book" style="color:var(--purple);width:14px;"></i> <%= divSubjects %> Subjects</span>
                         </div>
                         <div style="margin-top:12px;">
-                            <button class="btn btn-e" style="width:100%;justify-content:center;" onclick="showPage('assign',document.querySelectorAll('.nav-btn')[2]);filterDiv('<%=div.name%>')">
+                            <button type="button" class="btn btn-e" style="width:100%;justify-content:center;"
+                                onclick="showPage('assign',document.querySelectorAll('.nav-btn')[2]);filterDiv('<%= div.name %>')">
                                 <i class="fas fa-user-cog"></i> Manage Users
                             </button>
                         </div>
                     </div>
-                    <% }) %>
+                    <% } %>
                 </div>
                 <% } else { %>
                 <div class="empty"><i class="fas fa-layer-group"></i>No divisions created yet. Use the form above.</div>
@@ -356,157 +431,215 @@
         </div>
     </div>
 
-    <!-- ═══ ASSIGN ROLES ═══ -->
+    <!-- ══ ASSIGN ROLES ══ -->
     <div id="pg-assign" class="page">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:22px;">
             <div>
                 <h1 style="font-size:1.5rem;margin-bottom:4px;">Assign Roles &amp; Divisions</h1>
-                <p style="color:#8892a4;font-size:13px;">Approve users and assign them roles. Masters &amp; Lecturers can teach any division.</p>
+                <p style="color:#8892a4;font-size:13px;">Approve users and assign roles. Masters &amp; Lecturers can teach any division.</p>
             </div>
-            <div class="sw"><i class="fas fa-search"></i><input type="text" id="aSearch" class="fc" placeholder="Search users…" oninput="applyFilters()" style="width:230px;"></div>
+            <div class="sw">
+                <i class="fas fa-search"></i>
+                <input type="text" id="aSearch" class="fc" placeholder="Search users…" oninput="applyFilters()" style="width:230px;">
+            </div>
         </div>
 
         <div class="tabs" id="aTabs">
-            <button class="tab active" onclick="filterDiv('all',this)">All (<%=allUsers.length%>)</button>
-            <% if(allUsers.filter(u=>!u.isApproved).length>0){ %><button class="tab warn" onclick="filterDiv('pending',this)">⏳ Pending (<%=allUsers.filter(u=>!u.isApproved).length%>)</button><% } %>
-            <% allDivisions.forEach(div=>{ %>
-            <button class="tab" onclick="filterDiv('<%=div.name%>',this)" data-dv="<%=div.name%>"><%=div.name%></button>
-            <% }) %>
+            <button class="tab active" onclick="filterDiv('all',this)">All (<%= allUsers.length %>)</button>
+            <% if(pendCount > 0){ %>
+            <button class="tab warn" onclick="filterDiv('pending',this)">⏳ Pending (<%= pendCount %>)</button>
+            <% } %>
+            <% for(var ti=0; ti<allDivisions.length; ti++){ %>
+            <button class="tab" onclick="filterDiv('<%= allDivisions[ti].name %>',this)" data-dv="<%= allDivisions[ti].name %>">
+                <%= allDivisions[ti].name %>
+            </button>
+            <% } %>
             <button class="tab" onclick="filterDiv('Unassigned',this)">Unassigned</button>
         </div>
 
         <div class="card" style="padding:0;overflow:hidden;">
             <div style="overflow-x:auto;">
                 <table id="aTable">
-                    <thead><tr><th>User</th><th>Role</th><th>Division</th><th>Status</th><th>Actions</th></tr></thead>
+                    <thead>
+                        <tr><th>User</th><th>Role</th><th>Division</th><th>Status</th><th>Actions</th></tr>
+                    </thead>
                     <tbody>
-                        <% allUsers.forEach(u=>{ %>
-                        <tr class="ar" data-dv="<%=u.section||'Unassigned'%>" data-pend="<%=!u.isApproved%>"
-                            data-s="<%=(u.name+' '+u.email+' '+(u.rollNo||'')).toLowerCase()%>">
+                        <% for(var ui=0; ui<allUsers.length; ui++){
+                               var u = allUsers[ui];
+                               var uName = (u.name || '').replace(/'/g, "\\'");
+                               var uSection = u.section || '';
+                        %>
+                        <tr class="ar"
+                            data-dv="<%= u.section || 'Unassigned' %>"
+                            data-pend="<%= !u.isApproved %>"
+                            data-s="<%= (u.name + ' ' + u.email + ' ' + (u.rollNo||'')).toLowerCase() %>">
                             <td>
-                                <strong><%=u.name||'—'%></strong>
-                                <div style="font-size:11px;color:#8892a4;"><%=u.email%></div>
-                                <% if(u.rollNo){%><div style="font-size:11px;color:#aaa;font-family:monospace;">Roll: <%=u.rollNo%></div><%}%>
-                                <% if(u.isClassTeacher){%><span class="ct-tag"><i class="fas fa-star"></i> CT · <%=u.classTeacherSection%></span><%}%>
+                                <strong><%= u.name || '—' %></strong>
+                                <div style="font-size:11px;color:#8892a4;"><%= u.email %></div>
+                                <% if(u.rollNo){ %><div style="font-size:11px;color:#aaa;font-family:monospace;">Roll: <%= u.rollNo %></div><% } %>
+                                <% if(u.isClassTeacher){ %><span class="ct-tag"><i class="fas fa-star"></i> CT · <%= u.classTeacherSection %></span><% } %>
                             </td>
-                            <td><span class="rb rb-<%=u.role%>"><%=u.role||'—'%></span></td>
-                            <td><%=u.section?`<span class="sec-pill">${u.section}</span>`:'<span style="color:#bbb;font-size:12px;">—</span>'%></td>
-                            <td><span class="pill <%=u.isApproved?'pill-a':'pill-p'%>"><%=u.isApproved?'✓ Active':'⏳ Pending'%></span></td>
+                            <td><span class="rb rb-<%= u.role %>"><%= u.role || '—' %></span></td>
+                            <td>
+                                <% if(u.section){ %>
+                                    <span class="sec-pill"><%= u.section %></span>
+                                <% } else { %>
+                                    <span style="color:#bbb;font-size:12px;">—</span>
+                                <% } %>
+                            </td>
+                            <td>
+                                <span class="pill <%= u.isApproved ? 'pill-a' : 'pill-p' %>">
+                                    <%= u.isApproved ? '✓ Active' : '⏳ Pending' %>
+                                </span>
+                            </td>
                             <td>
                                 <div style="display:flex;gap:5px;flex-wrap:wrap;">
-                                    <button class="btn btn-e" onclick="openAssign('<%=u._id%>','<%=u.name.replace(/'/g,"\\'")%>','<%=u.email%>','<%=u.role%>','<%=u.section||""%>')">
+                                    <button type="button" class="btn btn-e"
+                                        onclick="openAssign('<%= u._id %>','<%= uName %>','<%= u.email %>','<%= u.role %>','<%= uSection %>')">
                                         <i class="fas fa-user-cog"></i> Assign
                                     </button>
-                                    <% if(u.role==='Lecturer'&&!u.isClassTeacher){ %>
-                                    <button class="btn btn-t" onclick="openCT('<%=u._id%>','<%=u.name.replace(/'/g,"\\'")%>')">
+                                    <% if(u.role === 'Lecturer' && !u.isClassTeacher){ %>
+                                    <button type="button" class="btn btn-t"
+                                        onclick="openCT('<%= u._id %>','<%= uName %>')">
                                         <i class="fas fa-star"></i> CT
                                     </button>
                                     <% } %>
-                                    <% if(u.role==='Lecturer'&&u.isClassTeacher){ %>
-                                    <form action="/set-class-teacher/<%=u._id%>" method="POST" style="display:inline;">
+                                    <% if(u.role === 'Lecturer' && u.isClassTeacher){ %>
+                                    <form action="/set-class-teacher/<%= u._id %>" method="POST" style="display:inline;"
+                                          onsubmit="return confirm('Remove Class Teacher status?')">
                                         <input type="hidden" name="removeClassTeacher" value="true">
-                                        <button class="btn" style="background:#fff8e1;color:#f57c00;border:1px solid #ffe082;" onclick="return confirm('Remove CT?')">
+                                        <button type="submit" class="btn" style="background:#fff8e1;color:#f57c00;border:1px solid #ffe082;">
                                             <i class="fas fa-star-half-alt"></i> Remove CT
                                         </button>
                                     </form>
                                     <% } %>
-                                    <form action="/delete-user/<%=u._id%>" method="POST" style="display:inline;" onsubmit="return confirm('Delete this user?')">
-                                        <button class="btn btn-d"><i class="fas fa-trash-alt"></i></button>
+                                    <form action="/delete-user/<%= u._id %>" method="POST" style="display:inline;"
+                                          onsubmit="return confirm('Permanently delete this user?')">
+                                        <button type="submit" class="btn btn-d"><i class="fas fa-trash-alt"></i></button>
                                     </form>
                                 </div>
                             </td>
                         </tr>
-                        <% }) %>
+                        <% } %>
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    <!-- ═══ ALL USERS ═══ -->
+    <!-- ══ ALL USERS ══ -->
     <div id="pg-users" class="page">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:22px;">
             <div>
                 <h1 style="font-size:1.5rem;margin-bottom:4px;">All Users by Division</h1>
                 <p style="color:#8892a4;font-size:13px;">Complete breakdown of every user grouped by their assigned division</p>
             </div>
-            <div class="sw"><i class="fas fa-search"></i><input type="text" id="uSearch" class="fc" placeholder="Search…" oninput="filterUsers()" style="width:220px;"></div>
+            <div class="sw">
+                <i class="fas fa-search"></i>
+                <input type="text" id="uSearch" class="fc" placeholder="Search…" oninput="filterUsers()" style="width:220px;">
+            </div>
         </div>
 
-        <div class="tabs">
+        <div class="tabs" id="userTabs">
             <button class="tab active" onclick="showDivBlock('all',this)">All</button>
-            <% sections.forEach(sec=>{ %>
-            <button class="tab" onclick="showDivBlock('<%=sec%>',this)"><%=sec%></button>
-            <% }) %>
+            <% for(var si=0; si<sections.length; si++){ %>
+            <button class="tab" onclick="showDivBlock('<%= sections[si] %>',this)"><%= sections[si] %></button>
+            <% } %>
         </div>
 
-        <% if(sections.length===0&&(!usersBySection['Unassigned']||usersBySection['Unassigned'].length===0)){ %>
+        <% if(sections.length === 0 && (!usersBySection['Unassigned'] || usersBySection['Unassigned'].length === 0)){ %>
             <div class="empty"><i class="fas fa-users"></i>No users in the system yet.</div>
         <% } %>
 
-        <% sections.forEach(sec=>{ %>
-        <div class="div-block" data-dv="<%=sec%>">
+        <% for(var seci=0; seci<sections.length; seci++){
+               var sec = sections[seci];
+               if(sec === 'Unassigned') continue;
+        %>
+        <div class="div-block" data-dv="<%= sec %>">
             <div class="div-heading">
-                <span class="div-badge"><%=sec%></span>
-                <span style="font-size:13px;color:#8892a4;"><%=usersBySection[sec].length%> user(s) · <%=usersBySection[sec].filter(u=>!u.isApproved).length%> pending</span>
+                <span class="div-badge"><%= sec %></span>
+                <span style="font-size:13px;color:#8892a4;">
+                    <%= usersBySection[sec].length %> user(s)
+                    &nbsp;·&nbsp;
+                    <%
+                        var secPending = 0;
+                        for(var spi=0; spi<usersBySection[sec].length; spi++){
+                            if(!usersBySection[sec][spi].isApproved) secPending++;
+                        }
+                    %>
+                    <%= secPending %> pending
+                </span>
             </div>
             <div class="div-table-wrap">
                 <div style="overflow-x:auto;">
                     <table>
                         <thead><tr><th>User</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
                         <tbody>
-                            <% usersBySection[sec].forEach(u=>{ %>
-                            <tr class="ur" data-s="<%=(u.name+' '+u.email).toLowerCase()%>">
+                            <% for(var usi=0; usi<usersBySection[sec].length; usi++){
+                                   var u = usersBySection[sec][usi];
+                                   var uName = (u.name || '').replace(/'/g, "\\'");
+                                   var uSection = u.section || '';
+                            %>
+                            <tr class="ur" data-s="<%= (u.name+' '+u.email).toLowerCase() %>">
                                 <td>
-                                    <strong><%=u.name||'—'%></strong>
-                                    <div style="font-size:11px;color:#8892a4;"><%=u.email%></div>
-                                    <% if(u.rollNo){%><div style="font-size:11px;font-family:monospace;color:#aaa;"><%=u.rollNo%></div><%}%>
-                                    <% if(u.isClassTeacher){%><span class="ct-tag"><i class="fas fa-star"></i> CT · <%=u.classTeacherSection%></span><%}%>
+                                    <strong><%= u.name || '—' %></strong>
+                                    <div style="font-size:11px;color:#8892a4;"><%= u.email %></div>
+                                    <% if(u.rollNo){ %><div style="font-size:11px;font-family:monospace;color:#aaa;"><%= u.rollNo %></div><% } %>
+                                    <% if(u.isClassTeacher){ %><span class="ct-tag"><i class="fas fa-star"></i> CT · <%= u.classTeacherSection %></span><% } %>
                                 </td>
-                                <td><span class="rb rb-<%=u.role%>"><%=u.role||'—'%></span></td>
-                                <td><span class="pill <%=u.isApproved?'pill-a':'pill-p'%>"><%=u.isApproved?'✓ Active':'⏳ Pending'%></span></td>
+                                <td><span class="rb rb-<%= u.role %>"><%= u.role || '—' %></span></td>
+                                <td><span class="pill <%= u.isApproved ? 'pill-a' : 'pill-p' %>"><%= u.isApproved ? '✓ Active' : '⏳ Pending' %></span></td>
                                 <td>
                                     <div style="display:flex;gap:5px;">
-                                        <button class="btn btn-e" onclick="openAssign('<%=u._id%>','<%=u.name.replace(/'/g,"\\'")%>','<%=u.email%>','<%=u.role%>','<%=u.section||""%>')">
+                                        <button type="button" class="btn btn-e"
+                                            onclick="openAssign('<%= u._id %>','<%= uName %>','<%= u.email %>','<%= u.role %>','<%= uSection %>')">
                                             <i class="fas fa-user-cog"></i> Edit
                                         </button>
-                                        <form action="/delete-user/<%=u._id%>" method="POST" style="display:inline;" onsubmit="return confirm('Delete?')">
-                                            <button class="btn btn-d"><i class="fas fa-trash-alt"></i></button>
+                                        <form action="/delete-user/<%= u._id %>" method="POST" style="display:inline;"
+                                              onsubmit="return confirm('Delete this user?')">
+                                            <button type="submit" class="btn btn-d"><i class="fas fa-trash-alt"></i></button>
                                         </form>
                                     </div>
                                 </td>
                             </tr>
-                            <% }) %>
+                            <% } %>
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
-        <% }) %>
+        <% } %>
 
-        <% if(usersBySection['Unassigned']&&usersBySection['Unassigned'].length>0){ %>
+        <% if(usersBySection['Unassigned'] && usersBySection['Unassigned'].length > 0){ %>
         <div class="div-block" data-dv="Unassigned">
             <div class="div-heading" style="border-left-color:var(--warning);">
                 <span class="div-badge" style="background:var(--warning);">Unassigned</span>
-                <span style="font-size:13px;color:#8892a4;"><%=usersBySection['Unassigned'].length%> user(s) with no division</span>
+                <span style="font-size:13px;color:#8892a4;"><%= usersBySection['Unassigned'].length %> user(s) with no division</span>
             </div>
             <div class="div-table-wrap">
                 <div style="overflow-x:auto;">
                     <table>
                         <thead><tr><th>User</th><th>Role</th><th>Status</th><th>Action</th></tr></thead>
                         <tbody>
-                            <% usersBySection['Unassigned'].forEach(u=>{ %>
-                            <tr class="ur" data-s="<%=(u.name+' '+u.email).toLowerCase()%>">
-                                <td><strong><%=u.name||'—'%></strong><div style="font-size:11px;color:#8892a4;"><%=u.email%></div></td>
-                                <td><span class="rb rb-<%=u.role%>"><%=u.role%></span></td>
-                                <td><span class="pill <%=u.isApproved?'pill-a':'pill-p'%>"><%=u.isApproved?'✓ Active':'⏳ Pending'%></span></td>
+                            <% for(var unai=0; unai<usersBySection['Unassigned'].length; unai++){
+                                   var u = usersBySection['Unassigned'][unai];
+                                   var uName = (u.name || '').replace(/'/g, "\\'");
+                            %>
+                            <tr class="ur" data-s="<%= (u.name+' '+u.email).toLowerCase() %>">
                                 <td>
-                                    <button class="btn btn-e" onclick="openAssign('<%=u._id%>','<%=u.name.replace(/'/g,"\\'")%>','<%=u.email%>','<%=u.role%>','')">
+                                    <strong><%= u.name || '—' %></strong>
+                                    <div style="font-size:11px;color:#8892a4;"><%= u.email %></div>
+                                </td>
+                                <td><span class="rb rb-<%= u.role %>"><%= u.role %></span></td>
+                                <td><span class="pill <%= u.isApproved ? 'pill-a' : 'pill-p' %>"><%= u.isApproved ? '✓ Active' : '⏳ Pending' %></span></td>
+                                <td>
+                                    <button type="button" class="btn btn-e"
+                                        onclick="openAssign('<%= u._id %>','<%= uName %>','<%= u.email %>','<%= u.role %>','')">
                                         <i class="fas fa-user-cog"></i> Assign Division
                                     </button>
                                 </td>
                             </tr>
-                            <% }) %>
+                            <% } %>
                         </tbody>
                     </table>
                 </div>
@@ -515,7 +648,7 @@
         <% } %>
     </div>
 
-    <!-- ═══ SUBJECTS ═══ -->
+    <!-- ══ SUBJECTS ══ -->
     <div id="pg-subjects" class="page">
         <h1 style="font-size:1.5rem;margin-bottom:4px;">Subject Catalog</h1>
         <p style="color:#8892a4;font-size:13px;margin-bottom:22px;">Subjects appear in the Leader's attendance form for each division</p>
@@ -524,56 +657,78 @@
             <div class="card-hdr"><h3><i class="fas fa-plus-circle" style="color:var(--success);"></i> Add Subject</h3></div>
             <div class="card-body">
                 <form action="/add-subject" method="POST" class="form-row">
-                    <div class="fg" style="flex:2;"><label>Subject Name</label><input type="text" name="subjectName" class="fc" placeholder="e.g. Data Structures" required></div>
-                    <div class="fg" style="flex:1;"><label>Code</label><input type="text" name="subjectCode" class="fc" placeholder="CS302"></div>
+                    <div class="fg" style="flex:2;">
+                        <label>Subject Name</label>
+                        <input type="text" name="subjectName" class="fc" placeholder="e.g. Data Structures" required>
+                    </div>
+                    <div class="fg" style="flex:1;">
+                        <label>Code</label>
+                        <input type="text" name="subjectCode" class="fc" placeholder="CS302">
+                    </div>
                     <div class="fg" style="flex:1;">
                         <label>Division</label>
                         <select name="section" class="fc" required>
                             <option value="">-- Select --</option>
-                            <% allDivisions.forEach(div=>{ %><option value="<%=div.name%>"><%=div.name%></option><% }) %>
+                            <% for(var divi=0; divi<allDivisions.length; divi++){ %>
+                            <option value="<%= allDivisions[divi].name %>"><%= allDivisions[divi].name %></option>
+                            <% } %>
                         </select>
                     </div>
-                    <div style="align-self:flex-end;"><button type="submit" class="btn btn-g"><i class="fas fa-plus"></i> Add</button></div>
+                    <div style="align-self:flex-end;">
+                        <button type="submit" class="btn btn-g"><i class="fas fa-plus"></i> Add</button>
+                    </div>
                 </form>
-                <% if(allDivisions.length===0){ %>
-                <p style="color:var(--warning);font-size:13px;margin-top:12px;"><i class="fas fa-exclamation-triangle"></i> Create divisions first before adding subjects.</p>
+                <% if(allDivisions.length === 0){ %>
+                <p style="color:var(--warning);font-size:13px;margin-top:12px;">
+                    <i class="fas fa-exclamation-triangle"></i> Create divisions first before adding subjects.
+                </p>
                 <% } %>
             </div>
         </div>
 
         <%
-            const subsByDiv={};
-            allSubjects.forEach(s=>{ const sec=s.section||'Unassigned'; if(!subsByDiv[sec])subsByDiv[sec]=[]; subsByDiv[sec].push(s); });
+            var subsByDiv = {};
+            for(var sbi=0; sbi<allSubjects.length; sbi++){
+                var sbSec = allSubjects[sbi].section || 'Unassigned';
+                if(!subsByDiv[sbSec]) subsByDiv[sbSec] = [];
+                subsByDiv[sbSec].push(allSubjects[sbi]);
+            }
+            var subDivKeys = Object.keys(subsByDiv).sort();
         %>
-        <% if(allSubjects.length>0){ %>
-            <% Object.keys(subsByDiv).sort().forEach(sec=>{ %>
+        <% if(allSubjects.length > 0){ %>
+            <% for(var sbki=0; sbki<subDivKeys.length; sbki++){
+                   var sbKey = subDivKeys[sbki];
+            %>
             <div class="card" style="padding:0;overflow:hidden;">
                 <div class="card-hdr">
                     <h3 style="font-size:.85rem;text-transform:uppercase;letter-spacing:.5px;">
-                        <i class="fas fa-layer-group" style="color:var(--accent);"></i> <%=sec%>
-                        <span style="font-weight:400;color:#aaa;margin-left:8px;"><%=subsByDiv[sec].length%> subject(s)</span>
+                        <i class="fas fa-layer-group" style="color:var(--accent);"></i> <%= sbKey %>
+                        <span style="font-weight:400;color:#aaa;margin-left:8px;"><%= subsByDiv[sbKey].length %> subject(s)</span>
                     </h3>
                 </div>
                 <div style="overflow-x:auto;">
                     <table>
                         <thead><tr><th>Code</th><th>Name</th><th>Action</th></tr></thead>
                         <tbody>
-                            <% subsByDiv[sec].forEach(sub=>{ %>
+                            <% for(var sbii=0; sbii<subsByDiv[sbKey].length; sbii++){
+                                   var sub = subsByDiv[sbKey][sbii];
+                            %>
                             <tr>
-                                <td style="font-family:monospace;font-weight:bold;color:var(--accent);"><%=sub.code||'—'%></td>
-                                <td><%=sub.name%></td>
+                                <td style="font-family:monospace;font-weight:bold;color:var(--accent);"><%= sub.code || '—' %></td>
+                                <td><%= sub.name %></td>
                                 <td>
-                                    <form action="/delete-subject/<%=sub._id%>" method="POST" onsubmit="return confirm('Delete subject?')">
-                                        <button class="btn btn-d"><i class="fas fa-times"></i> Remove</button>
+                                    <form action="/delete-subject/<%= sub._id %>" method="POST"
+                                          onsubmit="return confirm('Delete subject: <%= sub.name %>?')">
+                                        <button type="submit" class="btn btn-d"><i class="fas fa-times"></i> Remove</button>
                                     </form>
                                 </td>
                             </tr>
-                            <% }) %>
+                            <% } %>
                         </tbody>
                     </table>
                 </div>
             </div>
-            <% }) %>
+            <% } %>
         <% } else { %>
             <div class="empty"><i class="fas fa-book"></i>No subjects added yet.</div>
         <% } %>
@@ -581,13 +736,13 @@
 
 </div><!-- /main -->
 
-<!-- ASSIGN MODAL -->
+<!-- ══ ASSIGN MODAL ══ -->
 <div class="overlay" id="aModal">
     <div class="modal">
         <h3><i class="fas fa-user-cog" style="color:var(--accent);"></i> &nbsp;Assign Role &amp; Division</h3>
-        <p id="aModalDesc"></p>
+        <p class="modal-sub" id="aModalDesc"></p>
         <form id="aForm" method="POST">
-            <div class="fg" style="margin-bottom:14px;">
+            <div class="fg">
                 <label>Role</label>
                 <select name="role" id="aRole" class="fc" required onchange="toggleRoll()">
                     <option value="Student">Student</option>
@@ -596,135 +751,161 @@
                     <option value="Master">Master</option>
                     <option value="SuperAdmin">SuperAdmin</option>
                 </select>
-                <small style="color:#aaa;font-size:11px;margin-top:4px;">Master &amp; Lecturer can teach any division.</small>
+                <small style="color:#aaa;font-size:11px;margin-top:4px;">
+                    Master &amp; Lecturer can be assigned to any division.
+                </small>
             </div>
-            <div class="fg" style="margin-bottom:14px;">
+            <div class="fg">
                 <label>Division</label>
                 <select name="section" id="aSection" class="fc">
                     <option value="">— No Division / Unassigned —</option>
-                    <% allDivisions.forEach(div=>{ %><option value="<%=div.name%>"><%=div.name%></option><% }) %>
+                    <% for(var mdi=0; mdi<allDivisions.length; mdi++){ %>
+                    <option value="<%= allDivisions[mdi].name %>"><%= allDivisions[mdi].name %></option>
+                    <% } %>
                 </select>
             </div>
-            <div class="fg" id="rollGrp" style="display:none;margin-bottom:14px;">
+            <div class="fg" id="rollGrp" style="display:none;">
                 <label>Roll Number</label>
                 <input type="text" name="rollNo" id="aRoll" class="fc" placeholder="e.g. 22CS001">
             </div>
             <div class="modal-footer">
-                <button type="button" onclick="closeAssign()" class="btn" style="background:#eee;color:#333;padding:10px 18px;">Cancel</button>
-                <button type="submit" class="btn btn-b" style="padding:10px 22px;"><i class="fas fa-check"></i> Confirm &amp; Approve</button>
+                <button type="button" onclick="closeAssign()" class="btn"
+                        style="background:#eee;color:#333;padding:10px 18px;">Cancel</button>
+                <button type="submit" class="btn btn-b" style="padding:10px 22px;">
+                    <i class="fas fa-check"></i> Confirm &amp; Approve
+                </button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- CT MODAL -->
+<!-- ══ CLASS TEACHER MODAL ══ -->
 <div class="overlay" id="ctModal">
     <div class="modal">
         <h3><i class="fas fa-star" style="color:var(--purple);"></i> &nbsp;Set Class Teacher</h3>
-        <p id="ctDesc"></p>
+        <p class="modal-sub" id="ctDesc"></p>
         <form id="ctForm" method="POST">
-            <div class="fg" style="margin-bottom:14px;">
+            <div class="fg">
                 <label>Class Teacher Division</label>
                 <select name="classTeacherSection" class="fc" required>
                     <option value="">-- Select Division --</option>
-                    <% allDivisions.forEach(div=>{ %><option value="<%=div.name%>"><%=div.name%></option><% }) %>
+                    <% for(var ctdi=0; ctdi<allDivisions.length; ctdi++){ %>
+                    <option value="<%= allDivisions[ctdi].name %>"><%= allDivisions[ctdi].name %></option>
+                    <% } %>
                 </select>
             </div>
             <div class="modal-footer">
-                <button type="button" onclick="closeCT()" class="btn" style="background:#eee;color:#333;padding:10px 18px;">Cancel</button>
-                <button type="submit" class="btn btn-t" style="padding:10px 22px;"><i class="fas fa-star"></i> Confirm</button>
+                <button type="button" onclick="closeCT()" class="btn"
+                        style="background:#eee;color:#333;padding:10px 18px;">Cancel</button>
+                <button type="submit" class="btn btn-t" style="padding:10px 22px;">
+                    <i class="fas fa-star"></i> Confirm
+                </button>
             </div>
         </form>
     </div>
 </div>
 
 <script>
-// ── Page navigation ──
+/* ── Page navigation ── */
 function showPage(name, btn) {
     document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
     document.querySelectorAll('.nav-btn').forEach(function(b){ b.classList.remove('active'); });
-    document.getElementById('pg-'+name).classList.add('active');
-    if(btn){ btn.classList.add('active'); }
+    document.getElementById('pg-' + name).classList.add('active');
+    if (btn) btn.classList.add('active');
     closeSidebar();
-    window.scrollTo(0,0);
+    window.scrollTo(0, 0);
 }
 
-// ── Mobile sidebar ──
-function toggleSidebar(){
+/* ── Mobile sidebar ── */
+function toggleSidebar() {
     document.getElementById('sidebar').classList.toggle('open');
     document.getElementById('overlayBg').classList.toggle('open');
 }
-function closeSidebar(){
+function closeSidebar() {
     document.getElementById('sidebar').classList.remove('open');
     document.getElementById('overlayBg').classList.remove('open');
 }
 
-// ── All Users tab: division blocks ──
-function showDivBlock(dv, btn){
-    document.querySelectorAll('#pg-users .tabs .tab').forEach(function(t){ t.classList.remove('active'); });
-    if(btn) btn.classList.add('active');
+/* ── All Users: division block filter ── */
+function showDivBlock(dv, btn) {
+    document.querySelectorAll('#userTabs .tab').forEach(function(t){ t.classList.remove('active'); });
+    if (btn) btn.classList.add('active');
     document.querySelectorAll('.div-block').forEach(function(b){
-        b.classList.toggle('hidden', dv!=='all' && b.dataset.dv !== dv);
+        b.classList.toggle('hidden', dv !== 'all' && b.dataset.dv !== dv);
     });
 }
 
-// ── Assign tab filters ──
-var curDiv='all';
-function filterDiv(dv, btn){
-    curDiv=dv;
-    if(btn){
+/* ── Assign tab: division filter ── */
+var curDiv = 'all';
+function filterDiv(dv, btn) {
+    curDiv = dv;
+    if (btn) {
         document.querySelectorAll('#aTabs .tab').forEach(function(t){ t.classList.remove('active'); });
         btn.classList.add('active');
     }
     applyFilters();
 }
-function applyFilters(){
-    var q=(document.getElementById('aSearch').value||'').toLowerCase();
-    document.querySelectorAll('.ar').forEach(function(row){
-        var dvMatch = curDiv==='all'
-            || (curDiv==='pending' && row.dataset.pend==='true')
-            || row.dataset.dv===curDiv;
-        var qMatch = !q || row.dataset.s.includes(q);
-        row.style.display = dvMatch&&qMatch ? '' : 'none';
+function applyFilters() {
+    var q = (document.getElementById('aSearch').value || '').toLowerCase();
+    document.querySelectorAll('.ar').forEach(function(row) {
+        var dvMatch = curDiv === 'all'
+            || (curDiv === 'pending' && row.dataset.pend === 'true')
+            || row.dataset.dv === curDiv;
+        var qMatch = !q || row.dataset.s.indexOf(q) !== -1;
+        row.style.display = (dvMatch && qMatch) ? '' : 'none';
     });
 }
-function filterUsers(){
-    var q=(document.getElementById('uSearch').value||'').toLowerCase();
-    document.querySelectorAll('.ur').forEach(function(r){
-        r.style.display = !q||r.dataset.s.includes(q) ? '' : 'none';
+function filterUsers() {
+    var q = (document.getElementById('uSearch').value || '').toLowerCase();
+    document.querySelectorAll('.ur').forEach(function(r) {
+        r.style.display = (!q || r.dataset.s.indexOf(q) !== -1) ? '' : 'none';
     });
 }
 
-// ── Assign Modal ──
-function openAssign(id, name, email, role, section){
-    document.getElementById('aForm').action='/assign-user/'+id;
-    document.getElementById('aModalDesc').textContent=name+' · '+email;
-    document.getElementById('aRole').value=role||'Student';
-    document.getElementById('aSection').value=section||'';
+/* ── Assign Modal ── */
+function openAssign(id, name, email, role, section) {
+    document.getElementById('aForm').action = '/assign-user/' + id;
+    document.getElementById('aModalDesc').textContent = name + '  ·  ' + email;
+    document.getElementById('aRole').value = role || 'Student';
+    document.getElementById('aSection').value = section || '';
     toggleRoll();
     document.getElementById('aModal').classList.add('open');
 }
-function closeAssign(){ document.getElementById('aModal').classList.remove('open'); }
-function toggleRoll(){
-    var r=document.getElementById('aRole').value;
-    document.getElementById('rollGrp').style.display=(r==='Student'||r==='Leader')?'flex':'none';
+function closeAssign() {
+    document.getElementById('aModal').classList.remove('open');
 }
-document.getElementById('aModal').addEventListener('click',function(e){ if(e.target===this) closeAssign(); });
+function toggleRoll() {
+    var r = document.getElementById('aRole').value;
+    document.getElementById('rollGrp').style.display = (r === 'Student' || r === 'Leader') ? 'flex' : 'none';
+}
+document.getElementById('aModal').addEventListener('click', function(e) {
+    if (e.target === this) closeAssign();
+});
 
-// ── CT Modal ──
-function openCT(id, name){
-    document.getElementById('ctForm').action='/set-class-teacher/'+id;
-    document.getElementById('ctDesc').textContent='Lecturer: '+name;
+/* ── Class Teacher Modal ── */
+function openCT(id, name) {
+    document.getElementById('ctForm').action = '/set-class-teacher/' + id;
+    document.getElementById('ctDesc').textContent = 'Lecturer: ' + name;
     document.getElementById('ctModal').classList.add('open');
 }
-function closeCT(){ document.getElementById('ctModal').classList.remove('open'); }
-document.getElementById('ctModal').addEventListener('click',function(e){ if(e.target===this) closeCT(); });
+function closeCT() {
+    document.getElementById('ctModal').classList.remove('open');
+}
+document.getElementById('ctModal').addEventListener('click', function(e) {
+    if (e.target === this) closeCT();
+});
 
-// ── Dismiss alerts after 5s ──
-document.addEventListener('DOMContentLoaded',function(){
-    var alerts=document.querySelectorAll('.alert');
-    if(alerts.length){
-        setTimeout(function(){ alerts.forEach(function(a){ a.style.transition='opacity .5s'; a.style.opacity='0'; setTimeout(function(){ a.remove(); },500); }); },5000);
+/* ── Auto-dismiss alerts after 5s ── */
+document.addEventListener('DOMContentLoaded', function() {
+    var alerts = document.querySelectorAll('.alert');
+    if (alerts.length) {
+        setTimeout(function() {
+            alerts.forEach(function(a) {
+                a.style.transition = 'opacity .5s';
+                a.style.opacity = '0';
+                setTimeout(function() { if(a.parentNode) a.parentNode.removeChild(a); }, 500);
+            });
+        }, 5000);
     }
 });
 </script>
