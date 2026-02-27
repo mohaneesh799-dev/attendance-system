@@ -98,7 +98,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
     <div class="section-label">Your account has multiple roles — choose one to continue:</div>
 
     <form action="/choose-role" method="POST" id="roleForm">
-      <input type="hidden" name="_csrf" value=""><!-- CSRF placeholder -->
       <div class="role-grid">
         <%
           var roleData = {

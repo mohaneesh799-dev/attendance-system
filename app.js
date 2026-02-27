@@ -73,11 +73,9 @@ app.use(session({
     store: MongoStore.create({
         mongoUrl: mongoURI,
         touchAfter: 24 * 3600,
-        ttl: 24 * 60 * 60,
+        ttl:        24 * 60 * 60,
         autoRemove: 'interval',
-        autoRemoveInterval: 60, // clean expired sessions every 60 minutes
-        stringify: false,
-        crypto: { secret: false }
+        autoRemoveInterval: 60
     }),
     cookie: {
         secure: isProd,
@@ -132,7 +130,9 @@ const userSchema = new mongoose.Schema({
     role:               { type: String, default: 'Student' },
     roles:              { type: [String], default: [] },
     // ─────────────────────────
+    // sections[] = all sections a Master manages. section = primary/active one.
     section:            { type: String, default: '' },
+    sections:           { type: [String], default: [] },
     phone:              { type: String, default: '' },
     isApproved:         { type: Boolean, default: false },
     isPreRegistered:    { type: Boolean, default: false },
@@ -186,19 +186,23 @@ function getUser(req) {
     return u;
 }
 
-// Build session user object — includes ALL roles for role-switcher
+// Build session user object — includes ALL roles + ALL sections for multi-role/multi-section
 function buildSessionUser(user, activeRole) {
+    const sections = user.sections && user.sections.length
+        ? user.sections
+        : (user.section ? [user.section] : []);
     return {
-        _id: user._id,
-        email: user.email.toLowerCase(),
-        role: activeRole || user.role,
-        roles: user.roles && user.roles.length ? user.roles : [user.role],
-        name: user.name,
-        section: user.section,
-        rollNo: user.rollNo,
-        isApproved: user.isApproved,          // ← CRITICAL: was missing, caused isSuperAdmin loop
-        isClassTeacher: user.isClassTeacher,
-        classTeacherSection: user.classTeacherSection
+        _id:      user._id,
+        email:    user.email.toLowerCase(),
+        role:     activeRole || user.role,
+        roles:    user.roles && user.roles.length ? user.roles : [user.role],
+        section:  user.section || sections[0] || '',
+        sections, // all sections this master manages
+        name:     user.name,
+        rollNo:   user.rollNo,
+        isApproved:           user.isApproved,
+        isClassTeacher:       user.isClassTeacher,
+        classTeacherSection:  user.classTeacherSection
     };
 }
 
@@ -308,11 +312,7 @@ app.get('/select-role', (req, res) => {
         .then(user => {
             if (!user) return res.redirect('/login?error=User+not+found');
             const roles = user.roles && user.roles.length ? user.roles : [user.role];
-            res.render('choose-role', {
-                user,
-                roles,
-                error: req.query.error || null   // pass error for redirect-back scenarios
-            });
+            res.render('choose-role', { user, roles, error: req.query.error || null });
         })
         .catch(() => res.redirect('/login?error=Session+error'));
 });
@@ -334,29 +334,30 @@ app.get('/auth/google/callback', (req, res, next) => {
         if (!user) return res.redirect('/login?error=Google+login+failed');
 
         if (!user.isApproved) {
-            req.logout(e => { if(e) console.error(e); });
-            return res.render('pending', { user });
+            return req.logout(e => {
+                if (e) console.error('OAuth logout error (non-fatal):', e);
+                res.render('pending', { user });
+            });
         }
         const roles = user.roles && user.roles.length ? user.roles : [user.role];
         if (roles.length > 1) {
-            req.session.pendingUserId = user._id.toString();
-            // req.logout must finish BEFORE session.save, otherwise passport clears session after we save
+            // req.logout is async — MUST nest everything inside its callback
+            // or passport will clear the session AFTER we've already redirected
             return req.logout(e => {
-                if (e) console.error('Logout error (non-fatal):', e);
-                req.session.pendingUserId = user._id.toString(); // restore after logout clears it
+                if (e) console.error('OAuth logout error (non-fatal):', e);
+                req.session.pendingUserId = user._id.toString();
                 req.session.save(err => {
-                    if (err) { console.error('Session save error:', err); return res.redirect('/login?error=Session+error'); }
+                    if (err) return res.redirect('/login?error=Session+error');
                     res.redirect('/select-role');
                 });
             });
         }
-        // Single role: set session user, then clear passport state, then redirect
         const sessionUser = buildSessionUser(user, roles[0]);
         req.logout(e => {
-            if (e) console.error('Logout error (non-fatal):', e);
-            req.session.user = sessionUser; // set after logout so passport doesn't overwrite
+            if (e) console.error('OAuth logout error (non-fatal):', e);
+            req.session.user = sessionUser;
             req.session.save(err => {
-                if (err) { console.error('Session save error:', err); return res.redirect('/login?error=Session+error'); }
+                if (err) return res.redirect('/login?error=Session+error');
                 res.redirect(roleToPath(roles[0]));
             });
         });
@@ -405,37 +406,60 @@ app.get('/master', async (req, res) => {
         const user = getUser(req);
         const isClassTeacher = user && user.role === 'Lecturer' && user.isClassTeacher;
         if (!user || (user.role !== 'Master' && !isClassTeacher)) return res.redirect('/login?error=Unauthorized');
-        const facultySection = isClassTeacher ? user.classTeacherSection : user.section;
+
+        // Multi-section support: Master may manage many sections
+        let masterSections;
+        if (isClassTeacher) {
+            masterSections = [user.classTeacherSection];
+        } else {
+            masterSections = (user.sections && user.sections.length > 0)
+                ? user.sections
+                : (user.section ? [user.section] : []);
+        }
+        if (masterSections.length === 0) masterSections = [''];
+
         const [allUsers, masterSubjects, allDivisions] = await Promise.all([
-            User.find({ section: facultySection }).lean(),
-            Subject.find({ section: facultySection }).lean(),
+            User.find({ section: { $in: masterSections } }).lean(),
+            Subject.find({ section: { $in: masterSections } }).lean(),
             Division.find({}).sort({ name:1 }).lean()
         ]);
 
-        // Group users by role within section
-        const usersByRole = {};
+        // Group users by section for multi-section display
+        const usersBySection = {};
+        masterSections.forEach(s => { if (s) usersBySection[s] = []; });
         allUsers.forEach(u => {
-            const r = u.role || 'Unknown';
-            if (!usersByRole[r]) usersByRole[r] = [];
-            usersByRole[r].push(u);
+            const s = u.section || '';
+            if (!usersBySection[s]) usersBySection[s] = [];
+            usersBySection[s].push(u);
+        });
+
+        // Group subjects by section
+        const subjectsBySection = {};
+        masterSections.forEach(s => { if (s) subjectsBySection[s] = []; });
+        masterSubjects.forEach(sub => {
+            const s = sub.section || '';
+            if (!subjectsBySection[s]) subjectsBySection[s] = [];
+            subjectsBySection[s].push(sub);
         });
 
         const stats = {
-            total: allUsers.length,
-            pending: allUsers.filter(u => !u.isApproved).length,
+            total:    allUsers.length,
+            pending:  allUsers.filter(u => !u.isApproved).length,
             subjects: masterSubjects.length,
             students: allUsers.filter(u => u.role === 'Student').length
         };
 
         req.session.save(() => res.render('master', {
-            user: { ...user, section: facultySection },
-            allUsers: allUsers || [],
-            usersByRole,
-            masterSubjects: masterSubjects || [],
+            user: { ...user, section: masterSections[0] || '', sections: masterSections },
+            allUsers:         allUsers || [],
+            usersBySection,
+            subjectsBySection,
+            masterSubjects:   masterSubjects || [],
+            masterSections,
             allDivisions,
             stats,
             success: req.query.success || null,
-            error: req.query.error || null
+            error:   req.query.error   || null
         }));
     } catch(err) {
         console.error('Master Error:', err);
@@ -642,11 +666,11 @@ app.get('/role-error', (req, res) => {
 
 // ── Emergency session clear (allows user to escape redirect loops) ──
 app.get('/clear-session', (req, res) => {
+    const destroy = () => res.redirect('/login?message=Session+cleared.+Please+log+in+again.');
     req.session.destroy(err => {
         if(err) console.error('Session destroy error:', err);
-        res.clearCookie('rku.sid');
         res.clearCookie('connect.sid');
-        res.redirect('/login?message=Session+cleared.+Please+log+in+again.');
+        destroy();
     });
 });
 
@@ -695,21 +719,19 @@ app.post('/login', loginLimiter, async (req, res) => {
     }
 });
 
-// ── Select Role (POST) ────────────────────────────────────────
-// Handles BOTH /select-role and /choose-role (choose-role.ejs posts to /choose-role)
+// ── Select Role / Choose Role (POST) ─────────────────────────
+// choose-role.ejs posts to /choose-role; this alias makes both work
 async function handleRoleSelection(req, res) {
     try {
         if (!req.session.pendingUserId) return res.redirect('/login?error=Session+expired.+Please+log+in+again.');
         const { selectedRole } = req.body;
-        if (!selectedRole) return res.redirect('/select-role?error=Please+select+a+role');
+        if (!selectedRole) return res.redirect('/select-role?error=Please+select+a+role+to+continue.');
         const user = await User.findById(req.session.pendingUserId);
         if (!user) return res.redirect('/login?error=User+not+found');
-
         const roles = user.roles && user.roles.length ? user.roles : [user.role];
         if (!roles.includes(selectedRole)) {
-            return res.redirect('/select-role?error=Invalid+role+selection.+Please+choose+from+your+assigned+roles.');
+            return res.redirect('/select-role?error=Invalid+role.+Choose+one+of+your+assigned+roles.');
         }
-
         delete req.session.pendingUserId;
         req.session.user = buildSessionUser(user, selectedRole);
         req.session.save(err => {
@@ -721,8 +743,8 @@ async function handleRoleSelection(req, res) {
         res.status(500).render('error', { message: 'Role selection failed. Please try again.' });
     }
 }
-app.post('/select-role', handleRoleSelection);
-app.post('/choose-role', handleRoleSelection);   // ← alias: choose-role.ejs form posts here
+app.post('/select-role', handleRoleSelection);   // internal route
+app.post('/choose-role', handleRoleSelection);   // choose-role.ejs form posts here
 
 // ── Switch Role (while logged in) ────────────────────────────
 app.post('/switch-role', async (req, res) => {
@@ -730,13 +752,20 @@ app.post('/switch-role', async (req, res) => {
         const user = getUser(req);
         if (!user) return res.redirect('/login');
         const { targetRole } = req.body;
+        if (!targetRole) return res.redirect('back');
         const dbUser = await User.findById(user._id);
         if (!dbUser) return res.redirect('/login');
         const roles = dbUser.roles && dbUser.roles.length ? dbUser.roles : [dbUser.role];
         if (!roles.includes(targetRole)) return res.redirect('/login?error=Role+not+assigned');
         req.session.user = buildSessionUser(dbUser, targetRole);
-        req.session.save(() => res.redirect(roleToPath(targetRole)));
-    } catch(err) { res.redirect('/login?error=Switch+failed'); }
+        req.session.save(err => {
+            if (err) return res.redirect('/login?error=Session+error');
+            res.redirect(roleToPath(targetRole));
+        });
+    } catch(err) {
+        console.error('Switch role error:', err);
+        res.redirect('/login?error=Switch+failed');
+    }
 });
 
 // ── Register ──────────────────────────────────────────────────
@@ -779,8 +808,8 @@ app.post('/register-super-admin', async (req, res) => {
 app.get('/logout', (req, res) => {
     const destroy = () => req.session.destroy(err => {
         if (err) console.error('Session destroy error:', err);
-        res.clearCookie('rku.sid');        // must match session name above
-        res.clearCookie('connect.sid');    // clear legacy name too
+        res.clearCookie('rku.sid');
+        res.clearCookie('connect.sid');
         res.redirect('/login?message=Logged out successfully');
     });
     if (typeof req.logout === 'function') req.logout(err => { if(err) console.error(err); destroy(); });
@@ -894,36 +923,42 @@ app.post('/delete-division/:id', isSuperAdmin, async (req, res) => {
 });
 
 // ================================================================
-// ASSIGN USER — SUPPORTS MULTIPLE ROLES
+// ASSIGN USER — MULTIPLE ROLES + MULTIPLE SECTIONS (for Master)
 // ================================================================
 
 app.post('/assign-user/:id', isSuperAdmin, async (req, res) => {
     try {
-        // `roles` is now an array of checkboxes; `role` (hidden) is the primary/active role
-        let { roles, primaryRole, section, rollNo } = req.body;
+        let { roles, primaryRole, section, sections, rollNo } = req.body;
 
-        // Handle both checkbox array and old single-select fallback
+        // Normalise roles to array
         let rolesArray = Array.isArray(roles) ? roles : (roles ? [roles] : []);
-        if (rolesArray.length === 0 && primaryRole) rolesArray = [primaryRole];
-        if (rolesArray.length === 0) rolesArray = ['Student'];
+        if (!rolesArray.length && primaryRole) rolesArray = [primaryRole];
+        if (!rolesArray.length) rolesArray = ['Student'];
+        const activePrimaryRole = (primaryRole && rolesArray.includes(primaryRole))
+            ? primaryRole : rolesArray[0];
 
-        // Primary role = explicitly selected primary, or first in array
-        const activePrimaryRole = primaryRole && rolesArray.includes(primaryRole) ? primaryRole : rolesArray[0];
+        // Normalise sections to array (multi-select checkboxes for Master)
+        let sectionsArray = Array.isArray(sections) ? sections : (sections ? [sections] : []);
+        if (section && !sectionsArray.includes(section)) sectionsArray.push(section);
+        sectionsArray = [...new Set(sectionsArray.filter(Boolean))];
+        const primarySection = sectionsArray[0] || '';
 
         const updateData = {
-            roles: rolesArray,
-            role: activePrimaryRole,
-            section: section || '',
+            roles:    rolesArray,
+            role:     activePrimaryRole,
+            sections: sectionsArray,
+            section:  primarySection,
             isApproved: true
         };
-        if (activePrimaryRole === 'Student' || activePrimaryRole === 'Leader') {
-            if (rollNo && rollNo.trim()) updateData.rollNo = rollNo.trim();
+        if (['Student','Leader'].includes(activePrimaryRole) && rollNo && rollNo.trim()) {
+            updateData.rollNo = rollNo.trim();
         }
 
         const updatedUser = await User.findByIdAndUpdate(req.params.id, { $set: updateData }, { new: true });
         if (!updatedUser) return res.redirect('/super-admin-dashboard?error=User+not+found.');
 
-        res.redirect(`/super-admin-dashboard?success=User+${encodeURIComponent(updatedUser.name)}+assigned+as+${rolesArray.join('+')}+${section ? 'in+' + encodeURIComponent(section) : ''}.`);
+        const secLabel = sectionsArray.length > 1 ? sectionsArray.join('+&+') : (primarySection || 'no+section');
+        res.redirect(`/super-admin-dashboard?success=${encodeURIComponent(updatedUser.name)}+assigned+as+${rolesArray.join('+')}+in+${encodeURIComponent(secLabel)}.`);
     } catch(err) {
         console.error('Assign user error:', err);
         res.redirect('/super-admin-dashboard?error=Failed+to+assign+user.');

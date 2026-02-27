@@ -432,7 +432,7 @@ select.fc option{background:var(--card);color:var(--text);}
                     <tbody>
                         <% for(var pu=0; pu<pendingUsers.length; pu++){
                                var u=pendingUsers[pu];
-                               var uSec=(u.section||'');var uNm=(u.name||'').replace(/'/g,"\\'"); %>
+                               var uSec=(u.sections&&u.sections.length?u.sections.join(','):(u.section||''));var uNm=(u.name||'').replace(/'/g,"\\'"); %>
                         <tr>
                             <td><strong><%= u.name||'—' %></strong></td>
                             <td style="color:var(--muted);font-size:12px;"><%= u.email %></td>
@@ -464,7 +464,7 @@ select.fc option{background:var(--card);color:var(--text);}
                         <% for(var ai=0; ai<Math.min(allUsers.length,10); ai++){
                                var au=allUsers[ai];
                                var auNm=(au.name||'').replace(/'/g,"\\'");
-                               var auSec=(au.section||'');
+                               var auSec=(au.sections&&au.sections.length?au.sections.join(','):(au.section||''));
                         %>
                         <tr>
                             <td>
@@ -591,7 +591,7 @@ select.fc option{background:var(--card);color:var(--text);}
                         <% for(var ui=0; ui<allUsers.length; ui++){
                                var u=allUsers[ui];
                                var uNm=(u.name||'').replace(/'/g,"\\'");
-                               var uSec=(u.section||'');
+                               var uSec=(u.sections&&u.sections.length?u.sections.join(','):(u.section||''));
                         %>
                         <tr class="ar"
                             data-dv="<%= u.section||'Unassigned' %>"
@@ -678,7 +678,7 @@ select.fc option{background:var(--card);color:var(--text);}
                             <% for(var usi=0; usi<usersBySection[sec].length; usi++){
                                    var u=usersBySection[sec][usi];
                                    var uNm=(u.name||'').replace(/'/g,"\\'");
-                                   var uSec=(u.section||'');
+                                   var uSec=(u.sections&&u.sections.length?u.sections.join(','):(u.section||''));
                             %>
                             <tr class="ur" data-s="<%= (u.name+' '+u.email).toLowerCase() %>">
                                 <td>
@@ -856,13 +856,21 @@ select.fc option{background:var(--card);color:var(--text);}
                     <option value="">— Select primary role —</option>
                 </select>
             </div>
-            <div class="fg"><label>Division</label>
-                <select name="section" id="aSection" class="fc">
-                    <option value="">— No Division / Unassigned —</option>
+            <div class="fg" id="sectionGrp"><label>Division(s) <span id="secHint" style="font-size:11px;color:var(--muted);font-weight:400">(select all that apply for Master)</span></label>
+                <div id="aSections" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;max-height:160px;overflow-y:auto;padding:4px 0;">
                     <% for(var mdi=0; mdi<allDivisions.length; mdi++){ %>
-                    <option value="<%= allDivisions[mdi].name %>"><%= allDivisions[mdi].name %></option>
+                    <label style="display:flex;align-items:center;gap:7px;padding:7px 10px;border:1.5px solid var(--input-bd);border-radius:8px;cursor:pointer;font-size:13px;transition:.15s;" class="sec-cb-lbl" id="scl-<%= allDivisions[mdi].name %>">
+                        <input type="checkbox" name="sections" value="<%= allDivisions[mdi].name %>" style="accent-color:var(--acc);width:15px;height:15px;cursor:pointer;">
+                        <%= allDivisions[mdi].name %>
+                    </label>
                     <% } %>
-                </select>
+                    <% if(allDivisions.length === 0){ %>
+                    <p style="color:var(--muted);font-size:13px;grid-column:span 2;">No divisions created yet.</p>
+                    <% } %>
+                </div>
+                <label style="display:flex;align-items:center;gap:7px;margin-top:6px;font-size:12.5px;color:var(--muted);cursor:pointer;">
+                    <input type="checkbox" id="noSectionCb" style="accent-color:var(--muted);width:14px;height:14px;"> Leave unassigned
+                </label>
             </div>
             <div class="fg" id="rollGrp" style="display:none;"><label>Roll Number</label>
                 <input type="text" name="rollNo" id="aRoll" class="fc" placeholder="e.g. 22CS001">
@@ -983,17 +991,26 @@ function filterUsers(){
 window.filterUsers=filterUsers;
 
 /* ══ MODAL ══ */
-function openAssign(id,name,email,roles,section){
+function openAssign(id,name,email,roles,sections){
     var rolesArr = (roles||'Student').split(',').map(function(r){return r.trim();});
+    var secsArr  = sections ? sections.split(',').map(function(s){return s.trim();}).filter(Boolean) : [];
     document.getElementById('aForm').action='/assign-user/'+id;
     document.getElementById('aModalDesc').innerHTML='<strong>'+name+'</strong><br><span style="font-size:12px;color:var(--muted)">'+email+'</span>';
-    // Reset checkboxes
+    // Reset role checkboxes
     document.querySelectorAll('#roleCheckGrp input[type="checkbox"]').forEach(function(cb){
         cb.checked=rolesArr.includes(cb.value);
         var lbl=document.getElementById('rci-'+cb.value);
         if(lbl) lbl.classList.toggle('checked',cb.checked);
     });
-    document.getElementById('aSection').value=section||'';
+    // Reset section checkboxes
+    document.querySelectorAll('#aSections input[type="checkbox"]').forEach(function(cb){
+        var checked = secsArr.includes(cb.value);
+        cb.checked = checked;
+        var lbl = cb.closest('.sec-cb-lbl');
+        if(lbl){ lbl.style.borderColor = checked ? 'var(--acc)' : 'var(--input-bd)'; lbl.style.background = checked ? 'rgba(59,127,244,.06)' : ''; }
+    });
+    var noSec = document.getElementById('noSectionCb');
+    if(noSec) noSec.checked = secsArr.length === 0;
     updatePrimSel(rolesArr[0]);
     document.getElementById('aModal').classList.add('open');
 }
@@ -1051,6 +1068,16 @@ document.addEventListener('DOMContentLoaded',function(){
     document.querySelectorAll('#mobNav [data-page]').forEach(function(btn){
         btn.addEventListener('click',function(){ navTo(btn.dataset.page); });
     });
+
+    /* Section checkboxes — highlight on select */
+    document.querySelectorAll('#aSections input[type="checkbox"]').forEach(function(cb){
+        cb.addEventListener('change', function(){
+            var lbl = this.closest('.sec-cb-lbl');
+            if(lbl){ lbl.style.borderColor = this.checked ? 'var(--acc)' : 'var(--input-bd)'; lbl.style.background = this.checked ? 'rgba(59,127,244,.06)' : ''; }
+        });
+    });
+    var noSecCb = document.getElementById('noSectionCb');
+    if(noSecCb){ noSecCb.addEventListener('change', function(){ if(this.checked){ document.querySelectorAll('#aSections input[type="checkbox"]').forEach(function(cb){ cb.checked=false; var lbl=cb.closest('.sec-cb-lbl'); if(lbl){lbl.style.borderColor='';lbl.style.background='';} }); } }); }
 
     /* Role change → show/hide roll field */
     var aRole=document.getElementById('aRole');
