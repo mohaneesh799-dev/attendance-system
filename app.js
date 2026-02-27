@@ -10,7 +10,7 @@ const bcrypt     = require('bcrypt');
 const multer     = require('multer');
 const fileUpload = require('express-fileupload');
 const session    = require('express-session');
-const MongoStore = require('connect-mongo').default;
+const MongoStore = require('connect-mongo');
 const mongoose   = require('mongoose');
 const helmet     = require('helmet');
 const nodemailer = require('nodemailer');
@@ -75,7 +75,8 @@ app.use(session({
         touchAfter: 24 * 3600,
         ttl:        24 * 60 * 60,
         autoRemove: 'interval',
-        autoRemoveInterval: 60
+        autoRemoveInterval: 60,
+        stringify: false  // CRITICAL: prevents double-serialization that causes "[object Object] is not valid JSON"
     }),
     cookie: {
         secure: isProd,
@@ -92,6 +93,8 @@ passport.serializeUser((user, done) => done(null, user._id.toString()));
 passport.deserializeUser(async (id, done) => {
     try {
         const user = await User.findById(id).lean();
+        // Convert _id to string to avoid ObjectId serialization issues
+        if (user) user._id = user._id.toString();
         // If user was deleted from DB, return null (not error) — clears stale passport session
         done(null, user || null);
     }
@@ -192,7 +195,7 @@ function buildSessionUser(user, activeRole) {
         ? user.sections
         : (user.section ? [user.section] : []);
     return {
-        _id:      user._id,
+        _id:      user._id.toString(), // MUST be string — ObjectId causes "[object Object] is not valid JSON" in MongoStore
         email:    user.email.toLowerCase(),
         role:     activeRole || user.role,
         roles:    user.roles && user.roles.length ? user.roles : [user.role],
@@ -233,7 +236,7 @@ function isSuperAdmin(req, res, next) {
     if (u.role !== 'SuperAdmin') return res.redirect('/login?error=SuperAdmin+access+required');
     // If isApproved is missing from session (stale session), check DB directly
     if (u.isApproved === undefined || u.isApproved === null) {
-        User.findById(u._id).lean()
+        User.findById(u._id.toString ? u._id.toString() : u._id).lean()
             .then(dbUser => {
                 if (!dbUser || !dbUser.isApproved) {
                     return res.redirect('/login?error=Account+not+approved');
@@ -642,6 +645,15 @@ app.get('/export-attendance', async (req, res) => {
 
 app.get('/ping', (req, res) => res.status(200).send('OK'));
 
+// ── Session health check middleware — recovers from corrupt/stale sessions ──
+app.use((req, res, next) => {
+    // If session user _id is an object (not string), fix it in place
+    if (req.session && req.session.user && req.session.user._id && typeof req.session.user._id === 'object') {
+        req.session.user._id = req.session.user._id.toString();
+    }
+    next();
+});
+
 // ── Debug session (only in non-production, helps diagnose login issues) ──
 app.get('/debug-session', (req, res) => {
     if (process.env.NODE_ENV === 'production' && !req.query.key) {
@@ -664,14 +676,21 @@ app.get('/role-error', (req, res) => {
     });
 });
 
-// ── Emergency session clear (allows user to escape redirect loops) ──
+// ── Emergency session clear (allows user to escape redirect loops / corrupt sessions) ──
 app.get('/clear-session', (req, res) => {
-    const destroy = () => res.redirect('/login?message=Session+cleared.+Please+log+in+again.');
-    req.session.destroy(err => {
-        if(err) console.error('Session destroy error:', err);
-        res.clearCookie('connect.sid');
-        destroy();
-    });
+    const finish = () => {
+        req.session.destroy(err => {
+            if(err) console.error('Session destroy error:', err);
+            res.clearCookie('connect.sid');
+            res.clearCookie('rku.sid');
+            res.redirect('/login?message=Session+cleared.+Please+log+in+again.');
+        });
+    };
+    if (typeof req.logout === 'function') {
+        req.logout(err => { if(err) console.error(err); finish(); });
+    } else {
+        finish();
+    }
 });
 
 // ================================================================
@@ -979,7 +998,7 @@ app.post('/approve-user/:id', isAdmin, async (req, res) => {
 app.post('/delete-user/:id', isAdmin, async (req, res) => {
     try {
         const cu = getUser(req);
-        if (req.params.id === cu._id.toString()) return res.status(400).send('Cannot delete your own account.');
+        if (req.params.id === (cu._id || '').toString()) return res.status(400).send('Cannot delete your own account.');
         await User.findByIdAndDelete(req.params.id);
         const redirect = cu.role === 'SuperAdmin' ? '/super-admin-dashboard' : '/master';
         req.session.save(() => res.redirect(`${redirect}?success=User+deleted`));
@@ -1098,8 +1117,31 @@ app.get('/fix-database', isSuperAdmin, async (req, res) => {
 // ERROR HANDLER
 // ================================================================
 app.use((err, req, res, next) => {
-    console.error('🔥 Unhandled Error:', err.stack);
-    res.status(500).render('error', { message: err.message || 'Internal Server Error' });
+    console.error('🔥 Unhandled Error:', err.stack || err.message);
+
+    // Handle session/MongoStore JSON parse errors — destroy corrupt session and redirect
+    if (err && (err.message || '').includes('is not valid JSON') ||
+        (err && (err.message || '').includes('Unexpected token'))) {
+        console.warn('⚠️ Corrupt session detected — destroying and redirecting to login');
+        if (req.session) {
+            return req.session.destroy(() => {
+                res.clearCookie('rku.sid');
+                res.clearCookie('connect.sid');
+                res.redirect('/login?message=Session+refreshed.+Please+log+in+again.');
+            });
+        }
+        return res.redirect('/login?message=Please+log+in+again.');
+    }
+
+    const message = (process.env.NODE_ENV === 'production')
+        ? 'An unexpected error occurred. Please try again.'
+        : (err.message || 'Internal Server Error');
+
+    try {
+        res.status(500).render('error', { message });
+    } catch(renderErr) {
+        res.status(500).send(`<h2>Server Error</h2><p>${message}</p><a href="/login">Back to Login</a>`);
+    }
 });
 
 // ================================================================
