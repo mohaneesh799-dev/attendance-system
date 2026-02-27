@@ -1,185 +1,371 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lecturer Portal - <%= user.name %></title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --danger: #e74c3c; --bg: #f4f7f6; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: #333; }
-        .container { max-width: 1100px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid #eee; padding-bottom: 15px; }
-        .header h1 { margin: 0; font-size: 1.8rem; color: var(--primary); }
-        .section-badge { background: var(--accent); color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; text-transform: uppercase; }
-        .division-badge { background: #8e44ad; color: white; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .stat-card { background: #fff; padding: 20px; border-radius: 10px; border-left: 5px solid var(--accent); box-shadow: 0 2px 8px rgba(0,0,0,0.04); display: flex; flex-direction: column; }
-        .stat-card small { color: #7f8c8d; text-transform: uppercase; font-weight: 600; font-size: 12px; }
-        .stat-card span { font-size: 28px; font-weight: 800; color: var(--primary); margin-top: 5px; }
-        .division-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
-        .tab-btn { padding: 8px 18px; border: 2px solid #ddd; border-radius: 20px; cursor: pointer; font-weight: 600; font-size: 13px; background: white; color: #555; transition: 0.2s; }
-        .tab-btn.active, .tab-btn:hover { background: var(--accent); color: white; border-color: var(--accent); }
-        .record-card { margin-top: 20px; border: 1px solid #e0e0e0; border-radius: 10px; overflow: hidden; }
-        .record-card:hover { border-color: var(--accent); }
-        .record-header { background: #f8f9fa; padding: 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-        table { width: 100%; border-collapse: collapse; background: white; }
-        th { background: #f1f2f6; color: #57606f; font-size: 13px; text-transform: uppercase; text-align: left; padding: 12px 15px; border-bottom: 2px solid #ddd; }
-        td { padding: 12px 15px; border-bottom: 1px solid #eee; font-size: 14px; }
-        .status-badge { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
-        .status-badge.Present { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
-        .status-badge.Absent { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
-        .btn { padding: 10px 18px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: 0.3s; font-size: 14px; }
-        .btn-history { background: var(--primary); color: white; }
-        .btn-history:hover { background: #1a252f; }
-        .btn-logout { background: #fdf0f0; color: var(--danger); border: 1px solid #f9d6d6; }
-        .btn-logout:hover { background: var(--danger); color: white; }
-        .btn-refresh { background: #f0f7ff; color: var(--accent); border: 1px solid #d0e8ff; }
-        .btn-master { background: #f3e5f5; color: #8e44ad; border: 1px solid #e1bee7; }
-        .btn-master:hover { background: #8e44ad; color: white; }
-        .info-banner { background: #e8f4fd; border-left: 4px solid var(--accent); padding: 12px 18px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; color: #2471a3; }
-        .division-group { margin-bottom: 30px; }
-        .division-header { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #f0f0f0; }
-        .division-title { font-size: 1.1rem; font-weight: 700; color: var(--primary); }
-        .hidden { display: none; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lecturer Portal — <%= user.name %></title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<!-- THEME: Apply before first paint — no flash -->
+<script>(function(){var t=localStorage.getItem('rku-theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
+<style>
+:root{
+    --pri:#0f1f3d;--pri2:#1a3560;--acc:#3b7ff4;--acc2:#2563eb;
+    --suc:#10b981;--dan:#ef4444;--war:#f59e0b;--pur:#8b5cf6;
+    --bg:#f0f4fa;--card:#fff;--border:#e2e8f0;
+    --text:#0f172a;--muted:#64748b;--input-bg:#f8fafc;--input-bd:#cbd5e1;
+    --shadow:0 4px 20px rgba(0,0,0,.07);--shadow-lg:0 10px 40px rgba(0,0,0,.1);
+    --radius:14px;--radius-sm:9px;
+}
+[data-theme="dark"]{
+    --bg:#080d18;--card:#0f1624;--border:#1a2740;
+    --text:#dde6f0;--muted:#6b7f97;--input-bg:#0b1220;--input-bd:#1e3050;
+    --shadow:0 4px 24px rgba(0,0,0,.3);--shadow-lg:0 12px 40px rgba(0,0,0,.45);
+    --pri:#0d1b36;--pri2:#112040;--acc:#60a5fa;--acc2:#3b82f6;
+    --suc:#34d399;--dan:#f87171;--war:#fbbf24;--pur:#a78bfa;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{transition:background .22s,color .22s;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* ── Page wrapper ── */
+.page{max-width:1100px;margin:0 auto;padding:20px 16px 40px;}
+
+/* ── Topbar ── */
+.topbar{
+    background:linear-gradient(135deg,var(--pri) 0%,var(--pri2) 100%);
+    border-radius:var(--radius);padding:18px 22px;margin-bottom:20px;
+    display:flex;justify-content:space-between;align-items:center;
+    flex-wrap:wrap;gap:12px;box-shadow:var(--shadow-lg);
+}
+.topbar-left h1{color:#fff;font-size:1.2rem;font-weight:800;margin-bottom:3px;}
+.topbar-left p{color:rgba(255,255,255,.65);font-size:13px;}
+.topbar-actions{display:flex;gap:8px;flex-wrap:wrap;}
+.tb-btn{
+    display:inline-flex;align-items:center;gap:6px;padding:8px 15px;
+    border-radius:var(--radius-sm);font-size:12.5px;font-weight:700;
+    text-decoration:none;border:none;cursor:pointer;transition:.18s;white-space:nowrap;
+}
+.tb-btn:hover{opacity:.85;transform:translateY(-1px);}
+.tb-white{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.2);}
+.tb-danger{background:rgba(239,68,68,.25);color:#fca5a5;border:1px solid rgba(239,68,68,.3);}
+.tb-master{background:rgba(139,92,246,.3);color:#c4b5fd;border:1px solid rgba(139,92,246,.3);}
+.tb-theme{background:rgba(255,255,255,.1);color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.15);font-size:15px;padding:7px 11px;}
+
+/* ── Banner ── */
+.info-banner{
+    display:flex;align-items:center;gap:12px;
+    background:linear-gradient(135deg,rgba(59,127,244,.1),rgba(139,92,246,.08));
+    border:1px solid rgba(59,127,244,.25);border-left:4px solid var(--acc);
+    border-radius:var(--radius-sm);padding:13px 18px;margin-bottom:20px;font-size:13.5px;
+}
+[data-theme="dark"] .info-banner{background:rgba(59,127,244,.07);border-color:rgba(96,165,250,.2);}
+
+/* ── Stats ── */
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px;}
+.stat-card{
+    background:var(--card);border:1px solid var(--border);border-left:4px solid var(--acc);
+    border-radius:var(--radius-sm);padding:16px 18px;box-shadow:var(--shadow);
+    transition:.18s;
+}
+.stat-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg);}
+.stat-card small{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:700;}
+.stat-card .val{font-size:2rem;font-weight:900;color:var(--acc);margin-top:4px;line-height:1;}
+
+/* ── Section heading ── */
+.sec-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px;}
+.sec-head h2{font-size:1rem;font-weight:800;color:var(--text);display:flex;align-items:center;gap:8px;}
+.live-tag{
+    background:rgba(16,185,129,.12);color:var(--suc);border:1px solid rgba(16,185,129,.25);
+    padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;
+    display:inline-flex;align-items:center;gap:5px;
+}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--suc);animation:pulse 1.4s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+/* ── Division tabs ── */
+.div-tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px;}
+.tab-btn{
+    padding:7px 16px;border:1.5px solid var(--border);border-radius:20px;
+    cursor:pointer;font-weight:700;font-size:12.5px;background:var(--card);
+    color:var(--muted);transition:.18s;
+}
+.tab-btn:hover{border-color:var(--acc);color:var(--acc);}
+.tab-btn.active{background:var(--acc);color:#fff;border-color:var(--acc);box-shadow:0 3px 10px rgba(59,127,244,.3);}
+
+/* ── Division group ── */
+.div-group{margin-bottom:24px;}
+.div-group.hidden{display:none;}
+.div-hdr{
+    display:flex;align-items:center;gap:10px;
+    background:linear-gradient(135deg,rgba(59,127,244,.06),rgba(139,92,246,.04));
+    border:1px solid rgba(59,127,244,.18);border-radius:var(--radius-sm);
+    padding:10px 16px;margin-bottom:12px;
+}
+.div-badge{background:var(--pri);color:#fff;padding:3px 10px;border-radius:20px;font-size:11.5px;font-weight:800;text-transform:uppercase;}
+
+/* ── Record card ── */
+.rec-card{
+    background:var(--card);border:1px solid var(--border);
+    border-radius:var(--radius);overflow:hidden;
+    box-shadow:var(--shadow);margin-bottom:12px;transition:.18s;
+}
+.rec-card:hover{border-color:rgba(59,127,244,.3);box-shadow:var(--shadow-lg);}
+.rec-hdr{
+    display:flex;justify-content:space-between;align-items:center;
+    flex-wrap:wrap;gap:10px;padding:15px 18px;
+    border-bottom:1px solid var(--border);background:var(--input-bg);
+}
+.rec-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.subj-badge{background:var(--pri);color:#fff;padding:4px 12px;border-radius:6px;font-size:12px;font-weight:700;}
+.time-badge{font-size:13px;font-weight:600;color:var(--muted);}
+.status-badges{display:flex;gap:6px;flex-wrap:wrap;}
+
+/* ── Table ── */
+.tbl-scroll{max-height:360px;overflow-y:auto;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+table{width:100%;border-collapse:collapse;}
+thead th{
+    background:linear-gradient(135deg,var(--pri),var(--pri2));
+    color:#fff;padding:11px 14px;font-size:11px;text-transform:uppercase;
+    letter-spacing:.5px;text-align:left;white-space:nowrap;position:sticky;top:0;
+}
+tbody td{padding:11px 14px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover td{background:rgba(59,127,244,.03);}
+
+/* ── Status badge ── */
+.sp{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap;}
+.sp.Present{background:rgba(16,185,129,.12);color:var(--suc);border:1px solid rgba(16,185,129,.25);}
+.sp.Absent {background:rgba(239,68,68,.1);color:var(--dan);border:1px solid rgba(239,68,68,.2);}
+.cnt-badge{padding:4px 10px;border-radius:20px;font-size:11.5px;font-weight:700;}
+.cnt-p{background:rgba(16,185,129,.12);color:var(--suc);border:1px solid rgba(16,185,129,.22);}
+.cnt-a{background:rgba(239,68,68,.1);color:var(--dan);border:1px solid rgba(239,68,68,.2);}
+
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:700;cursor:pointer;transition:.18s;text-decoration:none;}
+.btn:hover{opacity:.88;transform:translateY(-1px);}
+.btn-acc{background:var(--acc);color:#fff;}
+.btn-his{background:var(--pri);color:#fff;}
+.btn-ref{background:rgba(59,127,244,.1);color:var(--acc);border:1px solid rgba(59,127,244,.2);}
+.btn-ref:hover{background:var(--acc);color:#fff;}
+.btn-out{background:rgba(239,68,68,.1);color:var(--dan);border:1px solid rgba(239,68,68,.2);}
+.btn-out:hover{background:var(--dan);color:#fff;}
+
+/* ── Empty ── */
+.empty{text-align:center;padding:60px 20px;color:var(--muted);border:2px dashed var(--border);border-radius:var(--radius);background:var(--card);}
+.empty i{font-size:2.8rem;opacity:.2;display:block;margin-bottom:14px;}
+.empty p{font-size:.95rem;margin-bottom:16px;}
+
+/* ── Responsive ── */
+@media(max-width:768px){
+    .page{padding:14px 12px 40px;}
+    .stats-grid{grid-template-columns:1fr 1fr;}
+    .stat-card .val{font-size:1.6rem;}
+    .topbar{padding:14px 16px;}
+    .topbar-left h1{font-size:1.05rem;}
+}
+@media(max-width:480px){
+    .stats-grid{grid-template-columns:1fr 1fr;}
+    .stat-card{padding:13px 14px;}
+    .rec-hdr{flex-direction:column;align-items:flex-start;}
+    thead th,tbody td{padding:9px 10px;font-size:12px;}
+}
+</style>
 </head>
 <body>
-<div class="container">
-    <div class="header">
-        <div>
+<div class="page">
+
+    <!-- Topbar -->
+    <div class="topbar">
+        <div class="topbar-left">
             <h1><i class="fas fa-chalkboard-teacher"></i> Lecturer Portal</h1>
-            <p style="margin-top: 5px;">Welcome back, <strong><%= user.name %></strong></p>
+            <p>Welcome back, <strong><%= user.name %></strong></p>
         </div>
-        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <div class="topbar-actions">
             <% if (user.isClassTeacher) { %>
-                <a href="/master" class="btn btn-master"><i class="fas fa-shield-alt"></i> Class Teacher Panel (<%= user.classTeacherSection %>)</a>
+                <a href="/master" class="tb-btn tb-master"><i class="fas fa-shield-alt"></i> CT Panel (<%= user.classTeacherSection %>)</a>
             <% } %>
-            <button onclick="location.reload()" class="btn btn-refresh"><i class="fas fa-sync-alt"></i> Refresh</button>
-            <a href="/attendance-history" class="btn btn-history"><i class="fas fa-history"></i> History</a>
-            <a href="/logout" class="btn btn-logout"><i class="fas fa-power-off"></i> Logout</a>
+            <button id="themeToggle" class="tb-btn tb-theme" aria-label="Toggle theme">
+                <i class="fas fa-moon" id="themeIcon"></i>
+            </button>
+            <button onclick="location.reload()" class="tb-btn tb-white"><i class="fas fa-sync-alt"></i> Refresh</button>
+            <a href="/attendance-history" class="tb-btn tb-white"><i class="fas fa-history"></i> History</a>
+            <a href="/settings" class="tb-btn tb-white"><i class="fas fa-cog"></i> Settings</a>
+            <a href="/logout" class="tb-btn tb-danger"><i class="fas fa-power-off"></i> Logout</a>
         </div>
     </div>
 
+    <!-- Class Teacher Banner -->
     <% if (user.isClassTeacher) { %>
-        <div class="info-banner">
-            <i class="fas fa-star"></i> You are the <strong>Class Teacher</strong> for Division <strong><%= user.classTeacherSection %></strong>.
-            Use the <strong>Class Teacher Panel</strong> button to manage students and subjects for that division.
+    <div class="info-banner">
+        <i class="fas fa-star" style="color:var(--war);font-size:1.1rem;"></i>
+        <span>You are the <strong>Class Teacher</strong> for Division <strong><%= user.classTeacherSection %></strong>.
+        Use the <strong>CT Panel</strong> to manage students and subjects.</span>
+    </div>
+    <% } %>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <small><i class="fas fa-layer-group"></i> &nbsp;Divisions Today</small>
+            <div class="val"><%= sectionsToday && sectionsToday.length > 0 ? sectionsToday.length : 0 %></div>
+        </div>
+        <div class="stat-card" style="border-left-color:var(--suc);">
+            <small><i class="fas fa-clipboard-check"></i> &nbsp;Classes Today</small>
+            <div class="val" style="color:var(--suc);"><%= todayRecords ? todayRecords.length : 0 %></div>
+        </div>
+        <div class="stat-card" style="border-left-color:var(--war);">
+            <small><i class="fas fa-user-check"></i> &nbsp;Present Today</small>
+            <div class="val" style="color:var(--war);">
+                <%= todayRecords ? todayRecords.reduce(function(s,r){ return s+(r.students||[]).filter(function(x){ return x.status==='Present';}).length; },0) : 0 %>
+            </div>
+        </div>
+    </div>
+
+    <!-- Today's Logs -->
+    <div class="sec-head">
+        <h2><i class="fas fa-clipboard-list" style="color:var(--acc);"></i> Today's Attendance Logs</h2>
+        <span class="live-tag"><span class="live-dot"></span> Live Updates</span>
+    </div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">
+        All attendance submitted across every division where you are the assigned lecturer today.
+    </p>
+
+    <% if (todayRecords && todayRecords.length > 0) { %>
+        <%
+            var grouped = {};
+            todayRecords.forEach(function(r) {
+                var sec = r.section || 'Unknown';
+                if (!grouped[sec]) grouped[sec] = [];
+                grouped[sec].push(r);
+            });
+            var divKeys = Object.keys(grouped).sort();
+        %>
+
+        <!-- Division Tabs -->
+        <div class="div-tabs" id="divTabs">
+            <button class="tab-btn active" data-div="all">
+                <i class="fas fa-th-large"></i> All Divisions
+            </button>
+            <% divKeys.forEach(function(sec) { %>
+                <button class="tab-btn" data-div="<%= sec %>">
+                    <i class="fas fa-layer-group"></i> <%= sec %>
+                    <span style="background:rgba(255,255,255,.2);border-radius:10px;padding:0 6px;font-size:10px;margin-left:2px;"><%= grouped[sec].length %></span>
+                </button>
+            <% }); %>
+        </div>
+
+        <!-- Division Groups -->
+        <% divKeys.forEach(function(sec) { %>
+            <div class="div-group" data-division="<%= sec %>">
+                <div class="div-hdr">
+                    <span class="div-badge"><%= sec %></span>
+                    <span style="font-size:13px;color:var(--muted);font-weight:600;">
+                        <i class="fas fa-clipboard-list"></i> &nbsp;
+                        <%= grouped[sec].length %> class<%= grouped[sec].length > 1 ? 'es' : '' %> recorded today
+                    </span>
+                </div>
+
+                <% grouped[sec].forEach(function(record) {
+                    var pCnt = (record.students||[]).filter(function(s){ return s.status==='Present'; }).length;
+                    var aCnt = (record.students||[]).filter(function(s){ return s.status==='Absent'; }).length;
+                %>
+                <div class="rec-card">
+                    <div class="rec-hdr">
+                        <div class="rec-meta">
+                            <span class="subj-badge"><%= record.subject %></span>
+                            <span class="time-badge"><i class="far fa-clock"></i> <%= record.manualTime || '—' %></span>
+                            <span style="font-size:12.5px;color:var(--muted);"><i class="far fa-calendar-alt"></i> <%= record.date %></span>
+                        </div>
+                        <div class="status-badges">
+                            <span class="cnt-badge cnt-p"><i class="fas fa-check-circle"></i> <%= pCnt %> Present</span>
+                            <span class="cnt-badge cnt-a"><i class="fas fa-times-circle"></i> <%= aCnt %> Absent</span>
+                        </div>
+                    </div>
+                    <div class="tbl-scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width:100px;">Roll No</th>
+                                    <th>Student Name</th>
+                                    <th style="width:110px;">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% if (record.students && record.students.length > 0) { %>
+                                    <% record.students.forEach(function(student) { %>
+                                        <tr>
+                                            <td style="font-family:monospace;font-weight:700;color:var(--acc);">
+                                                <%= student.studentId || 'N/A' %>
+                                            </td>
+                                            <td><%= student.name || student.studentName %></td>
+                                            <td>
+                                                <span class="sp <%= student.status %>">
+                                                    <% if(student.status==='Present'){ %><i class="fas fa-check"></i><% } else { %><i class="fas fa-times"></i><% } %>
+                                                    <%= student.status %>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    <% }); %>
+                                <% } else { %>
+                                    <tr><td colspan="3" style="text-align:center;color:var(--muted);padding:24px;">No students listed.</td></tr>
+                                <% } %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <% }); %>
+            </div>
+        <% }); %>
+
+    <% } else { %>
+        <div class="empty">
+            <i class="fas fa-clipboard-list"></i>
+            <p>No attendance records submitted for your classes today.</p>
+            <a href="/attendance-history" class="btn btn-acc">
+                <i class="fas fa-history"></i> View Previous Logs
+            </a>
         </div>
     <% } %>
 
-    <div class="stats-grid">
-        <div class="stat-card">
-            <small>Divisions Teaching Today</small>
-            <span><%= sectionsToday && sectionsToday.length > 0 ? sectionsToday.length : 0 %></span>
-        </div>
-        <div class="stat-card" style="border-left-color: var(--success);">
-            <small>Today's Total Classes</small>
-            <span><%= todayRecords ? todayRecords.length : 0 %></span>
-        </div>
-        <div class="stat-card" style="border-left-color: #f1c40f;">
-            <small>Total Present Today</small>
-            <span><%= todayRecords ? todayRecords.reduce(function(s,r){ return s + (r.students||[]).filter(function(x){ return x.status==='Present'; }).length; }, 0) : 0 %></span>
-        </div>
-    </div>
-
-    <div class="main-body">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h3 style="margin: 0; color: var(--primary);">Today's Attendance Logs — All Divisions</h3>
-            <span class="section-badge">Live Updates</span>
-        </div>
-        <p style="font-size: 14px; color: #7f8c8d; margin-top: 8px;">
-            Showing all attendance submitted across every division where you are the assigned lecturer today.
-        </p>
-
-        <% if (todayRecords && todayRecords.length > 0) { %>
-            <%
-                var grouped = {};
-                todayRecords.forEach(function(r) {
-                    var sec = r.section || 'Unknown';
-                    if (!grouped[sec]) grouped[sec] = [];
-                    grouped[sec].push(r);
-                });
-                var divKeys = Object.keys(grouped).sort();
-            %>
-
-            <div class="division-tabs">
-                <button class="tab-btn active" onclick="showDivision('all', this)">All Divisions</button>
-                <% divKeys.forEach(function(sec) { %>
-                    <button class="tab-btn" onclick="showDivision('<%= sec %>', this)"><%= sec %></button>
-                <% }); %>
-            </div>
-
-            <% divKeys.forEach(function(sec) { %>
-                <div class="division-group" data-division="<%= sec %>">
-                    <div class="division-header">
-                        <span class="division-badge"><%= sec %></span>
-                        <span class="division-title"><%= grouped[sec].length %> class<%= grouped[sec].length > 1 ? 'es' : '' %> today</span>
-                    </div>
-                    <% grouped[sec].forEach(function(record) { %>
-                        <div class="record-card">
-                            <div class="record-header">
-                                <div>
-                                    <span class="section-badge" style="background: #57606f;"><%= record.subject %></span>
-                                    <span style="margin-left: 10px; font-weight: 600;"><i class="far fa-clock"></i> <%= record.manualTime %></span>
-                                </div>
-                                <div style="font-size: 14px;">
-                                    <strong>Date:</strong> <%= record.date %> &nbsp;|&nbsp;
-                                    <span class="status-badge Present" style="margin-left: 5px;">
-                                        <%= (record.students||[]).filter(function(s){ return s.status==='Present'; }).length %> Present
-                                    </span>
-                                    <span class="status-badge Absent" style="margin-left: 5px;">
-                                        <%= (record.students||[]).filter(function(s){ return s.status==='Absent'; }).length %> Absent
-                                    </span>
-                                </div>
-                            </div>
-                            <div style="max-height: 350px; overflow-y: auto;">
-                                <table>
-                                    <thead>
-                                        <tr><th>Roll No</th><th>Student Name</th><th>Status</th></tr>
-                                    </thead>
-                                    <tbody>
-                                        <% if (record.students && record.students.length > 0) { %>
-                                            <% record.students.forEach(function(student) { %>
-                                                <tr>
-                                                    <td style="font-family: monospace; font-weight: bold; color: var(--accent);"><%= student.studentId || 'N/A' %></td>
-                                                    <td><%= student.name || student.studentName %></td>
-                                                    <td><span class="status-badge <%= student.status %>"><%= student.status %></span></td>
-                                                </tr>
-                                            <% }); %>
-                                        <% } else { %>
-                                            <tr><td colspan="3" style="text-align:center;color:#999;padding:20px;">No students listed.</td></tr>
-                                        <% } %>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    <% }); %>
-                </div>
-            <% }); %>
-
-        <% } else { %>
-            <div style="text-align: center; padding: 60px 20px; color: #7f8c8d; background: #fff; border: 2px dashed #ddd; border-radius: 12px; margin-top: 20px;">
-                <i class="fas fa-clipboard-list" style="font-size: 3rem; margin-bottom: 15px; opacity: 0.3;"></i>
-                <p style="font-size: 1.1rem; margin-bottom: 20px;">No attendance records submitted for your classes today.</p>
-                <a href="/attendance-history" style="color: var(--accent); font-weight: 600; text-decoration: underline;">View previous logs in history</a>
-            </div>
-        <% } %>
-    </div>
-</div>
+</div><!-- /page -->
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        function showDivision(division, btn) {
-            document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
-            btn.classList.add('active');
-            document.querySelectorAll('.division-group').forEach(function(group) {
-                group.classList.toggle('hidden', division !== 'all' && group.dataset.division !== division);
+(function(){
+    // ── Theme ──
+    function setTheme(t){
+        document.documentElement.setAttribute('data-theme',t);
+        localStorage.setItem('rku-theme',t);
+        syncIcon(t);
+    }
+    function syncIcon(t){
+        var icon=document.getElementById('themeIcon');
+        if(icon) icon.className = (t||'light')==='dark' ? 'fas fa-sun' : 'fas fa-moon';
+    }
+    document.addEventListener('DOMContentLoaded',function(){
+        syncIcon(document.documentElement.getAttribute('data-theme'));
+        var tog=document.getElementById('themeToggle');
+        if(tog) tog.addEventListener('click',function(){
+            var cur=document.documentElement.getAttribute('data-theme')||'light';
+            setTheme(cur==='dark'?'light':'dark');
+        });
+
+        // ── Division tabs ──
+        var tabsWrap = document.getElementById('divTabs');
+        if(tabsWrap){
+            tabsWrap.addEventListener('click',function(e){
+                var btn = e.target.closest('.tab-btn');
+                if(!btn) return;
+                tabsWrap.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
+                btn.classList.add('active');
+                var dv = btn.dataset.div;
+                document.querySelectorAll('.div-group').forEach(function(g){
+                    g.classList.toggle('hidden', dv !== 'all' && g.dataset.division !== dv);
+                });
             });
         }
-        // Expose to onclick
-        window.showDivision = showDivision;
     });
+    if(document.readyState!=='loading') syncIcon(document.documentElement.getAttribute('data-theme'));
+})();
 </script>
 </body>
 </html>

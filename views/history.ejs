@@ -1,132 +1,352 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Attendance History | System</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --danger: #e74c3c; --bg: #f8f9fa; }
-        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); margin: 0; padding: 20px; color: #333; }
-        .container { max-width: 1100px; margin: 0 auto; }
-        
-        .header-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-        .back-btn { text-decoration: none; color: var(--primary); font-weight: 600; display: flex; align-items: center; gap: 8px; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Attendance History</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<!-- THEME: Apply before first paint — no flash -->
+<script>(function(){var t=localStorage.getItem('rku-theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
+<style>
+:root{
+    --pri:#0f1f3d;--acc:#3b7ff4;--acc2:#2563eb;
+    --suc:#10b981;--dan:#ef4444;--war:#f59e0b;
+    --bg:#f0f4fa;--card:#fff;--border:#e2e8f0;
+    --text:#0f172a;--muted:#64748b;--input-bg:#f8fafc;--input-bd:#cbd5e1;
+    --shadow:0 4px 20px rgba(0,0,0,.07);
+    --radius:14px;--radius-sm:9px;
+}
+[data-theme="dark"]{
+    --bg:#080d18;--card:#0f1624;--border:#1a2740;
+    --text:#dde6f0;--muted:#6b7f97;--input-bg:#0b1220;--input-bd:#1e3050;
+    --shadow:0 4px 24px rgba(0,0,0,.35);
+    --pri:#0d1b36;--acc:#60a5fa;--acc2:#3b82f6;
+    --suc:#34d399;--dan:#f87171;--war:#fbbf24;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{transition:background .22s,color .22s;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px 16px;}
 
-        /* Filter Styling */
-        .filter-card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 30px; }
-        .filter-box { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end; }
-        .filter-group { display: flex; flex-direction: column; gap: 8px; }
-        label { font-size: 13px; font-weight: bold; color: #7f8c8d; text-transform: uppercase; }
-        input[type="date"] { padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; }
-        
-        .btn-search { background: var(--accent); color: white; border: none; padding: 11px 25px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: 0.3s; }
-        .btn-search:hover { background: #2980b9; transform: translateY(-1px); }
+/* ── Layout ── */
+.page{max-width:1080px;margin:0 auto;}
 
-        /* Summary Stats */
-        .summary-ribbon { display: flex; gap: 15px; margin-bottom: 20px; }
-        .mini-stat { background: white; padding: 10px 20px; border-radius: 8px; border-left: 4px solid var(--accent); font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+/* ── Topbar ── */
+.topbar{
+    display:flex;justify-content:space-between;align-items:center;
+    margin-bottom:22px;flex-wrap:wrap;gap:12px;
+}
+.back-btn{
+    display:inline-flex;align-items:center;gap:8px;
+    background:var(--card);border:1.5px solid var(--border);
+    color:var(--text);text-decoration:none;padding:9px 16px;
+    border-radius:var(--radius-sm);font-weight:700;font-size:13px;
+    box-shadow:var(--shadow);transition:.18s;
+}
+.back-btn:hover{border-color:var(--acc);color:var(--acc);}
+.page-title{font-size:1.35rem;font-weight:800;letter-spacing:-.3px;}
+.page-title span{color:var(--acc);}
+.topbar-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
 
-        /* Table Styling */
-        .table-container { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .history-table { width: 100%; border-collapse: collapse; }
-        .history-table th { background: #f1f2f6; padding: 15px; text-align: left; font-size: 13px; color: #2f3542; border-bottom: 2px solid #dfe4ea; }
-        .history-table td { padding: 15px; border-bottom: 1px solid #f1f2f6; font-size: 14px; }
-        
-        .status-pill { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; }
-        .status-Present { background: #e8f5e9; color: #2e7d32; }
-        .status-Absent { background: #ffebee; color: #c62828; }
-        .status-N-A { background: #f1f2f6; color: #747d8c; }
+/* ── Theme toggle ── */
+.theme-toggle{
+    background:var(--card);border:1.5px solid var(--border);
+    color:var(--muted);cursor:pointer;padding:8px 12px;
+    border-radius:var(--radius-sm);font-size:15px;
+    box-shadow:var(--shadow);transition:.18s;
+}
+.theme-toggle:hover{border-color:var(--acc);color:var(--acc);}
 
-        @media (max-width: 768px) { .filter-box { flex-direction: column; align-items: stretch; } }
-    </style>
+/* ── Filter card ── */
+.filter-card{
+    background:var(--card);border:1px solid var(--border);
+    border-radius:var(--radius);padding:20px;
+    box-shadow:var(--shadow);margin-bottom:20px;
+}
+.filter-card h4{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:14px;}
+.filter-row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;}
+.fg{display:flex;flex-direction:column;gap:5px;flex:1;min-width:140px;}
+.fg label{font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;}
+.fc{
+    width:100%;padding:10px 13px;border-radius:var(--radius-sm);
+    border:1.5px solid var(--input-bd);font-size:13.5px;font-family:inherit;
+    background:var(--input-bg);color:var(--text);outline:none;transition:.18s;
+}
+.fc:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(59,127,244,.12);}
+
+/* ── Buttons ── */
+.btn{
+    display:inline-flex;align-items:center;gap:7px;padding:10px 20px;
+    border:none;border-radius:var(--radius-sm);font-size:13.5px;font-weight:700;
+    cursor:pointer;transition:.18s;text-decoration:none;white-space:nowrap;
+}
+.btn:hover{opacity:.88;transform:translateY(-1px);}
+.btn-acc{background:var(--acc);color:#fff;}
+.btn-ghost{background:var(--card);color:var(--muted);border:1.5px solid var(--border);}
+.btn-ghost:hover{border-color:var(--acc);color:var(--acc);}
+.btn-print{background:var(--input-bg);color:var(--muted);border:1.5px solid var(--input-bd);}
+
+/* ── Stats ribbon ── */
+.stats-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;}
+.stat-pill{
+    display:flex;align-items:center;gap:10px;
+    background:var(--card);border:1px solid var(--border);
+    border-left:4px solid var(--acc);
+    padding:12px 18px;border-radius:var(--radius-sm);
+    box-shadow:var(--shadow);font-size:13px;flex:1;min-width:140px;
+}
+.stat-pill.green{border-left-color:var(--suc);}
+.stat-pill.red{border-left-color:var(--dan);}
+.stat-pill .stat-val{font-size:1.4rem;font-weight:800;color:var(--acc);line-height:1;}
+.stat-pill.green .stat-val{color:var(--suc);}
+.stat-pill.red .stat-val{color:var(--dan);}
+.stat-pill small{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;font-weight:600;}
+
+/* ── Table ── */
+.table-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;}
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+table{width:100%;border-collapse:collapse;}
+thead th{
+    background:linear-gradient(135deg,var(--pri),var(--pri2,#1a3560));
+    color:#fff;padding:13px 16px;font-size:11.5px;text-transform:uppercase;
+    letter-spacing:.5px;text-align:left;white-space:nowrap;
+}
+tbody td{padding:13px 16px;border-bottom:1px solid var(--border);font-size:13.5px;vertical-align:middle;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover td{background:rgba(59,127,244,.04);}
+[data-theme="dark"] tbody tr:hover td{background:rgba(96,165,250,.05);}
+
+/* ── Status pills ── */
+.sp{padding:4px 11px;border-radius:20px;font-size:11.5px;font-weight:700;display:inline-flex;align-items:center;gap:5px;}
+.sp-present{background:rgba(16,185,129,.12);color:var(--suc);border:1px solid rgba(16,185,129,.25);}
+.sp-absent {background:rgba(239,68,68,.1);color:var(--dan);border:1px solid rgba(239,68,68,.22);}
+.sp-na     {background:rgba(100,116,139,.1);color:var(--muted);border:1px solid var(--border);}
+
+/* ── Percentage bar ── */
+.pct-wrap{display:flex;align-items:center;gap:8px;min-width:120px;}
+.pct-bar{flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.pct-fill{height:100%;background:var(--suc);border-radius:3px;transition:width .4s ease;}
+.pct-fill.warn{background:var(--war);}
+.pct-fill.bad {background:var(--dan);}
+.pct-num{font-weight:700;font-size:12px;color:var(--muted);min-width:36px;text-align:right;}
+
+/* ── Empty state ── */
+.empty-state{text-align:center;padding:60px 20px;color:var(--muted);}
+.empty-state i{font-size:2.5rem;opacity:.25;display:block;margin-bottom:14px;}
+.empty-state p{font-size:.95rem;}
+
+/* ── Subject tag ── */
+.subj-tag{font-weight:700;color:var(--text);}
+.time-tag{font-size:12px;color:var(--muted);margin-top:2px;}
+
+/* ── Print ── */
+@media print{
+    .no-print{display:none!important;}
+    body{background:#fff;color:#000;}
+    .table-card{box-shadow:none;}
+}
+
+/* ── Responsive ── */
+@media(max-width:600px){
+    body{padding:14px 12px;}
+    .page-title{font-size:1.1rem;}
+    .filter-row{flex-direction:column;}
+    .filter-row .fg{min-width:unset;}
+    .stats-row{gap:8px;}
+    .stat-pill{min-width:unset;flex:1 1 45%;}
+    thead th{padding:10px 12px;font-size:10.5px;}
+    tbody td{padding:10px 12px;font-size:12.5px;}
+}
+</style>
 </head>
 <body>
+<div class="page">
 
-<div class="container">
-    <div class="header-section">
-        <h1><i class="fas fa-history"></i> Attendance History</h1>
-        <a href="/<%= user.role.toLowerCase() %>" class="back-btn"><i class="fas fa-chevron-left"></i> Dashboard</a>
+    <!-- Topbar -->
+    <div class="topbar">
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+            <a href="/<%= user.role.toLowerCase() %>" class="back-btn">
+                <i class="fas fa-arrow-left"></i> Dashboard
+            </a>
+            <h1 class="page-title"><i class="fas fa-history" style="color:var(--acc);"></i> Attendance <span>History</span></h1>
+        </div>
+        <div class="topbar-right no-print">
+            <button class="theme-toggle" id="themeToggle" title="Toggle theme" aria-label="Toggle dark/light mode">
+                <i class="fas fa-moon" id="themeIcon"></i>
+            </button>
+            <button class="btn btn-print" onclick="window.print()">
+                <i class="fas fa-print"></i> <span class="hide-xs">Print</span>
+            </button>
+        </div>
     </div>
 
-    <div class="filter-card">
-        <form action="/attendance-history" method="GET" class="filter-box">
-            <div class="filter-group">
+    <!-- Filter Card -->
+    <div class="filter-card no-print">
+        <h4><i class="fas fa-filter"></i> &nbsp;Filter Records</h4>
+        <form action="/attendance-history" method="GET" class="filter-row">
+            <div class="fg">
                 <label>From Date</label>
-                <input type="date" name="startDate" value="<%= startDate %>" required>
+                <input type="date" name="startDate" class="fc" value="<%= startDate %>" required>
             </div>
-            <div class="filter-group">
+            <div class="fg">
                 <label>To Date</label>
-                <input type="date" name="endDate" value="<%= endDate %>" required>
+                <input type="date" name="endDate" class="fc" value="<%= endDate %>" required>
             </div>
-            <button type="submit" class="btn-search"><i class="fas fa-filter"></i> Apply Filter</button>
-            <button type="button" onclick="window.print()" class="btn-search" style="background: #747d8c;"><i class="fas fa-print"></i> Print</button>
+            <div style="align-self:flex-end;">
+                <button type="submit" class="btn btn-acc">
+                    <i class="fas fa-search"></i> Apply Filter
+                </button>
+            </div>
         </form>
     </div>
 
-    <div class="summary-ribbon">
-        <div class="mini-stat"><strong>Records Found:</strong> <%= records.length %></div>
-        <% if (user.role === 'Student') { 
-            let pCount = 0;
-            records.forEach(r => {
-                const me = r.students.find(s => s.studentId === user.rollNo);
+    <!-- Stats Ribbon -->
+    <div class="stats-row">
+        <div class="stat-pill">
+            <div>
+                <div class="stat-val"><%= records.length %></div>
+                <small>Records Found</small>
+            </div>
+        </div>
+        <% if (user.role === 'Student') {
+            var pCount = 0;
+            records.forEach(function(r){
+                var me = r.students.find(function(s){ return s.studentId === user.rollNo; });
                 if(me && me.status === 'Present') pCount++;
             });
+            var pct = records.length > 0 ? ((pCount/records.length)*100) : 0;
         %>
-            <div class="mini-stat" style="border-left-color: var(--success);"><strong>Range Attendance:</strong> <%= records.length > 0 ? ((pCount/records.length)*100).toFixed(1) : 0 %>%</div>
+        <div class="stat-pill green">
+            <div>
+                <div class="stat-val"><%= pCount %></div>
+                <small>Present</small>
+            </div>
+        </div>
+        <div class="stat-pill <%= pct >= 75 ? 'green' : pct >= 60 ? '' : 'red' %>">
+            <div>
+                <div class="stat-val"><%= pct.toFixed(1) %>%</div>
+                <small>Attendance Rate</small>
+            </div>
+        </div>
+        <% } %>
+        <% if (user.role !== 'Student' && records.length > 0) {
+            var totalPresent = 0, totalStudents = 0;
+            records.forEach(function(r){
+                totalPresent += (r.students||[]).filter(function(s){ return s.status==='Present'; }).length;
+                totalStudents += (r.students||[]).length;
+            });
+        %>
+        <div class="stat-pill green">
+            <div>
+                <div class="stat-val"><%= totalPresent %></div>
+                <small>Total Present</small>
+            </div>
+        </div>
         <% } %>
     </div>
 
-    
-
-    <div class="table-container">
-        <table class="history-table">
-            <thead>
-                <tr>
-                    <th><i class="far fa-calendar-alt"></i> Date</th>
-                    <th><i class="fas fa-book"></i> Subject</th>
-                    <th><i class="far fa-clock"></i> Time Slot</th>
-                    <th><i class="fas fa-info-circle"></i> <%= user.role === 'Student' ? 'Your Status' : 'Attendance Strength' %></th>
-                </tr>
-            </thead>
-            <tbody>
-                <% if (records && records.length > 0) { %>
-                    <% records.forEach(rec => { %>
+    <!-- Table -->
+    <div class="table-card">
+        <div class="tbl-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th><i class="far fa-calendar-alt"></i> Date</th>
+                        <th><i class="fas fa-book"></i> Subject</th>
+                        <th><i class="far fa-clock"></i> Time Slot</th>
+                        <th><%= user.role === 'Student' ? 'Your Status' : 'Strength' %></th>
+                        <% if(user.role !== 'Student') { %><th>Rate</th><% } %>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (records && records.length > 0) { %>
+                        <% records.forEach(function(rec) {
+                            var presentCnt = (rec.students||[]).filter(function(s){ return s.status==='Present'; }).length;
+                            var totalCnt   = (rec.students||[]).length;
+                            var recPct     = totalCnt > 0 ? (presentCnt/totalCnt)*100 : 0;
+                        %>
                         <tr>
-                            <td><strong><%= rec.date %></strong></td>
-                            <td><%= rec.subject %></td>
-                            <td><span style="color: #7f8c8d;"><%= rec.manualTime || 'Not Specified' %></span></td>
                             <td>
-                                <% if (user.role === 'Student') { 
-                                    const me = rec.students.find(s => s.studentId === user.rollNo);
-                                    const statusClass = me ? me.status : 'N-A';
+                                <strong style="font-variant-numeric:tabular-nums;"><%= rec.date %></strong>
+                            </td>
+                            <td>
+                                <div class="subj-tag"><%= rec.subject %></div>
+                                <% if(rec.section) { %><div class="time-tag"><i class="fas fa-layer-group" style="opacity:.6;"></i> <%= rec.section %></div><% } %>
+                            </td>
+                            <td>
+                                <span style="color:var(--muted);font-size:12.5px;">
+                                    <i class="far fa-clock" style="opacity:.6;"></i>
+                                    <%= rec.manualTime || '—' %>
+                                </span>
+                            </td>
+                            <td>
+                                <% if (user.role === 'Student') {
+                                    var me = (rec.students||[]).find(function(s){ return s.studentId === user.rollNo; });
+                                    var st = me ? me.status : 'N-A';
                                 %>
-                                    <span class="status-pill status-<%= statusClass %>">
+                                    <span class="sp sp-<%= st.toLowerCase().replace(' ','-') === 'n-a' ? 'na' : st.toLowerCase() %>">
+                                        <% if(st==='Present'){ %><i class="fas fa-check-circle"></i><% } %>
+                                        <% if(st==='Absent'){ %><i class="fas fa-times-circle"></i><% } %>
                                         <%= me ? me.status : 'Not Marked' %>
                                     </span>
-                                <% } else { 
-                                    const presentCount = rec.students.filter(s => s.status === 'Present').length;
-                                    const totalInClass = rec.students.length;
-                                %>
-                                    <div style="font-weight: 600; color: var(--primary);">
-                                        <%= presentCount %> / <%= totalInClass %> <small style="font-weight: normal; color: #7f8c8d;">(Present)</small>
-                                    </div>
+                                <% } else { %>
+                                    <span style="font-weight:700;"><%= presentCnt %> / <%= totalCnt %></span>
+                                    <span style="font-size:12px;color:var(--muted);"> present</span>
                                 <% } %>
                             </td>
+                            <% if(user.role !== 'Student') { %>
+                            <td>
+                                <div class="pct-wrap">
+                                    <div class="pct-bar">
+                                        <div class="pct-fill <%= recPct >= 75 ? '' : recPct >= 60 ? 'warn' : 'bad' %>"
+                                             style="width:<%= recPct.toFixed(0) %>%;"></div>
+                                    </div>
+                                    <span class="pct-num"><%= recPct.toFixed(0) %>%</span>
+                                </div>
+                            </td>
+                            <% } %>
                         </tr>
-                    <% }) %>
-                <% } else { %>
-                    <tr>
-                        <td colspan="4" style="text-align: center; padding: 50px; color: #95a5a6;">
-                            <i class="fas fa-search" style="font-size: 30px; display: block; margin-bottom: 10px;"></i>
-                            No records found for the selected date range.
-                        </td>
-                    </tr>
-                <% } %>
-            </tbody>
-        </table>
+                        <% }); %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="<%= user.role === 'Student' ? 4 : 5 %>">
+                                <div class="empty-state">
+                                    <i class="fas fa-search"></i>
+                                    <p>No records found for the selected date range.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
     </div>
-</div>
 
+</div><!-- /page -->
+
+<script>
+(function(){
+    // ── Theme ──
+    function setTheme(t){
+        document.documentElement.setAttribute('data-theme',t);
+        localStorage.setItem('rku-theme',t);
+        var icon = document.getElementById('themeIcon');
+        if(icon) icon.className = t==='dark' ? 'fas fa-sun' : 'fas fa-moon';
+    }
+    function syncTheme(){
+        var t = document.documentElement.getAttribute('data-theme')||'light';
+        var icon = document.getElementById('themeIcon');
+        if(icon) icon.className = t==='dark' ? 'fas fa-sun' : 'fas fa-moon';
+    }
+    document.addEventListener('DOMContentLoaded', function(){
+        syncTheme();
+        var tog = document.getElementById('themeToggle');
+        if(tog) tog.addEventListener('click', function(){
+            var cur = document.documentElement.getAttribute('data-theme')||'light';
+            setTheme(cur==='dark'?'light':'dark');
+        });
+    });
+    if(document.readyState!=='loading') syncTheme();
+})();
+</script>
 </body>
 </html>
