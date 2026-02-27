@@ -206,7 +206,10 @@ function isSuperAdmin(req, res, next) {
 app.get('/',      (req, res) => res.redirect('/login'));
 app.get('/login', (req, res) => {
     const u = getUser(req);
-    if (u) return res.redirect(`/${u.role.toLowerCase()}`);
+    if (u) {
+        const roleMap = { superadmin: '/super-admin-dashboard', master: '/master', leader: '/leader', lecturer: '/lecturer', student: '/student' };
+        return res.redirect(roleMap[(u.role||'').toLowerCase()] || '/login?error=RoleNotAssigned');
+    }
     res.render('login', { error: req.query.error || null, message: req.query.message || null });
 });
 app.get('/login-email', (req, res) =>
@@ -543,7 +546,6 @@ app.get('/logout', (req, res) => {
     else destroy();
 });
 
-// ── Settings ──────────────────────────────────────────────────
 app.post('/update-settings', async (req, res) => {
     const { name, phone, currentPassword, newPassword } = req.body;
     const su = getUser(req);
@@ -551,22 +553,37 @@ app.post('/update-settings', async (req, res) => {
     try {
         const user = await User.findById(su._id);
         if (!user) return res.redirect('/login');
+
+        // Google OAuth users — no password, just update profile fields
         if (!user.password) {
-            user.name = name; user.phone = phone; await user.save();
-            req.session.user = { ...req.session.user, name };
-            return res.render('settings', { user, message: 'Profile updated!', messageType: 'success' });
+            user.name = (name || user.name).trim();
+            user.phone = phone || '';
+            await user.save();
+            if (req.session.user) req.session.user.name = user.name;
+            return res.render('settings', { user: user.toObject(), message: 'Profile updated successfully!', messageType: 'success' });
+        }
+
+        // Credential users — verify current password
+        if (!currentPassword) {
+            return res.render('settings', { user: user.toObject(), message: 'Please enter your current password to save changes.', messageType: 'error' });
         }
         const ok = await bcrypt.compare(currentPassword, user.password);
-        if (!ok) return res.render('settings', { user: su, message: 'Incorrect current password!', messageType: 'error' });
-        user.name = name; user.phone = phone;
+        if (!ok) return res.render('settings', { user: user.toObject(), message: 'Incorrect current password.', messageType: 'error' });
+
+        user.name = (name || user.name).trim();
+        user.phone = phone || '';
+
         if (newPassword && newPassword.trim()) {
-            if (newPassword.length < 6) return res.render('settings', { user: su, message: 'New password must be ≥ 6 characters.', messageType: 'error' });
-            user.password = await bcrypt.hash(newPassword, 10);
+            if (newPassword.trim().length < 6) return res.render('settings', { user: user.toObject(), message: 'New password must be at least 6 characters.', messageType: 'error' });
+            user.password = await bcrypt.hash(newPassword.trim(), 10);
         }
         await user.save();
-        req.session.user = { ...req.session.user, name };
-        res.render('settings', { user, message: 'Profile updated successfully!', messageType: 'success' });
-    } catch(err) { res.status(500).render('error', { message: 'Error updating settings.' }); }
+        if (req.session.user) req.session.user.name = user.name;
+        res.render('settings', { user: user.toObject(), message: 'Profile updated successfully!', messageType: 'success' });
+    } catch(err) {
+        console.error('Settings update error:', err);
+        res.status(500).render('error', { message: 'Error updating settings.' });
+    }
 });
 
 // ── Lock Attendance ───────────────────────────────────────────

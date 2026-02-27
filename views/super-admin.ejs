@@ -167,7 +167,7 @@
         <button class="nav-btn" onclick="showPage('divisions',this)"><i class="fas fa-layer-group"></i> Divisions</button>
         <button class="nav-btn" onclick="showPage('assign',this)">
             <i class="fas fa-user-cog"></i> Assign Roles
-            <% const pc=allUsers.filter(u=>!u.isApproved).length; %>
+            <% var pc=allUsers.filter(function(u){return !u.isApproved;}).length; %>
             <% if(pc>0){%><span class="badge"><%=pc%></span><%}%>
         </button>
         <button class="nav-btn" onclick="showPage('users',this)"><i class="fas fa-users"></i> All Users</button>
@@ -234,7 +234,7 @@
         <% } %>
 
         <!-- Pending approvals quick action -->
-        <% const pendingU=allUsers.filter(u=>!u.isApproved); %>
+        <% var pendingU=allUsers.filter(function(u){return !u.isApproved;}); %>
         <% if(pendingU.length>0){ %>
         <div class="card">
             <div class="card-hdr">
@@ -251,7 +251,7 @@
                             <td style="color:#636e72;font-size:12px;"><%=u.email%></td>
                             <td><span class="rb rb-<%=u.role%>"><%=u.role%></span></td>
                             <td>
-                                <button class="btn btn-e" onclick="openAssign('<%=u._id%>','<%=u.name.replace(/'/g,"\\'")%>','<%=u.email%>','<%=u.role%>','<%=u.section||""% >')">
+                                <button class="btn btn-e" onclick="openAssign('<%=u._id%>','<%=u.name.replace(/'/g,"\\'")%>','<%=u.email%>','<%=u.role%>','<%=u.section||""%>')">
                                     <i class="fas fa-user-cog"></i> Assign &amp; Approve
                                 </button>
                             </td>
@@ -368,7 +368,7 @@
 
         <div class="tabs" id="aTabs">
             <button class="tab active" onclick="filterDiv('all',this)">All (<%=allUsers.length%>)</button>
-            <% if(pc>0){ %><button class="tab warn" onclick="filterDiv('pending',this)">⏳ Pending (<%=pc%>)</button><% } %>
+            <% if(allUsers.filter(u=>!u.isApproved).length>0){ %><button class="tab warn" onclick="filterDiv('pending',this)">⏳ Pending (<%=allUsers.filter(u=>!u.isApproved).length%>)</button><% } %>
             <% allDivisions.forEach(div=>{ %>
             <button class="tab" onclick="filterDiv('<%=div.name%>',this)" data-dv="<%=div.name%>"><%=div.name%></button>
             <% }) %>

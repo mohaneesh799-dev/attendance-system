@@ -174,14 +174,20 @@
                 <div style="font-size:.85rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;">
                     <i class="fas fa-lock"></i> &nbsp;Change Password
                 </div>
+                <% if (user.googleId && !user.password) { %>
+                <div class="msg ok" style="margin-bottom:14px;">
+                    <i class="fas fa-info-circle"></i> You signed in with Google — password change is not available.
+                </div>
+                <% } else { %>
                 <div class="fg">
                     <label>Current Password</label>
-                    <input type="password" name="currentPassword" class="fc" placeholder="Required to authorize changes" required>
+                    <input type="password" name="currentPassword" class="fc" placeholder="Required to authorize changes">
                 </div>
                 <div class="fg">
-                    <label>New Password <span style="font-weight:400;text-transform:none;">(leave blank to keep)</span></label>
+                    <label>New Password <span style="font-weight:400;text-transform:none;">(leave blank to keep current)</span></label>
                     <input type="password" name="newPassword" class="fc" placeholder="Min. 6 characters">
                 </div>
+                <% } %>
                 <button type="submit" class="btn-save">
                     <i class="fas fa-save"></i> Save Changes
                 </button>

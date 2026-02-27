@@ -232,9 +232,10 @@
                         <tbody>
                             <% let idx = 0;
                                allUsers.forEach(function(u){
-                                 if(u.role==='Master'||u.role==='Lecturer'||u.role==='SuperAdmin') return; %>
-                            <tr id="row-<%= idx %>">
-                                <td style="color:var(--muted);font-size:12px;"><%= idx + 1 %></td>
+                                 if(u.role==='Master'||u.role==='Lecturer'||u.role==='SuperAdmin') return;
+                                 var rowIdx = idx; %>
+                            <tr id="row-<%= rowIdx %>">
+                                <td style="color:var(--muted);font-size:12px;"><%= rowIdx + 1 %></td>
                                 <td class="roll-col" style="font-family:monospace;font-weight:700;color:var(--accent);">
                                     <%= u.rollNo || u.rollno || '—' %>
                                 </td>
@@ -245,14 +246,14 @@
                                     <% } %>
                                 </td>
                                 <td>
-                                    <input type="hidden" name="students[<%= idx %>][id]"   value="<%= u.rollNo || u.rollno || '' %>">
-                                    <input type="hidden" name="students[<%= idx %>][name]" value="<%= u.name %>">
+                                    <input type="hidden" name="students[<%= rowIdx %>][id]"   value="<%= u.rollNo || u.rollno || '' %>">
+                                    <input type="hidden" name="students[<%= rowIdx %>][name]" value="<%= u.name %>">
                                     <label class="cb-wrap">
                                         <input type="checkbox"
-                                               name="students[<%= idx %>][status]"
+                                               name="students[<%= rowIdx %>][status]"
                                                value="Present"
                                                class="student-checkbox"
-                                               data-row="<%= idx %>"
+                                               data-row="<%= rowIdx %>"
                                                onchange="updateCount()">
                                         <span>Present</span>
                                     </label>
