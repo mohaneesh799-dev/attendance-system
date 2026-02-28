@@ -318,7 +318,7 @@ select.fc option{background:var(--card);color:var(--text);}
         </div>
     </div>
 
-    <div class="nav-lbl">Menu
+    <div class="nav-lbl">Menu</div>
     <!-- Role Switcher (shown when user has multiple roles) -->
     <% var _sRoles = (user.roles && user.roles.length > 0) ? user.roles : [user.role]; %>
     <% if (_sRoles.length > 1) { %>
@@ -334,7 +334,6 @@ select.fc option{background:var(--card);color:var(--text);}
         </form>
     </div>
     <% } %>
-    </div>
     <nav id="sideNav" style="padding:0 10px 12px;">
         <%
             var pendCount = 0;
@@ -479,7 +478,7 @@ select.fc option{background:var(--card);color:var(--text);}
                             <td>
                                 <button type="button" class="btn btn-ghost btn-assign"
                                     data-id="<%= au._id %>" data-name="<%= auNm %>"
-                                    data-email="<%= au.email %>" data-role="<%= au.role %>" data-sec="<%= auSec %>">
+                                    data-email="<%= au.email %>" data-roles="<%= (au.roles&&au.roles.length?au.roles:[au.role]).join(',') %>" data-sec="<%= auSec %>">
                                     <i class="fas fa-edit"></i> Edit
                                 </button>
                             </td>
@@ -595,7 +594,7 @@ select.fc option{background:var(--card);color:var(--text);}
                         %>
                         <tr class="ar"
                             data-dv="<%= u.section||'Unassigned' %>"
-                            data-pend="<%= !u.isApproved %>"
+                            data-pend="<%= u.isApproved ? 'n' : 'y' %>"
                             data-s="<%= (u.name+' '+u.email+' '+(u.rollNo||'')).toLowerCase() %>">
                             <td>
                                 <strong><%= u.name||'—' %></strong>
@@ -966,7 +965,7 @@ window.filterDiv=filterDiv;
 function applyFilters(){
     var q=(document.getElementById('aSearch')?document.getElementById('aSearch').value:'').toLowerCase();
     document.querySelectorAll('.ar').forEach(function(row){
-        var dvMatch=curDiv==='all'||(curDiv==='pending'&&row.dataset.pend==='true')||row.dataset.dv===curDiv;
+        var dvMatch=curDiv==='all'||(curDiv==='pending'&&row.dataset.pend==='y')||row.dataset.dv===curDiv;
         var qMatch=!q||row.dataset.s.indexOf(q)!==-1;
         row.style.display=(dvMatch&&qMatch)?'':'none';
     });

@@ -10,9 +10,7 @@ const bcrypt     = require('bcrypt');
 const multer     = require('multer');
 const fileUpload = require('express-fileupload');
 const session    = require('express-session');
-// connect-mongo: handle v3 (legacy), v4/v5/v6 (.create), and ESM-default export
-const _connectMongo = require('connect-mongo');
-const MongoStore = _connectMongo.default || _connectMongo;
+const MongoStore = require('connect-mongo').default;
 const mongoose   = require('mongoose');
 const helmet     = require('helmet');
 const nodemailer = require('nodemailer');
@@ -63,34 +61,17 @@ mongoose.connect(mongoURI)
 
 // ── Session ───────────────────────────────────────────────────
 if (!process.env.SESSION_SECRET) { console.error('❌ FATAL: SESSION_SECRET not set.'); process.exit(1); }
-// Render runs behind a proxy — trust it so secure cookies work
 app.set('trust proxy', 1);
-const isProd = process.env.NODE_ENV === 'production';
 app.use(session({
     secret: process.env.SESSION_SECRET,
-    resave: false,
+    resave: true,
     saveUninitialized: false,
     proxy: true,
-    name: 'rku.sid',
-    store: (() => {
-        // Support connect-mongo v3 (MongoStore(session)) AND v4/v5/v6 (MongoStore.create())
-        const opts = {
-            mongoUrl: mongoURI,
-            touchAfter: 24 * 3600,
-            ttl: 24 * 60 * 60,
-            autoRemove: 'interval',
-            autoRemoveInterval: 60,
-            stringify: false // CRITICAL: prevents "[object Object] is not valid JSON" on ObjectId serialization
-        };
-        if (typeof MongoStore.create === 'function') return MongoStore.create(opts);
-        // v3 legacy fallback
-        const connectMongov3 = require('connect-mongo')(session);
-        return new connectMongov3(opts);
-    })(),
+    store: MongoStore.create({ mongoUrl: mongoURI, touchAfter: 24 * 3600 }),
     cookie: {
-        secure: isProd,
+        secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
-        sameSite: isProd ? 'none' : 'lax',
+        sameSite: 'lax',
         maxAge: 24 * 60 * 60 * 1000
     }
 }));
@@ -100,14 +81,8 @@ app.use(passport.initialize());
 app.use(passport.session());
 passport.serializeUser((user, done) => done(null, user._id.toString()));
 passport.deserializeUser(async (id, done) => {
-    try {
-        const user = await User.findById(id).lean();
-        // Convert _id to string to avoid ObjectId serialization issues
-        if (user) user._id = user._id.toString();
-        // If user was deleted from DB, return null (not error) — clears stale passport session
-        done(null, user || null);
-    }
-    catch(e) { done(null, null); } // On any error, return null to avoid crashes
+    try { done(null, await User.findById(id).lean()); }
+    catch(e) { done(e, null); }
 });
 
 // ── Nodemailer ────────────────────────────────────────────────
@@ -142,9 +117,7 @@ const userSchema = new mongoose.Schema({
     role:               { type: String, default: 'Student' },
     roles:              { type: [String], default: [] },
     // ─────────────────────────
-    // sections[] = all sections a Master manages. section = primary/active one.
     section:            { type: String, default: '' },
-    sections:           { type: [String], default: [] },
     phone:              { type: String, default: '' },
     isApproved:         { type: Boolean, default: false },
     isPreRegistered:    { type: Boolean, default: false },
@@ -189,32 +162,20 @@ const Division = mongoose.model('Division', divisionSchema);
 // HELPERS
 // ================================================================
 
-function getUser(req) {
-    // Prefer session.user (set after credential login / role selection)
-    // Fall back to passport req.user (set after Google OAuth)
-    // Always validate it has the minimum required fields
-    const u = req.session.user || req.user;
-    if (!u || !u.role) return null;
-    return u;
-}
+function getUser(req) { return req.session.user || req.user; }
 
-// Build session user object — includes ALL roles + ALL sections for multi-role/multi-section
+// Build session user object — includes ALL roles for role-switcher
 function buildSessionUser(user, activeRole) {
-    const sections = user.sections && user.sections.length
-        ? user.sections
-        : (user.section ? [user.section] : []);
     return {
-        _id:      user._id.toString(), // MUST be string — ObjectId causes "[object Object] is not valid JSON" in MongoStore
-        email:    user.email.toLowerCase(),
-        role:     activeRole || user.role,
-        roles:    user.roles && user.roles.length ? user.roles : [user.role],
-        section:  user.section || sections[0] || '',
-        sections, // all sections this master manages
-        name:     user.name,
-        rollNo:   user.rollNo,
-        isApproved:           user.isApproved,
-        isClassTeacher:       user.isClassTeacher,
-        classTeacherSection:  user.classTeacherSection
+        _id: user._id,
+        email: user.email.toLowerCase(),
+        role: activeRole || user.role,
+        roles: user.roles && user.roles.length ? user.roles : [user.role],
+        name: user.name,
+        section: user.section,
+        rollNo: user.rollNo,
+        isClassTeacher: user.isClassTeacher,
+        classTeacherSection: user.classTeacherSection
     };
 }
 
@@ -228,11 +189,10 @@ const ROLE_PATHS = {
 };
 
 function roleToPath(role) {
-    // NEVER return /login here — that causes redirect loops.
-    // If role is unknown, send to /role-error which shows a helpful page.
-    return ROLE_PATHS[(role || '').toLowerCase()] || '/role-error';
+    return ROLE_PATHS[(role || '').toLowerCase()] || '/login?error=RoleNotAssigned';
 }
 
+// ── Middleware ────────────────────────────────────────────────
 function isAdmin(req, res, next) {
     const u = getUser(req);
     if (u && (u.role === 'Master' || u.role === 'SuperAdmin')) return next();
@@ -241,57 +201,35 @@ function isAdmin(req, res, next) {
 
 function isSuperAdmin(req, res, next) {
     const u = getUser(req);
-    if (!u) return res.redirect('/login?error=Please+log+in');
-    if (u.role !== 'SuperAdmin') return res.redirect('/login?error=SuperAdmin+access+required');
-    // If isApproved is missing from session (stale session), check DB directly
-    if (u.isApproved === undefined || u.isApproved === null) {
-        User.findById(u._id.toString ? u._id.toString() : u._id).lean()
-            .then(dbUser => {
-                if (!dbUser || !dbUser.isApproved) {
-                    return res.redirect('/login?error=Account+not+approved');
-                }
-                // Patch session with isApproved so future requests don't need DB check
-                if (req.session.user) req.session.user.isApproved = true;
-                req.session.save(() => next());
-            })
-            .catch(() => res.redirect('/login?error=Session+error'));
-        return;
-    }
-    if (!u.isApproved) return res.redirect('/login?error=Account+not+approved');
-    return next();
+    if (u && u.role === 'SuperAdmin' && u.isApproved) return next();
+    return res.redirect('/login?error=Unauthorized');
 }
 
-// ── Google OAuth ──────────────────────────────────────────────
-// Only set up Google OAuth if credentials are configured
-if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && process.env.APP_BASE_URL) {
-    passport.use(new GoogleStrategy({
-        clientID:     process.env.GOOGLE_CLIENT_ID,
-        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        callbackURL:  `${process.env.APP_BASE_URL}/auth/google/callback`
-    }, async (accessToken, refreshToken, profile, done) => {
-        const email = profile.emails[0].value;
-        try {
-            let user = await User.findOne({ email });
-            if (!user) {
-                user = new User({
-                    googleId: profile.id, email, name: profile.displayName,
-                    role: 'SuperAdmin', roles: ['SuperAdmin'], isApproved: false
-                });
-                await user.save();
-                transporter.sendMail({
-                    from: process.env.EMAIL_USER, to: process.env.DEVELOPER_EMAIL,
-                    subject: 'New Admin Request', text: `New Google login: ${email}`
-                }, err => { if (err) console.log('📧 Email failed (non-fatal):', err.message); });
-            } else if (user.googleId !== profile.id) {
-                // Update googleId if missing
-                await User.findByIdAndUpdate(user._id, { googleId: profile.id });
-            }
-            return done(null, user);
-        } catch(err) { return done(err, null); }
-    }));
-} else {
-    console.warn('⚠️ Google OAuth not configured — GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, or APP_BASE_URL missing');
-}
+// ================================================================
+// GOOGLE OAUTH
+// ================================================================
+passport.use(new GoogleStrategy({
+    clientID:     process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL:  `${process.env.APP_BASE_URL}/auth/google/callback`
+}, async (accessToken, refreshToken, profile, done) => {
+    const email = profile.emails[0].value;
+    try {
+        let user = await User.findOne({ email });
+        if (!user) {
+            user = new User({
+                googleId: profile.id, email, name: profile.displayName,
+                role: 'SuperAdmin', roles: ['SuperAdmin'], isApproved: false
+            });
+            await user.save();
+            transporter.sendMail({
+                from: process.env.EMAIL_USER, to: process.env.DEVELOPER_EMAIL,
+                subject: 'New Admin Request', text: `New Google login: ${email}`
+            }, err => { if (err) console.log('📧 Email failed (non-fatal):', err.message); });
+        }
+        return done(null, user);
+    } catch(err) { return done(err, null); }
+}));
 
 // ================================================================
 // GET ROUTES
@@ -301,17 +239,7 @@ app.get('/', (req, res) => res.redirect('/login'));
 
 app.get('/login', (req, res) => {
     const u = getUser(req);
-    if (u && u.role && ROLE_PATHS[(u.role || '').toLowerCase()]) {
-        // For SuperAdmin, only redirect if explicitly approved
-        // (prevents loop when isApproved is missing from old session)
-        if (u.role === 'SuperAdmin' && !u.isApproved) {
-            req.session.destroy(() => {});
-            return res.render('login', { error: 'Your SuperAdmin account is not yet approved.', message: null });
-        }
-        return res.redirect(roleToPath(u.role));
-    }
-    // Session exists but role is unknown/invalid — destroy it
-    if (u) req.session.destroy(() => {});
+    if (u) return res.redirect(roleToPath(u.role));
     res.render('login', { error: req.query.error || null, message: req.query.message || null });
 });
 
@@ -319,63 +247,32 @@ app.get('/register', (req, res) => res.render('register', { error: null }));
 
 // ── Role Selection (shown when user has multiple roles) ───────
 app.get('/select-role', (req, res) => {
-    // choose-role page removed — role selection is now done via the sidebar switch widget
-    // If a pendingUserId exists (edge case), auto-select first role and redirect
-    if (req.session.pendingUserId) {
-        return User.findById(req.session.pendingUserId).lean()
-            .then(user => {
-                if (!user) return res.redirect('/login?error=User+not+found');
-                const roles = user.roles && user.roles.length ? user.roles : [user.role];
-                delete req.session.pendingUserId;
-                req.session.user = buildSessionUser(user, roles[0]);
-                return req.session.save(err => {
-                    if (err) return res.redirect('/login?error=Session+error');
-                    res.redirect(roleToPath(roles[0]));
-                });
-            })
-            .catch(() => res.redirect('/login?error=Session+error'));
-    }
-    const u = getUser(req);
-    if (u) return res.redirect(roleToPath(u.role));
-    res.redirect('/login');
+    if (!req.session.pendingUserId) return res.redirect('/login?error=Session+expired');
+    User.findById(req.session.pendingUserId).lean()
+        .then(user => {
+            if (!user) return res.redirect('/login?error=User+not+found');
+            const roles = user.roles && user.roles.length ? user.roles : [user.role];
+            res.render('role-select', { user, roles });
+        })
+        .catch(() => res.redirect('/login'));
 });
 
-// ── Google OAuth Routes ───────────────────────────────────────
-app.get('/auth/google', (req, res, next) => {
-    if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
-        return res.redirect('/login?error=Google+Sign-In+is+not+configured+on+this+server');
-    }
-    passport.authenticate('google', { scope: ['profile', 'email'], prompt: 'select_account' })(req, res, next);
-});
-
-app.get('/auth/google/callback', (req, res, next) => {
-    passport.authenticate('google', { failureRedirect: '/login?error=Google+login+failed' }, async (err, user) => {
-        if (err) {
-            console.error('Google OAuth error:', err.message);
-            return res.redirect('/login?error=Google+authentication+failed.+Check+OAuth+settings.');
+// ── Google OAuth ──────────────────────────────────────────────
+app.get('/auth/google', passport.authenticate('google', { scope: ['profile','email'], prompt: 'select_account' }));
+app.get('/auth/google/callback',
+    passport.authenticate('google', { failureRedirect: '/login?error=Google+login+failed' }),
+    async (req, res) => {
+        const u = req.user;
+        if (!u.isApproved) return res.render('pending', { user: u });
+        const roles = u.roles && u.roles.length ? u.roles : [u.role];
+        if (roles.length > 1) {
+            req.session.pendingUserId = u._id.toString();
+            return req.session.save(() => res.redirect('/select-role'));
         }
-        if (!user) return res.redirect('/login?error=Google+login+failed');
-
-        if (!user.isApproved) {
-            return req.logout(e => {
-                if (e) console.error('OAuth logout error (non-fatal):', e);
-                res.render('pending', { user });
-            });
-        }
-        const roles = user.roles && user.roles.length ? user.roles : [user.role];
-        // Multi-role: go directly to first role — user can switch via sidebar widget
-        // (no choose-role page needed)
-        const sessionUser = buildSessionUser(user, roles[0]);
-        req.logout(e => {
-            if (e) console.error('OAuth logout error (non-fatal):', e);
-            req.session.user = sessionUser;
-            req.session.save(err => {
-                if (err) return res.redirect('/login?error=Session+error');
-                res.redirect(roleToPath(roles[0]));
-            });
-        });
-    })(req, res, next);
-});
+        req.session.user = buildSessionUser(u, roles[0]);
+        req.session.save(() => res.redirect(roleToPath(roles[0])));
+    }
+);
 
 // ── Dashboards ────────────────────────────────────────────────
 
@@ -419,75 +316,37 @@ app.get('/master', async (req, res) => {
         const user = getUser(req);
         const isClassTeacher = user && user.role === 'Lecturer' && user.isClassTeacher;
         if (!user || (user.role !== 'Master' && !isClassTeacher)) return res.redirect('/login?error=Unauthorized');
-
-        // Multi-section support: Master may manage many sections
-        let masterSections;
-        if (isClassTeacher) {
-            masterSections = [user.classTeacherSection].filter(Boolean);
-        } else {
-            masterSections = (user.sections && user.sections.length > 0)
-                ? user.sections.filter(Boolean)
-                : (user.section ? [user.section] : []);
-        }
-        // Filter out any empty strings to avoid bad DB queries
-        masterSections = masterSections.filter(Boolean);
-        // If still empty, fetch from DB directly (handles stale sessions)
-        if (masterSections.length === 0) {
-            const dbUser = await User.findById(user._id).lean();
-            if (dbUser) {
-                masterSections = (dbUser.sections && dbUser.sections.length > 0)
-                    ? dbUser.sections.filter(Boolean)
-                    : (dbUser.section ? [dbUser.section] : []);
-            }
-        }
-
-        // Build DB query — if still no sections, fetch ALL users (SuperAdmin-style fallback)
-        const sectionQuery = masterSections.length > 0
-            ? { section: { $in: masterSections } }
-            : {};  // no section filter = show all pending users
-
+        const facultySection = isClassTeacher ? user.classTeacherSection : user.section;
         const [allUsers, masterSubjects, allDivisions] = await Promise.all([
-            User.find(sectionQuery).lean(),
-            masterSections.length > 0 ? Subject.find({ section: { $in: masterSections } }).lean() : Subject.find({}).lean(),
+            User.find({ section: facultySection }).lean(),
+            Subject.find({ section: facultySection }).lean(),
             Division.find({}).sort({ name:1 }).lean()
         ]);
 
-        // Group users by section for multi-section display
-        const usersBySection = {};
-        masterSections.forEach(s => { if (s) usersBySection[s] = []; });
+        // Group users by role within section
+        const usersByRole = {};
         allUsers.forEach(u => {
-            const s = u.section || '';
-            if (!usersBySection[s]) usersBySection[s] = [];
-            usersBySection[s].push(u);
-        });
-
-        // Group subjects by section
-        const subjectsBySection = {};
-        masterSections.forEach(s => { if (s) subjectsBySection[s] = []; });
-        masterSubjects.forEach(sub => {
-            const s = sub.section || '';
-            if (!subjectsBySection[s]) subjectsBySection[s] = [];
-            subjectsBySection[s].push(sub);
+            const r = u.role || 'Unknown';
+            if (!usersByRole[r]) usersByRole[r] = [];
+            usersByRole[r].push(u);
         });
 
         const stats = {
-            total:    allUsers.length,
-            pending:  allUsers.filter(u => !u.isApproved).length,
+            total: allUsers.length,
+            pending: allUsers.filter(u => !u.isApproved).length,
             subjects: masterSubjects.length,
             students: allUsers.filter(u => u.role === 'Student').length
         };
 
         req.session.save(() => res.render('master', {
-            user: { ...user, section: masterSections[0] || '', sections: masterSections },
-            allUsers:         allUsers || [],
-            usersBySection,
-            subjectsBySection,
-            masterSubjects:   masterSubjects || [],
-            masterSections,
+            user: { ...user, section: facultySection },
+            allUsers: allUsers || [],
+            usersByRole,
+            masterSubjects: masterSubjects || [],
             allDivisions,
             stats,
             success: req.query.success || null,
-            error:   req.query.error   || null
+            error: req.query.error || null
         }));
     } catch(err) {
         console.error('Master Error:', err);
@@ -670,54 +529,6 @@ app.get('/export-attendance', async (req, res) => {
 
 app.get('/ping', (req, res) => res.status(200).send('OK'));
 
-// ── Session health check middleware — recovers from corrupt/stale sessions ──
-app.use((req, res, next) => {
-    // If session user _id is an object (not string), fix it in place
-    if (req.session && req.session.user && req.session.user._id && typeof req.session.user._id === 'object') {
-        req.session.user._id = req.session.user._id.toString();
-    }
-    next();
-});
-
-// ── Debug session (only in non-production, helps diagnose login issues) ──
-app.get('/debug-session', (req, res) => {
-    if (process.env.NODE_ENV === 'production' && !req.query.key) {
-        return res.status(403).json({ error: 'Not available in production without key' });
-    }
-    res.json({
-        sessionID: req.sessionID,
-        sessionUser: req.session.user || null,
-        passportUser: req.user || null,
-        sessionExists: !!req.session,
-        cookie: req.session.cookie
-    });
-});
-
-// ── Role Error (shown when role is unknown — prevents redirect loop) ──
-app.get('/role-error', (req, res) => {
-    const u = getUser(req);
-    res.status(400).render('error', {
-        message: `Your account role "${u ? u.role : 'unknown'}" is not configured. Please contact your administrator to assign a valid role (Student, Leader, Lecturer, Master, or SuperAdmin).`
-    });
-});
-
-// ── Emergency session clear (allows user to escape redirect loops / corrupt sessions) ──
-app.get('/clear-session', (req, res) => {
-    const finish = () => {
-        req.session.destroy(err => {
-            if(err) console.error('Session destroy error:', err);
-            res.clearCookie('connect.sid');
-            res.clearCookie('rku.sid');
-            res.redirect('/login?message=Session+cleared.+Please+log+in+again.');
-        });
-    };
-    if (typeof req.logout === 'function') {
-        req.logout(err => { if(err) console.error(err); finish(); });
-    } else {
-        finish();
-    }
-});
-
 // ================================================================
 // POST ROUTES
 // ================================================================
@@ -726,63 +537,51 @@ app.get('/clear-session', (req, res) => {
 app.post('/login', loginLimiter, async (req, res) => {
     try {
         const { email, password } = req.body;
-        if (!email || !password) return res.render('login', { error: 'Email and password are required.', message: null });
         const user = await User.findOne({ email: email.toLowerCase().trim() });
-        if (!user) return res.render('login', { error: 'Account not found. Please register first.', message: null });
-        if (!user.password) return res.render('login', { error: 'This account uses Google Sign-In. Use the Google button above.', message: null });
+        if (!user) return res.render('login', { error:'Account not found. Please register first.', message:null });
+        if (!user.password) return res.render('login', { error:'This account uses Google Sign-In.', message:null });
         const ok = await bcrypt.compare(password, user.password);
-        if (!ok) return res.render('login', { error: 'Incorrect password. Please try again.', message: null });
+        if (!ok) return res.render('login', { error:'Incorrect password.', message:null });
+        if (!user.isApproved && user.role !== 'Master') return res.render('login', { error:'Your account is awaiting admin approval.', message:null });
 
-        // Approval check — SuperAdmin is ALWAYS allowed (they self-approve or use email link)
-        // Master is always allowed. Others need approval.
-        const skipApprovalCheck = ['SuperAdmin', 'Master'].includes(user.role);
-        if (!user.isApproved && !skipApprovalCheck) {
-            return res.render('login', { error: 'Your account is awaiting admin approval. Please contact your administrator.', message: null });
-        }
-
-        // ── Multi-role: go directly to first role — user can switch via sidebar widget ──
+        // ── Multi-role: if user has multiple roles, ask which to use ──
         const roles = user.roles && user.roles.length > 0 ? user.roles : [user.role];
-        // No choose-role page — always go to first role directly; switch via sidebar
+        if (roles.length > 1) {
+            req.session.pendingUserId = user._id.toString();
+            return req.session.save(err => {
+                if (err) return res.status(500).send('Session error.');
+                res.redirect('/select-role');
+            });
+        }
 
         // ── Single role: go directly ──
         req.session.user = buildSessionUser(user, roles[0]);
-        console.log(`✅ Login: ${user.email} as ${roles[0]}, isApproved: ${user.isApproved}`);
         req.session.save(err => {
-            if (err) { console.error('Session save error:', err); return res.status(500).send('Login failed — session could not be saved.'); }
+            if (err) return res.status(500).send('Login failed.');
             res.redirect(roleToPath(roles[0]));
         });
-    } catch(err) {
-        console.error('Login error:', err);
-        res.status(500).render('error', { message: 'Internal Server Error during login.' });
-    }
+    } catch(err) { res.status(500).render('error', { message: 'Internal Server Error during login.' }); }
 });
 
-// ── Select Role / Choose Role (POST) ─────────────────────────
-// choose-role.ejs posts to /choose-role; this alias makes both work
-async function handleRoleSelection(req, res) {
+// ── Select Role (POST) ────────────────────────────────────────
+app.post('/select-role', async (req, res) => {
     try {
-        if (!req.session.pendingUserId) return res.redirect('/login?error=Session+expired.+Please+log+in+again.');
+        if (!req.session.pendingUserId) return res.redirect('/login?error=Session+expired');
         const { selectedRole } = req.body;
-        if (!selectedRole) return res.redirect('/select-role?error=Please+select+a+role+to+continue.');
         const user = await User.findById(req.session.pendingUserId);
         if (!user) return res.redirect('/login?error=User+not+found');
+
         const roles = user.roles && user.roles.length ? user.roles : [user.role];
-        if (!roles.includes(selectedRole)) {
-            return res.redirect('/select-role?error=Invalid+role.+Choose+one+of+your+assigned+roles.');
-        }
+        if (!roles.includes(selectedRole)) return res.redirect('/select-role?error=Invalid+role+selection');
+
         delete req.session.pendingUserId;
         req.session.user = buildSessionUser(user, selectedRole);
         req.session.save(err => {
-            if (err) { console.error('Session save error:', err); return res.status(500).send('Session error.'); }
+            if (err) return res.status(500).send('Session error.');
             res.redirect(roleToPath(selectedRole));
         });
-    } catch(err) {
-        console.error('Role selection error:', err);
-        res.status(500).render('error', { message: 'Role selection failed. Please try again.' });
-    }
-}
-app.post('/select-role', handleRoleSelection);   // internal route
-app.post('/choose-role', handleRoleSelection);   // choose-role.ejs form posts here
+    } catch(err) { res.status(500).render('error', { message: 'Role selection failed.' }); }
+});
 
 // ── Switch Role (while logged in) ────────────────────────────
 app.post('/switch-role', async (req, res) => {
@@ -790,20 +589,13 @@ app.post('/switch-role', async (req, res) => {
         const user = getUser(req);
         if (!user) return res.redirect('/login');
         const { targetRole } = req.body;
-        if (!targetRole) return res.redirect('back');
         const dbUser = await User.findById(user._id);
         if (!dbUser) return res.redirect('/login');
         const roles = dbUser.roles && dbUser.roles.length ? dbUser.roles : [dbUser.role];
         if (!roles.includes(targetRole)) return res.redirect('/login?error=Role+not+assigned');
         req.session.user = buildSessionUser(dbUser, targetRole);
-        req.session.save(err => {
-            if (err) return res.redirect('/login?error=Session+error');
-            res.redirect(roleToPath(targetRole));
-        });
-    } catch(err) {
-        console.error('Switch role error:', err);
-        res.redirect('/login?error=Switch+failed');
-    }
+        req.session.save(() => res.redirect(roleToPath(targetRole)));
+    } catch(err) { res.redirect('/login?error=Switch+failed'); }
 });
 
 // ── Register ──────────────────────────────────────────────────
@@ -846,7 +638,6 @@ app.post('/register-super-admin', async (req, res) => {
 app.get('/logout', (req, res) => {
     const destroy = () => req.session.destroy(err => {
         if (err) console.error('Session destroy error:', err);
-        res.clearCookie('rku.sid');
         res.clearCookie('connect.sid');
         res.redirect('/login?message=Logged out successfully');
     });
@@ -961,42 +752,36 @@ app.post('/delete-division/:id', isSuperAdmin, async (req, res) => {
 });
 
 // ================================================================
-// ASSIGN USER — MULTIPLE ROLES + MULTIPLE SECTIONS (for Master)
+// ASSIGN USER — SUPPORTS MULTIPLE ROLES
 // ================================================================
 
 app.post('/assign-user/:id', isSuperAdmin, async (req, res) => {
     try {
-        let { roles, primaryRole, section, sections, rollNo } = req.body;
+        // `roles` is now an array of checkboxes; `role` (hidden) is the primary/active role
+        let { roles, primaryRole, section, rollNo } = req.body;
 
-        // Normalise roles to array
+        // Handle both checkbox array and old single-select fallback
         let rolesArray = Array.isArray(roles) ? roles : (roles ? [roles] : []);
-        if (!rolesArray.length && primaryRole) rolesArray = [primaryRole];
-        if (!rolesArray.length) rolesArray = ['Student'];
-        const activePrimaryRole = (primaryRole && rolesArray.includes(primaryRole))
-            ? primaryRole : rolesArray[0];
+        if (rolesArray.length === 0 && primaryRole) rolesArray = [primaryRole];
+        if (rolesArray.length === 0) rolesArray = ['Student'];
 
-        // Normalise sections to array (multi-select checkboxes for Master)
-        let sectionsArray = Array.isArray(sections) ? sections : (sections ? [sections] : []);
-        if (section && !sectionsArray.includes(section)) sectionsArray.push(section);
-        sectionsArray = [...new Set(sectionsArray.filter(Boolean))];
-        const primarySection = sectionsArray[0] || '';
+        // Primary role = explicitly selected primary, or first in array
+        const activePrimaryRole = primaryRole && rolesArray.includes(primaryRole) ? primaryRole : rolesArray[0];
 
         const updateData = {
-            roles:    rolesArray,
-            role:     activePrimaryRole,
-            sections: sectionsArray,
-            section:  primarySection,
+            roles: rolesArray,
+            role: activePrimaryRole,
+            section: section || '',
             isApproved: true
         };
-        if (['Student','Leader'].includes(activePrimaryRole) && rollNo && rollNo.trim()) {
-            updateData.rollNo = rollNo.trim();
+        if (activePrimaryRole === 'Student' || activePrimaryRole === 'Leader') {
+            if (rollNo && rollNo.trim()) updateData.rollNo = rollNo.trim();
         }
 
         const updatedUser = await User.findByIdAndUpdate(req.params.id, { $set: updateData }, { new: true });
         if (!updatedUser) return res.redirect('/super-admin-dashboard?error=User+not+found.');
 
-        const secLabel = sectionsArray.length > 1 ? sectionsArray.join('+&+') : (primarySection || 'no+section');
-        res.redirect(`/super-admin-dashboard?success=${encodeURIComponent(updatedUser.name)}+assigned+as+${rolesArray.join('+')}+in+${encodeURIComponent(secLabel)}.`);
+        res.redirect(`/super-admin-dashboard?success=User+${encodeURIComponent(updatedUser.name)}+assigned+as+${rolesArray.join('+')}+${section ? 'in+' + encodeURIComponent(section) : ''}.`);
     } catch(err) {
         console.error('Assign user error:', err);
         res.redirect('/super-admin-dashboard?error=Failed+to+assign+user.');
@@ -1017,7 +802,7 @@ app.post('/approve-user/:id', isAdmin, async (req, res) => {
 app.post('/delete-user/:id', isAdmin, async (req, res) => {
     try {
         const cu = getUser(req);
-        if (req.params.id === (cu._id || '').toString()) return res.status(400).send('Cannot delete your own account.');
+        if (req.params.id === cu._id.toString()) return res.status(400).send('Cannot delete your own account.');
         await User.findByIdAndDelete(req.params.id);
         const redirect = cu.role === 'SuperAdmin' ? '/super-admin-dashboard' : '/master';
         req.session.save(() => res.redirect(`${redirect}?success=User+deleted`));
@@ -1136,30 +921,8 @@ app.get('/fix-database', isSuperAdmin, async (req, res) => {
 // ERROR HANDLER
 // ================================================================
 app.use((err, req, res, next) => {
-    console.error('🔥 Unhandled Error:', err.stack || err.message);
-
-    // Handle session/MongoStore JSON parse errors — destroy corrupt session and redirect
-    if (err && (err.message || '').includes('is not valid JSON') ||
-        (err && (err.message || '').includes('Unexpected token'))) {
-        console.warn('⚠️ Corrupt session detected — destroying and redirecting to login');
-        if (req.session) {
-            return req.session.destroy(() => {
-                res.clearCookie('rku.sid');
-                res.clearCookie('connect.sid');
-                res.redirect('/login?message=Session+refreshed.+Please+log+in+again.');
-            });
-        }
-        return res.redirect('/login?message=Please+log+in+again.');
-    }
-
-    // Show real error so users can report the exact issue
-    const message = err.message || 'Internal Server Error';
-
-    try {
-        res.status(500).render('error', { message });
-    } catch(renderErr) {
-        res.status(500).send(`<h2>Server Error</h2><p>${message}</p><a href="/login">Back to Login</a>`);
-    }
+    console.error('🔥 Unhandled Error:', err.stack);
+    res.status(500).render('error', { message: err.message || 'Internal Server Error' });
 });
 
 // ================================================================

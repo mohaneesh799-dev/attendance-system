@@ -152,7 +152,17 @@
 <body>
 <div class="page">
 
-    <a href="/<%= user.role.toLowerCase() %>" class="back-link">
+    <%
+        var _activeR = (typeof activeRole !== 'undefined' ? activeRole : user.role) || 'student';
+        var _backPath = {
+            'superadmin': '/super-admin-dashboard',
+            'master': '/master',
+            'lecturer': '/lecturer',
+            'leader': '/leader',
+            'student': '/student'
+        }[_activeR.toLowerCase()] || '/login';
+    %>
+    <a href="<%= _backPath %>" class="back-link">
         <i class="fas fa-arrow-left"></i> Back to Dashboard
     </a>
 
@@ -189,7 +199,7 @@
                 </div>
                 <div class="fg">
                     <label>Active Role (this session)</label>
-                    <input type="text" class="fc" value="<%= user.role %>" readonly>
+                    <input type="text" class="fc" value="<%= typeof activeRole !== 'undefined' ? activeRole : user.role %>" readonly>
                 </div>
                 <% var _allRoles = (user.roles && user.roles.length > 0) ? user.roles : [user.role]; %>
                 <% if (_allRoles.length > 1) { %>
@@ -200,7 +210,7 @@
                         <span style="padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;background:rgba(59,130,246,.1);color:var(--accent);border:1px solid rgba(59,130,246,.2)"><%= r %></span>
                         <% }); %>
                     </div>
-                    <small style="color:var(--muted);font-size:11px;margin-top:5px">You have multiple roles. <a href="/" style="color:var(--accent)">Switch role on next login</a>.</small>
+                    <small style="color:var(--muted);font-size:11px;margin-top:5px">You have multiple roles. Use the role switcher widget in your dashboard sidebar.</small>
                 </div>
                 <% } %>
                 <% if (user.section) { %>

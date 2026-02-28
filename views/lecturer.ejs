@@ -169,29 +169,6 @@ tbody tr:hover td{background:rgba(59,127,244,.03);}
     .rec-hdr{flex-direction:column;align-items:flex-start;}
     thead th,tbody td{padding:9px 10px;font-size:12px;}
 }
-
-/* ── Switch Role Widget ── */
-.role-switcher{
-    display:inline-flex;align-items:center;gap:7px;
-    background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);
-    border-radius:10px;padding:5px 5px 5px 11px;
-}
-.role-switcher-label{font-size:11px;color:rgba(255,255,255,.6);font-weight:700;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;}
-.role-switcher select{
-    background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.25);
-    border-radius:7px;padding:5px 9px;font-size:12.5px;font-weight:700;
-    outline:none;cursor:pointer;font-family:inherit;
-    -webkit-appearance:none;appearance:none;
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='rgba(255,255,255,0.6)'/%3E%3C/svg%3E");
-    background-repeat:no-repeat;background-position:right 8px center;padding-right:24px;
-}
-.role-switcher select option{background:#1a3560;color:#fff;}
-.role-switcher .sw-btn{
-    background:rgba(255,255,255,.2);color:#fff;border:none;border-radius:7px;
-    padding:5px 11px;font-size:12px;font-weight:800;cursor:pointer;
-    transition:.18s;white-space:nowrap;font-family:inherit;
-}
-.role-switcher .sw-btn:hover{background:rgba(255,255,255,.35);}
 </style>
 </head>
 <body>
@@ -213,18 +190,6 @@ tbody tr:hover td{background:rgba(59,127,244,.03);}
             <button onclick="location.reload()" class="tb-btn tb-white"><i class="fas fa-sync-alt"></i> Refresh</button>
             <a href="/attendance-history" class="tb-btn tb-white"><i class="fas fa-history"></i> History</a>
             <a href="/settings" class="tb-btn tb-white"><i class="fas fa-cog"></i> Settings</a>
-            <%- /* ── Switch Role Widget — only shown for multi-role accounts ── */ %>
-            <% var _allRoles = (user.roles && user.roles.length > 1) ? user.roles : null; %>
-            <% if (_allRoles) { %>
-            <form action="/switch-role" method="POST" class="role-switcher">
-                <span class="role-switcher-label"><i class="fas fa-exchange-alt"></i></span>
-                <select name="targetRole" onchange="this.form.submit()" title="Switch Role">
-                    <% _allRoles.forEach(function(r){ %>
-                    <option value="<%= r %>" <%= r===user.role?'selected':'' %>><%= r %></option>
-                    <% }); %>
-                </select>
-            </form>
-            <% } %>
             <a href="/logout" class="tb-btn tb-danger"><i class="fas fa-power-off"></i> Logout</a>
         </div>
     </div>

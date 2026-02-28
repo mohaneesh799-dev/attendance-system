@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Master Dashboard — RKU Attendance</title>
+<title><%= user.section %> — Master Dashboard</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- THEME: Apply before first paint — no flash -->
 <script>(function(){var t=localStorage.getItem('rku-theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
@@ -235,7 +235,7 @@ tbody tr:hover td{background:rgba(59,127,244,.03);}
 
 <!-- Mobile Topbar -->
 <div class="mob-topbar" id="mobTopbar">
-    <span><i class="fas fa-shield-alt" style="color:var(--acc);"></i> Master — <%= (typeof masterSections!=='undefined'&&masterSections.length)?masterSections.join(', '):user.section %></span>
+    <span><i class="fas fa-shield-alt" style="color:var(--acc);"></i> Master — <%= user.section %></span>
     <button id="themeToggleMob" class="btn-theme" style="padding:6px 10px;font-size:14px;" aria-label="Toggle theme">
         <i class="fas fa-moon" id="themeIconMob"></i>
     </button>
@@ -257,38 +257,8 @@ tbody tr:hover td{background:rgba(59,127,244,.03);}
         <div class="user-chip">
             <small>Authorized Faculty</small>
             <strong><%= user.name %></strong>
-            <% var _masterSecs = (typeof masterSections !== 'undefined' && masterSections.length) ? masterSections : (user.sections && user.sections.length ? user.sections : [user.section]); %>
-            <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">
-                <% _masterSecs.forEach(function(s){ if(s){ %>
-                <span class="section-pill"><i class="fas fa-layer-group" style="font-size:10px;margin-right:3px;"></i><%= s %></span>
-                <% } }); %>
-            </div>
+            <span class="section-pill"><i class="fas fa-layer-group" style="font-size:10px;margin-right:4px;"></i><%= user.section %></span>
         </div>
-        <%
-          var _roles = (user.roles && user.roles.length > 0) ? user.roles : [user.role];
-          if (_roles.length > 1) {
-        %>
-        <div style="margin-bottom:14px;">
-            <div style="font-size:10px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px;display:flex;align-items:center;gap:5px;">
-                <i class="fas fa-exchange-alt"></i> Switch Role
-            </div>
-            <form action="/switch-role" method="POST">
-                <div style="display:flex;gap:6px;align-items:center;">
-                    <select name="targetRole"
-                        style="flex:1;font-size:12px;padding:7px 10px;background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.15);color:#fff;border-radius:8px;outline:none;font-family:inherit;font-weight:600;cursor:pointer;-webkit-appearance:none;appearance:none;">
-                        <% _roles.forEach(function(r){ %>
-                        <option value="<%= r %>" <%= r===user.role?'selected':'' %> style="background:#0f1624;color:#fff;"><%= r %></option>
-                        <% }); %>
-                    </select>
-                    <button type="submit"
-                        style="padding:7px 13px;background:var(--acc);color:#fff;border:none;border-radius:8px;font-size:12px;cursor:pointer;font-weight:800;transition:.18s;white-space:nowrap;font-family:inherit;"
-                        onmouseover="this.style.opacity='.82'" onmouseout="this.style.opacity='1'">
-                        <i class="fas fa-arrow-right"></i>
-                    </button>
-                </div>
-            </form>
-        </div>
-        <% } %>
     </div>
     <nav>
         <div class="nav-lbl">Navigation</div>
@@ -319,10 +289,7 @@ tbody tr:hover td{background:rgba(59,127,244,.03);}
     <div class="pg-hdr">
         <div>
             <h1>Section Command Center</h1>
-            <% var _mSecs=(typeof masterSections!=='undefined'&&masterSections.length)?masterSections:(user.sections&&user.sections.length?user.sections:[user.section]); %>
-            <p>Managing <strong><%= _mSecs.filter(Boolean).join(', ') || 'your section' %></strong>
-               <% if(_mSecs.filter(Boolean).length > 1){ %><span style="font-size:11px;background:rgba(59,127,244,.12);color:var(--acc);padding:2px 8px;border-radius:20px;font-weight:700;margin-left:6px;"><%= _mSecs.filter(Boolean).length %> sections</span><% } %>
-            </p>
+            <p>Managing all records for <strong><%= user.section %></strong></p>
         </div>
         <div class="hdr-right">
             <button id="themeToggle" class="btn-theme" aria-label="Toggle theme">
@@ -370,55 +337,12 @@ tbody tr:hover td{background:rgba(59,127,244,.03);}
         </div>
         <div class="card-body">
             <form action="/add-subject" method="POST" class="subject-form">
-                <% if(_mSecs.filter(Boolean).length > 1){ %>
-                <select name="section" class="fc" required style="min-width:130px;">
-                    <option value="" disabled selected>— Section —</option>
-                    <% _mSecs.filter(Boolean).forEach(function(s){ %><option value="<%= s %>"><%= s %></option><% }); %>
-                </select>
-                <% } else { %>
-                <input type="hidden" name="section" value="<%= _mSecs[0]||'' %>">
-                <% } %>
+                <input type="hidden" name="section" value="<%= user.section %>">
                 <input type="text" name="subjectName" class="fc" placeholder="New Subject Name (e.g. Mathematics)" required style="flex:1;min-width:180px;">
                 <button type="submit" class="btn btn-acc"><i class="fas fa-plus"></i> Add Subject</button>
             </form>
 
             <% if (masterSubjects && masterSubjects.length > 0) { %>
-                <%
-                  // Group subjects by section for multi-section display
-                  var _subjBySec = (typeof subjectsBySection !== 'undefined') ? subjectsBySection : {};
-                  var _singleSec = _mSecs.filter(Boolean).length <= 1;
-                %>
-                <% if(!_singleSec){ %>
-                  <% _mSecs.filter(Boolean).forEach(function(sec){ var secSubs = _subjBySec[sec]||[]; %>
-                  <div style="margin-top:14px;">
-                    <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:6px;">
-                      <span style="background:var(--acc);color:#fff;padding:2px 9px;border-radius:20px;"><%= sec %></span>
-                      <span>(<%= secSubs.length %> subject<%= secSubs.length!==1?'s':'' %>)</span>
-                    </div>
-                    <% if(secSubs.length){ %>
-                    <div class="tbl-wrap">
-                      <table>
-                        <thead><tr><th>Subject</th><th style="text-align:right;">Actions</th></tr></thead>
-                        <tbody>
-                          <% secSubs.forEach(function(sub){ %>
-                          <tr>
-                            <td><strong><%= sub.name %></strong><% if(sub.code){ %><span style="font-size:11.5px;color:var(--muted);margin-left:8px;">(<%=sub.code%>)</span><% } %></td>
-                            <td style="text-align:right;">
-                              <form action="/delete-subject/<%= sub._id %>" method="POST" style="display:inline;" onsubmit="return confirm('Delete ' + this.dataset.name + '?')" data-name="<%= sub.name %>">
-                                <button type="submit" class="btn btn-dan" style="padding:6px 12px;font-size:12px;"><i class="fas fa-trash-alt"></i></button>
-                              </form>
-                            </td>
-                          </tr>
-                          <% }); %>
-                        </tbody>
-                      </table>
-                    </div>
-                    <% } else { %>
-                    <p style="color:var(--muted);font-size:13px;padding:10px 0;">No subjects for this section yet.</p>
-                    <% } %>
-                  </div>
-                  <% }); %>
-                <% } else { %>
                 <div class="tbl-wrap">
                     <table>
                         <thead><tr><th><i class="fas fa-book-open"></i> Subject Name</th><th style="text-align:right;">Actions</th></tr></thead>
@@ -427,7 +351,7 @@ tbody tr:hover td{background:rgba(59,127,244,.03);}
                             <tr>
                                 <td><strong><%= sub.name %></strong><% if(sub.code){ %><span style="font-size:11.5px;color:var(--muted);margin-left:8px;">(<%=sub.code%>)</span><% } %></td>
                                 <td style="text-align:right;">
-                                    <form action="/delete-subject/<%= sub._id %>" method="POST" style="display:inline;" onsubmit="return confirm('Delete subject: ' + this.dataset.name + '?')" data-name="<%= sub.name %>">
+                                    <form action="/delete-subject/<%= sub._id %>" method="POST" style="display:inline;" onsubmit="return confirm('Delete subject: <%= sub.name %>?')">
                                         <button type="submit" class="btn btn-dan" style="padding:7px 13px;font-size:12px;">
                                             <i class="fas fa-trash-alt"></i> Remove
                                         </button>
@@ -438,7 +362,6 @@ tbody tr:hover td{background:rgba(59,127,244,.03);}
                         </tbody>
                     </table>
                 </div>
-                <% } %>
             <% } else { %>
                 <div style="text-align:center;padding:30px;color:var(--muted);">
                     <i class="fas fa-book" style="font-size:2rem;opacity:.2;display:block;margin-bottom:10px;"></i>
@@ -455,41 +378,41 @@ tbody tr:hover td{background:rgba(59,127,244,.03);}
         </div>
         <div class="card-body">
             <div class="umgmt-hdr">
-                <span style="font-size:13px;color:var(--muted);">Manage, approve and assign roles to users across your sections.</span>
+                <span style="font-size:13px;color:var(--muted);">Manage, approve and assign roles to users in this section.</span>
                 <div class="search-wrap">
                     <i class="fas fa-search"></i>
-                    <input type="text" id="userSearch" class="fc" placeholder="Search name, email or roll…" oninput="applyUserFilter()">
+                    <input type="text" id="userSearch" class="fc" placeholder="Search name or email…">
                 </div>
             </div>
 
-            <!-- Section tabs (only shown when master has multiple sections) -->
-            <% if(_mSecs.filter(Boolean).length > 1){ %>
-            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;" id="secTabs">
-                <button type="button" class="tab-btn active" onclick="filterSec('all',this)">All Sections (<%= stats.total %>)</button>
-                <% _mSecs.filter(Boolean).forEach(function(s){ var sc=(typeof usersBySection!=='undefined'&&usersBySection[s])?usersBySection[s].length:0; %>
-                <button type="button" class="tab-btn" onclick="filterSec('<%= s %>',this)"><%= s %> (<%= sc %>)</button>
-                <% }); %>
-            </div>
-            <% } %>
-
-            <!-- Role filter tabs -->
+            <!-- Role tabs for division-wise view -->
             <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px" id="roleTabs">
-                <button type="button" class="tab-btn active" onclick="filterRole('all',this)">All (<%= stats.total %>)</button>
-                <button type="button" class="tab-btn" onclick="filterRole('Student',this)"><i class="fas fa-graduation-cap" style="color:var(--acc)"></i> Students (<%= stats.students %>)</button>
+                <button type="button" class="tab-btn active" onclick="filterRole('all',this)">
+                    All (<%= stats.total %>)
+                </button>
+                <button type="button" class="tab-btn" onclick="filterRole('Student',this)">
+                    <i class="fas fa-graduation-cap" style="color:var(--acc)"></i> Students (<%= stats.students %>)
+                </button>
                 <% var _pendUsers = allUsers.filter(function(u){ return !u.isApproved; }); %>
                 <% if (_pendUsers.length > 0) { %>
-                <button type="button" class="tab-btn warn" onclick="filterRole('pending',this)">⏳ Pending (<%= _pendUsers.length %>)</button>
+                <button type="button" class="tab-btn warn" onclick="filterRole('pending',this)">
+                    ⏳ Pending (<%= _pendUsers.length %>)
+                </button>
                 <% } %>
-                <% ['Leader','Lecturer','Master'].forEach(function(r){ var _rc=allUsers.filter(function(u){return u.role===r;}).length; if(_rc>0){ %>
+                <% ['Leader','Lecturer','Master'].forEach(function(r){
+                   var _rc = allUsers.filter(function(u){ return u.role===r; }).length;
+                   if(_rc > 0) { %>
                 <button type="button" class="tab-btn" onclick="filterRole('<%= r %>',this)"><%= r %>s (<%= _rc %>)</button>
                 <% }}); %>
             </div>
 
             <form action="/bulk-approve" method="POST">
-                <input type="hidden" name="section" value="<%= _mSecs[0]||'' %>">
+                <input type="hidden" name="section" value="<%= user.section %>">
+
                 <div class="bulk-bar">
                     <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13.5px;font-weight:700;">
-                        <input type="checkbox" id="selectAll" style="width:16px;height:16px;accent-color:var(--acc);cursor:pointer;"> Select All
+                        <input type="checkbox" id="selectAll" style="width:16px;height:16px;accent-color:var(--acc);cursor:pointer;">
+                        Select All
                     </label>
                     <select name="targetRole" required class="fc" style="flex:1;min-width:140px;">
                         <option value="" disabled selected>Assign Role…</option>
@@ -497,8 +420,11 @@ tbody tr:hover td{background:rgba(59,127,244,.03);}
                         <option value="Leader">Leader</option>
                         <option value="Lecturer">Lecturer</option>
                     </select>
-                    <button type="submit" class="btn btn-suc"><i class="fas fa-user-check"></i> Bulk Update & Approve</button>
+                    <button type="submit" class="btn btn-suc">
+                        <i class="fas fa-user-check"></i> Bulk Update & Approve
+                    </button>
                 </div>
+
                 <div class="tbl-wrap">
                     <table id="userTable">
                         <thead>
@@ -506,37 +432,57 @@ tbody tr:hover td{background:rgba(59,127,244,.03);}
                                 <th style="width:44px;"></th>
                                 <th>User Details</th>
                                 <th>Role & Status</th>
-                                <% if(_mSecs.filter(Boolean).length > 1){ %><th>Section</th><% } %>
                                 <th style="text-align:center;">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             <% if (allUsers && allUsers.length > 0) { %>
                                 <% allUsers.forEach(function(u) { %>
-                                <tr class="u-row" data-role="<%= u.role %>" data-pend="<%= !u.isApproved?'y':'n' %>" data-sec="<%= u.section||'' %>" data-q="<%= (u.name+' '+u.email+' '+(u.rollNo||'')).toLowerCase() %>">
-                                    <td><input type="checkbox" name="userIds[]" value="<%= u._id %>" class="user-cb" style="width:16px;height:16px;accent-color:var(--acc);cursor:pointer;"></td>
+                                <tr class="u-row" data-role="<%= u.role %>" data-pend="<%= !u.isApproved ? 'y' : 'n' %>">
+                                    <td>
+                                        <input type="checkbox" name="userIds[]" value="<%= u._id %>" class="user-cb"
+                                               style="width:16px;height:16px;accent-color:var(--acc);cursor:pointer;">
+                                    </td>
                                     <td>
                                         <strong><%= u.name %></strong>
-                                        <div style="font-size:12px;color:var(--muted);"><i class="fas fa-envelope" style="opacity:.5;font-size:10px;"></i> <%= u.email %></div>
-                                        <% if(u.rollNo){ %><div style="font-size:11.5px;color:var(--acc);font-family:monospace;font-weight:700;">Roll: <%= u.rollNo %></div><% } %>
+                                        <div style="font-size:12px;color:var(--muted);">
+                                            <i class="fas fa-envelope" style="opacity:.5;font-size:10px;"></i> <%= u.email %>
+                                        </div>
+                                        <% if(u.rollNo){ %>
+                                        <div style="font-size:11.5px;color:var(--acc);font-family:monospace;font-weight:700;">
+                                            Roll: <%= u.rollNo %>
+                                        </div>
+                                        <% } %>
                                     </td>
                                     <td>
-                                        <span class="badge b-<%= (u.role||'').toLowerCase() %>"><%= u.role||'Unassigned' %></span>
-                                        <% if(u.isApproved){ %><span class="b-active" style="margin-left:8px;"><i class="fas fa-check-circle"></i> Active</span>
-                                        <% }else{ %><span class="badge b-pending" style="margin-left:6px;">⏳ Pending</span><% } %>
+                                        <span class="badge b-<%= (u.role||'').toLowerCase() %>">
+                                            <%= u.role || 'Unassigned' %>
+                                        </span>
+                                        <% if(u.isApproved) { %>
+                                            <span class="b-active" style="margin-left:8px;">
+                                                <i class="fas fa-check-circle"></i> Active
+                                            </span>
+                                        <% } else { %>
+                                            <span class="badge b-pending" style="margin-left:6px;">⏳ Pending</span>
+                                        <% } %>
                                     </td>
-                                    <% if(_mSecs.filter(Boolean).length > 1){ %>
-                                    <td><span style="font-size:11.5px;background:rgba(59,127,244,.1);color:var(--acc);padding:2px 9px;border-radius:20px;font-weight:700;"><%= u.section||'—' %></span></td>
-                                    <% } %>
                                     <td style="text-align:center;">
-                                        <form action="/delete-user/<%= u._id %>" method="POST" style="display:inline;" onsubmit="return confirmDelete(this)" data-name="<%= (u.name||'Unknown').replace(/&/g,'&amp;').replace(/"/g,'&quot;') %>">
-                                            <button type="submit" class="btn btn-dan" style="padding:7px 12px;font-size:12px;" title="Delete"><i class="fas fa-trash-alt"></i></button>
+                                        <form action="/delete-user/<%= u._id %>" method="POST" style="display:inline;"
+                                              onsubmit="return confirm('Permanently delete <%= u.name %>?')">
+                                            <button type="submit" class="btn btn-dan" style="padding:7px 12px;font-size:12px;" title="Delete User">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
                                         </form>
                                     </td>
                                 </tr>
                                 <% }); %>
                             <% } else { %>
-                                <tr><td colspan="5" style="text-align:center;padding:50px 20px;color:var(--muted);"><i class="fas fa-user-slash" style="font-size:2rem;opacity:.2;display:block;margin-bottom:12px;"></i>No users found in your sections.</td></tr>
+                                <tr>
+                                    <td colspan="4" style="text-align:center;padding:50px 20px;color:var(--muted);">
+                                        <i class="fas fa-user-slash" style="font-size:2rem;opacity:.2;display:block;margin-bottom:12px;"></i>
+                                        No users found in this section.
+                                    </td>
+                                </tr>
                             <% } %>
                         </tbody>
                     </table>
@@ -556,14 +502,7 @@ tbody tr:hover td{background:rgba(59,127,244,.03);}
                 <code style="background:var(--input-bg);padding:2px 7px;border-radius:5px;font-size:12.5px;border:1px solid var(--border);">name, email, studentId</code>
             </p>
             <form action="/upload-users" method="POST" enctype="multipart/form-data" class="import-form">
-                <% if(_mSecs.filter(Boolean).length > 1){ %>
-                <select name="section" class="fc" required style="min-width:130px;">
-                    <option value="" disabled selected>— Target Section —</option>
-                    <% _mSecs.filter(Boolean).forEach(function(s){ %><option value="<%= s %>"><%= s %></option><% }); %>
-                </select>
-                <% } else { %>
-                <input type="hidden" name="section" value="<%= _mSecs[0]||'' %>">
-                <% } %>
+                <input type="hidden" name="section" value="<%= user.section %>">
                 <input type="file" name="csvFile" accept=".csv" required>
                 <button type="submit" class="btn btn-acc"><i class="fas fa-upload"></i> Upload & Auto-Approve</button>
             </form>
@@ -635,42 +574,30 @@ tbody tr:hover td{background:rgba(59,127,244,.03);}
         setInterval(updateClock,1000);
 
 
-        /* ══ USER FILTERS ══ */
+        /* Role tab filter */
         var _curRole = 'all';
-        var _curSec  = 'all';
-
-        function applyUserFilter() {
-            var q = (document.getElementById('userSearch') ? document.getElementById('userSearch').value : '').toLowerCase();
-            document.querySelectorAll('#userTable tbody tr.u-row').forEach(function(r) {
-                var roleMatch = _curRole === 'all'
-                    || (_curRole === 'pending' && r.dataset.pend === 'y')
-                    || r.dataset.role === _curRole;
-                var secMatch  = _curSec === 'all' || r.dataset.sec === _curSec;
-                var qMatch    = !q || (r.dataset.q && r.dataset.q.includes(q)) || r.textContent.toLowerCase().includes(q);
-                r.style.display = (roleMatch && secMatch && qMatch) ? '' : 'none';
-            });
-        }
-        window.applyUserFilter = applyUserFilter;
-
         function filterRole(role, btn) {
             _curRole = role;
             document.querySelectorAll('#roleTabs .tab-btn').forEach(function(b){ b.classList.remove('active'); });
             if (btn) btn.classList.add('active');
-            applyUserFilter();
+            applyRoleFilter();
         }
-        window.filterRole = filterRole;
-
-        function filterSec(sec, btn) {
-            _curSec = sec;
-            document.querySelectorAll('#secTabs .tab-btn').forEach(function(b){ b.classList.remove('active'); });
-            if (btn) btn.classList.add('active');
-            applyUserFilter();
+        function applyRoleFilter() {
+            var q = (document.getElementById('userSearch') ? document.getElementById('userSearch').value : '').toLowerCase();
+            document.querySelectorAll('#userTable tbody tr.u-row, #userTable tbody tr[data-role]').forEach(function(r) {
+                var rm = _curRole === 'all'
+                    || (_curRole === 'pending' && r.dataset.pend === 'y')
+                    || r.dataset.role === _curRole;
+                var qm = !q || r.textContent.toLowerCase().includes(q);
+                r.style.display = (rm && qm) ? '' : 'none';
+            });
         }
-        window.filterSec = filterSec;
 
         /* Search */
-        var searchEl = document.getElementById('userSearch');
-        if (searchEl) searchEl.addEventListener('input', applyUserFilter);
+        var searchEl=document.getElementById('userSearch');
+        if(searchEl){
+            searchEl.addEventListener('input', applyRoleFilter);
+        }
 
         /* Select All */
         var selAll=document.getElementById('selectAll');
@@ -697,12 +624,6 @@ tbody tr:hover td{background:rgba(59,127,244,.03);}
             },5000);
         });
     });
-
-    /* confirmDelete: safely handles names with quotes */
-    window.confirmDelete = function(form) {
-        var name = form.getAttribute('data-name') || 'this user';
-        return confirm('Permanently delete ' + name + '?');
-    };
 
     /* Run syncIcons immediately if DOM already ready */
     if(document.readyState!=='loading') syncIcons(document.documentElement.getAttribute('data-theme'));
