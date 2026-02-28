@@ -259,6 +259,21 @@ tbody tr:hover td{background:rgba(59,127,244,.03);}
             <strong><%= user.name %></strong>
             <span class="section-pill"><i class="fas fa-layer-group" style="font-size:10px;margin-right:4px;"></i><%= user.section %></span>
         </div>
+
+        <% var masterRoles = user.roles && user.roles.length > 1 ? user.roles : null; %>
+        <% if (masterRoles) { %>
+        <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:9px;padding:11px 14px;margin-bottom:14px;">
+            <small style="font-size:10px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:7px;"><i class="fas fa-exchange-alt" style="margin-right:4px;"></i> Switch Role</small>
+            <form action="/switch-role" method="POST" style="display:flex;gap:6px;">
+                <select name="targetRole" style="flex:1;padding:7px 9px;border-radius:7px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:#fff;font-size:12.5px;font-family:inherit;outline:none;cursor:pointer;">
+                    <% masterRoles.forEach(function(r){ %>
+                        <option value="<%= r %>" style="background:#0f1f3d;" <%= r === user.role ? 'selected' : '' %>><%= r %></option>
+                    <% }); %>
+                </select>
+                <button type="submit" style="padding:7px 12px;border-radius:7px;background:var(--acc);color:#fff;border:none;font-size:12px;font-weight:700;cursor:pointer;transition:.18s;">Go</button>
+            </form>
+        </div>
+        <% } %>
     </div>
     <nav>
         <div class="nav-lbl">Navigation</div>

@@ -62,16 +62,18 @@ mongoose.connect(mongoURI)
 // ── Session ───────────────────────────────────────────────────
 if (!process.env.SESSION_SECRET) { console.error('❌ FATAL: SESSION_SECRET not set.'); process.exit(1); }
 app.set('trust proxy', 1);
+const isProd = process.env.NODE_ENV === 'production';
 app.use(session({
     secret: process.env.SESSION_SECRET,
-    resave: true,
+    resave: false,
     saveUninitialized: false,
     proxy: true,
+    name: 'rku.sid',
     store: MongoStore.create({ mongoUrl: mongoURI, touchAfter: 24 * 3600 }),
     cookie: {
-        secure: process.env.NODE_ENV === 'production',
+        secure: isProd,
         httpOnly: true,
-        sameSite: 'lax',
+        sameSite: isProd ? 'none' : 'lax',  // 'none' required on Render proxy
         maxAge: 24 * 60 * 60 * 1000
     }
 }));
@@ -81,8 +83,11 @@ app.use(passport.initialize());
 app.use(passport.session());
 passport.serializeUser((user, done) => done(null, user._id.toString()));
 passport.deserializeUser(async (id, done) => {
-    try { done(null, await User.findById(id).lean()); }
-    catch(e) { done(e, null); }
+    try {
+        const user = await User.findById(id).lean();
+        done(null, user || null);  // null on not found — clears stale passport session
+    }
+    catch(e) { done(null, null); }  // null on error — prevents crashes
 });
 
 // ── Nodemailer ────────────────────────────────────────────────
@@ -162,7 +167,11 @@ const Division = mongoose.model('Division', divisionSchema);
 // HELPERS
 // ================================================================
 
-function getUser(req) { return req.session.user || req.user; }
+function getUser(req) {
+    const u = req.session.user || req.user;
+    if (!u || !u.role) return null;
+    return u;
+}
 
 // Build session user object — includes ALL roles for role-switcher
 function buildSessionUser(user, activeRole) {
@@ -174,6 +183,7 @@ function buildSessionUser(user, activeRole) {
         name: user.name,
         section: user.section,
         rollNo: user.rollNo,
+        isApproved: user.isApproved,   // ← CRITICAL FIX: was missing
         isClassTeacher: user.isClassTeacher,
         classTeacherSection: user.classTeacherSection
     };
@@ -189,7 +199,7 @@ const ROLE_PATHS = {
 };
 
 function roleToPath(role) {
-    return ROLE_PATHS[(role || '').toLowerCase()] || '/login?error=RoleNotAssigned';
+    return ROLE_PATHS[(role || '').toLowerCase()] || '/role-error';
 }
 
 // ── Middleware ────────────────────────────────────────────────
@@ -201,35 +211,43 @@ function isAdmin(req, res, next) {
 
 function isSuperAdmin(req, res, next) {
     const u = getUser(req);
-    if (u && u.role === 'SuperAdmin' && u.isApproved) return next();
-    return res.redirect('/login?error=Unauthorized');
+    if (!u) return res.redirect('/login?error=Please+log+in');
+    if (u.role !== 'SuperAdmin') return res.redirect('/login?error=SuperAdmin+access+required');
+    // isApproved may be undefined in old sessions — check DB to heal it
+    if (u.isApproved === undefined || u.isApproved === null) {
+        return User.findById(u._id).lean().then(dbUser => {
+            if (!dbUser || !dbUser.isApproved) return res.redirect('/login?error=Account+not+approved');
+            if (req.session.user) { req.session.user.isApproved = true; }
+            req.session.save(() => next());
+        }).catch(() => res.redirect('/login?error=Session+error'));
+    }
+    if (!u.isApproved) return res.redirect('/login?error=Account+not+approved');
+    return next();
 }
 
 // ================================================================
 // GOOGLE OAUTH
 // ================================================================
-passport.use(new GoogleStrategy({
-    clientID:     process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL:  `${process.env.APP_BASE_URL}/auth/google/callback`
-}, async (accessToken, refreshToken, profile, done) => {
-    const email = profile.emails[0].value;
-    try {
-        let user = await User.findOne({ email });
-        if (!user) {
-            user = new User({
-                googleId: profile.id, email, name: profile.displayName,
-                role: 'SuperAdmin', roles: ['SuperAdmin'], isApproved: false
-            });
-            await user.save();
-            transporter.sendMail({
-                from: process.env.EMAIL_USER, to: process.env.DEVELOPER_EMAIL,
-                subject: 'New Admin Request', text: `New Google login: ${email}`
-            }, err => { if (err) console.log('📧 Email failed (non-fatal):', err.message); });
-        }
-        return done(null, user);
-    } catch(err) { return done(err, null); }
-}));
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && process.env.APP_BASE_URL) {
+    passport.use(new GoogleStrategy({
+        clientID:     process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        callbackURL:  `${process.env.APP_BASE_URL}/auth/google/callback`
+    }, async (accessToken, refreshToken, profile, done) => {
+        const email = profile.emails[0].value;
+        try {
+            let user = await User.findOne({ email });
+            if (!user) {
+                user = new User({ googleId: profile.id, email, name: profile.displayName, role: 'SuperAdmin', roles: ['SuperAdmin'], isApproved: false });
+                await user.save();
+                transporter.sendMail({ from: process.env.EMAIL_USER, to: process.env.DEVELOPER_EMAIL, subject: 'New Admin Request', text: `New Google login: ${email}` }, err => { if (err) console.log('📧 Email failed:', err.message); });
+            }
+            return done(null, user);
+        } catch(err) { return done(err, null); }
+    }));
+} else {
+    console.warn('⚠️ Google OAuth not configured — GOOGLE_CLIENT_ID/SECRET or APP_BASE_URL missing');
+}
 
 // ================================================================
 // GET ROUTES
@@ -239,40 +257,54 @@ app.get('/', (req, res) => res.redirect('/login'));
 
 app.get('/login', (req, res) => {
     const u = getUser(req);
-    if (u) return res.redirect(roleToPath(u.role));
+    if (u && u.role && ROLE_PATHS[(u.role || '').toLowerCase()]) {
+        // SuperAdmin: only redirect if approved
+        if (u.role === 'SuperAdmin' && !u.isApproved) {
+            req.session.destroy(() => {});
+            return res.render('login', { error: 'Your SuperAdmin account is not yet approved.', message: null });
+        }
+        return res.redirect(roleToPath(u.role));
+    }
+    if (u) req.session.destroy(() => {}); // Destroy corrupt/invalid sessions
     res.render('login', { error: req.query.error || null, message: req.query.message || null });
 });
 
 app.get('/register', (req, res) => res.render('register', { error: null }));
 
-// ── Role Selection (shown when user has multiple roles) ───────
-app.get('/select-role', (req, res) => {
-    if (!req.session.pendingUserId) return res.redirect('/login?error=Session+expired');
-    User.findById(req.session.pendingUserId).lean()
-        .then(user => {
-            if (!user) return res.redirect('/login?error=User+not+found');
-            const roles = user.roles && user.roles.length ? user.roles : [user.role];
-            res.render('role-select', { user, roles });
-        })
-        .catch(() => res.redirect('/login'));
+// ── Role Error page (prevents redirect loops for unknown roles) ──
+app.get('/role-error', (req, res) => {
+    const u = getUser(req);
+    res.status(400).render('error', { message: `Role "${u ? u.role : 'unknown'}" is not configured. Ask your administrator to assign a valid role.` });
+});
+
+// ── Emergency session clear ──
+app.get('/clear-session', (req, res) => {
+    req.session.destroy(() => {});
+    res.clearCookie('rku.sid');
+    res.clearCookie('connect.sid');
+    res.redirect('/login?message=Session+cleared.+Please+log+in+again.');
 });
 
 // ── Google OAuth ──────────────────────────────────────────────
-app.get('/auth/google', passport.authenticate('google', { scope: ['profile','email'], prompt: 'select_account' }));
-app.get('/auth/google/callback',
-    passport.authenticate('google', { failureRedirect: '/login?error=Google+login+failed' }),
-    async (req, res) => {
-        const u = req.user;
-        if (!u.isApproved) return res.render('pending', { user: u });
-        const roles = u.roles && u.roles.length ? u.roles : [u.role];
+app.get('/auth/google', (req, res, next) => {
+    if (!process.env.GOOGLE_CLIENT_ID) return res.redirect('/login?error=Google+Sign-In+not+configured');
+    passport.authenticate('google', { scope: ['profile','email'], prompt: 'select_account' })(req, res, next);
+});
+app.get('/auth/google/callback', (req, res, next) => {
+    passport.authenticate('google', { failureRedirect: '/login?error=Google+login+failed' }, async (err, user) => {
+        if (err) { console.error('Google OAuth error:', err.message); return res.redirect('/login?error=Google+authentication+failed'); }
+        if (!user) return res.redirect('/login?error=Google+login+failed');
+        if (!user.isApproved) { req.logout(e => {}); return res.render('pending', { user }); }
+        const roles = user.roles && user.roles.length ? user.roles : [user.role];
         if (roles.length > 1) {
-            req.session.pendingUserId = u._id.toString();
+            req.session.pendingUserId = user._id.toString();
             return req.session.save(() => res.redirect('/select-role'));
         }
-        req.session.user = buildSessionUser(u, roles[0]);
+        req.session.user = buildSessionUser(user, roles[0]);
+        req.logout(e => {});
         req.session.save(() => res.redirect(roleToPath(roles[0])));
-    }
-);
+    })(req, res, next);
+});
 
 // ── Dashboards ────────────────────────────────────────────────
 
@@ -529,6 +561,18 @@ app.get('/export-attendance', async (req, res) => {
 
 app.get('/ping', (req, res) => res.status(200).send('OK'));
 
+// ── Role Selection (for multi-role users — keeps choose-role.ejs for now) ──
+app.get('/select-role', (req, res) => {
+    if (!req.session.pendingUserId) return res.redirect('/login?error=Session+expired');
+    User.findById(req.session.pendingUserId).lean()
+        .then(user => {
+            if (!user) return res.redirect('/login?error=User+not+found');
+            const roles = user.roles && user.roles.length ? user.roles : [user.role];
+            res.render('choose-role', { user, roles });  // uses choose-role.ejs
+        })
+        .catch(() => res.redirect('/login'));
+});
+
 // ================================================================
 // POST ROUTES
 // ================================================================
@@ -537,14 +581,20 @@ app.get('/ping', (req, res) => res.status(200).send('OK'));
 app.post('/login', loginLimiter, async (req, res) => {
     try {
         const { email, password } = req.body;
+        if (!email || !password) return res.render('login', { error: 'Email and password are required.', message: null });
         const user = await User.findOne({ email: email.toLowerCase().trim() });
-        if (!user) return res.render('login', { error:'Account not found. Please register first.', message:null });
-        if (!user.password) return res.render('login', { error:'This account uses Google Sign-In.', message:null });
+        if (!user) return res.render('login', { error: 'Account not found. Please register first.', message: null });
+        if (!user.password) return res.render('login', { error: 'This account uses Google Sign-In. Use the Google button.', message: null });
         const ok = await bcrypt.compare(password, user.password);
-        if (!ok) return res.render('login', { error:'Incorrect password.', message:null });
-        if (!user.isApproved && user.role !== 'Master') return res.render('login', { error:'Your account is awaiting admin approval.', message:null });
+        if (!ok) return res.render('login', { error: 'Incorrect password. Please try again.', message: null });
 
-        // ── Multi-role: if user has multiple roles, ask which to use ──
+        // SuperAdmin and Master are always allowed; others need approval
+        const skipApproval = ['SuperAdmin', 'Master'].includes(user.role);
+        if (!user.isApproved && !skipApproval) {
+            return res.render('login', { error: 'Your account is awaiting admin approval.', message: null });
+        }
+
+        // Multi-role: show inline role switcher (no separate page needed)
         const roles = user.roles && user.roles.length > 0 ? user.roles : [user.role];
         if (roles.length > 1) {
             req.session.pendingUserId = user._id.toString();
@@ -554,13 +604,15 @@ app.post('/login', loginLimiter, async (req, res) => {
             });
         }
 
-        // ── Single role: go directly ──
         req.session.user = buildSessionUser(user, roles[0]);
         req.session.save(err => {
-            if (err) return res.status(500).send('Login failed.');
+            if (err) return res.status(500).send('Login failed — session error.');
             res.redirect(roleToPath(roles[0]));
         });
-    } catch(err) { res.status(500).render('error', { message: 'Internal Server Error during login.' }); }
+    } catch(err) {
+        console.error('Login error:', err);
+        res.status(500).render('error', { message: 'Internal Server Error during login.' });
+    }
 });
 
 // ── Select Role (POST) ────────────────────────────────────────
