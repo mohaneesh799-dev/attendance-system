@@ -69,7 +69,13 @@ app.use(session({
     saveUninitialized: false,
     proxy: true,
     name: 'rku.sid',
-    store: MongoStore.create({ mongoUrl: mongoURI, touchAfter: 24 * 3600 }),
+    store: MongoStore.create({
+        mongoUrl: mongoURI,
+        touchAfter: 24 * 3600,
+        ttl: 24 * 60 * 60,
+        autoRemove: 'interval',
+        autoRemoveInterval: 60
+    }),
     cookie: {
         secure: isProd,
         httpOnly: true,
@@ -123,6 +129,7 @@ const userSchema = new mongoose.Schema({
     roles:              { type: [String], default: [] },
     // ─────────────────────────
     section:            { type: String, default: '' },
+    sections:           { type: [String], default: [] },  // for Master: all managed sections
     phone:              { type: String, default: '' },
     isApproved:         { type: Boolean, default: false },
     isPreRegistered:    { type: Boolean, default: false },
@@ -175,16 +182,20 @@ function getUser(req) {
 
 // Build session user object — includes ALL roles for role-switcher
 function buildSessionUser(user, activeRole) {
+    const sections = user.sections && user.sections.length
+        ? user.sections
+        : (user.section ? [user.section] : []);
     return {
-        _id: user._id,
-        email: user.email.toLowerCase(),
-        role: activeRole || user.role,
-        roles: user.roles && user.roles.length ? user.roles : [user.role],
-        name: user.name,
-        section: user.section,
-        rollNo: user.rollNo,
-        isApproved: user.isApproved,   // ← CRITICAL FIX: was missing
-        isClassTeacher: user.isClassTeacher,
+        _id:     user._id,
+        email:   user.email.toLowerCase(),
+        role:    activeRole || user.role,
+        roles:   user.roles && user.roles.length ? user.roles : [user.role],
+        section: user.section || '',
+        sections,
+        name:    user.name,
+        rollNo:  user.rollNo,
+        isApproved:          user.isApproved,
+        isClassTeacher:      user.isClassTeacher,
         classTeacherSection: user.classTeacherSection
     };
 }
@@ -279,10 +290,12 @@ app.get('/role-error', (req, res) => {
 
 // ── Emergency session clear ──
 app.get('/clear-session', (req, res) => {
-    req.session.destroy(() => {});
-    res.clearCookie('rku.sid');
-    res.clearCookie('connect.sid');
-    res.redirect('/login?message=Session+cleared.+Please+log+in+again.');
+    req.session.destroy(err => {
+        if (err) console.error('Session destroy error:', err);
+        res.clearCookie('rku.sid');
+        res.clearCookie('connect.sid');
+        res.redirect('/login?message=Session+cleared.+Please+log+in+again.');
+    });
 });
 
 // ── Google OAuth ──────────────────────────────────────────────
@@ -294,15 +307,33 @@ app.get('/auth/google/callback', (req, res, next) => {
     passport.authenticate('google', { failureRedirect: '/login?error=Google+login+failed' }, async (err, user) => {
         if (err) { console.error('Google OAuth error:', err.message); return res.redirect('/login?error=Google+authentication+failed'); }
         if (!user) return res.redirect('/login?error=Google+login+failed');
-        if (!user.isApproved) { req.logout(e => {}); return res.render('pending', { user }); }
+        // req.logout is async in Passport v0.6+ — must nest everything in its callback
+        if (!user.isApproved) {
+            return req.logout(e => {
+                if (e) console.error('Logout error:', e);
+                res.render('pending', { user });
+            });
+        }
         const roles = user.roles && user.roles.length ? user.roles : [user.role];
         if (roles.length > 1) {
-            req.session.pendingUserId = user._id.toString();
-            return req.session.save(() => res.redirect('/select-role'));
+            return req.logout(e => {
+                if (e) console.error('Logout error:', e);
+                req.session.pendingUserId = user._id.toString();
+                req.session.save(err2 => {
+                    if (err2) return res.redirect('/login?error=Session+error');
+                    res.redirect('/select-role');
+                });
+            });
         }
-        req.session.user = buildSessionUser(user, roles[0]);
-        req.logout(e => {});
-        req.session.save(() => res.redirect(roleToPath(roles[0])));
+        const sessionUser = buildSessionUser(user, roles[0]);
+        req.logout(e => {
+            if (e) console.error('Logout error:', e);
+            req.session.user = sessionUser;
+            req.session.save(err2 => {
+                if (err2) return res.redirect('/login?error=Session+error');
+                res.redirect(roleToPath(roles[0]));
+            });
+        });
     })(req, res, next);
 });
 
@@ -561,16 +592,16 @@ app.get('/export-attendance', async (req, res) => {
 
 app.get('/ping', (req, res) => res.status(200).send('OK'));
 
-// ── Role Selection (for multi-role users — keeps choose-role.ejs for now) ──
+// ── Role Selection (for multi-role users) ──
 app.get('/select-role', (req, res) => {
-    if (!req.session.pendingUserId) return res.redirect('/login?error=Session+expired');
+    if (!req.session.pendingUserId) return res.redirect('/login?error=Session+expired.+Please+log+in+again.');
     User.findById(req.session.pendingUserId).lean()
         .then(user => {
             if (!user) return res.redirect('/login?error=User+not+found');
             const roles = user.roles && user.roles.length ? user.roles : [user.role];
-            res.render('choose-role', { user, roles });  // uses choose-role.ejs
+            res.render('choose-role', { user, roles, error: req.query.error || null });
         })
-        .catch(() => res.redirect('/login'));
+        .catch(() => res.redirect('/login?error=Session+error'));
 });
 
 // ================================================================
@@ -615,25 +646,32 @@ app.post('/login', loginLimiter, async (req, res) => {
     }
 });
 
-// ── Select Role (POST) ────────────────────────────────────────
-app.post('/select-role', async (req, res) => {
+// ── Select Role / Choose Role (POST) ─────────────────────────
+// choose-role.ejs posts to /choose-role — register BOTH to handle either
+async function handleRoleSelection(req, res) {
     try {
-        if (!req.session.pendingUserId) return res.redirect('/login?error=Session+expired');
+        if (!req.session.pendingUserId) return res.redirect('/login?error=Session+expired.+Please+log+in+again.');
         const { selectedRole } = req.body;
+        if (!selectedRole) return res.redirect('/select-role?error=Please+select+a+role+to+continue.');
         const user = await User.findById(req.session.pendingUserId);
         if (!user) return res.redirect('/login?error=User+not+found');
-
         const roles = user.roles && user.roles.length ? user.roles : [user.role];
-        if (!roles.includes(selectedRole)) return res.redirect('/select-role?error=Invalid+role+selection');
-
+        if (!roles.includes(selectedRole)) {
+            return res.redirect('/select-role?error=Invalid+role.+Please+choose+one+of+your+assigned+roles.');
+        }
         delete req.session.pendingUserId;
         req.session.user = buildSessionUser(user, selectedRole);
         req.session.save(err => {
-            if (err) return res.status(500).send('Session error.');
+            if (err) { console.error('Session save error:', err); return res.status(500).send('Session error.'); }
             res.redirect(roleToPath(selectedRole));
         });
-    } catch(err) { res.status(500).render('error', { message: 'Role selection failed.' }); }
-});
+    } catch(err) {
+        console.error('Role selection error:', err);
+        res.status(500).render('error', { message: 'Role selection failed. Please try again.' });
+    }
+}
+app.post('/select-role', handleRoleSelection);   // internal redirect path
+app.post('/choose-role', handleRoleSelection);   // ← choose-role.ejs form action
 
 // ── Switch Role (while logged in) ────────────────────────────
 app.post('/switch-role', async (req, res) => {
@@ -641,13 +679,20 @@ app.post('/switch-role', async (req, res) => {
         const user = getUser(req);
         if (!user) return res.redirect('/login');
         const { targetRole } = req.body;
+        if (!targetRole) return res.redirect('back');
         const dbUser = await User.findById(user._id);
         if (!dbUser) return res.redirect('/login');
         const roles = dbUser.roles && dbUser.roles.length ? dbUser.roles : [dbUser.role];
         if (!roles.includes(targetRole)) return res.redirect('/login?error=Role+not+assigned');
         req.session.user = buildSessionUser(dbUser, targetRole);
-        req.session.save(() => res.redirect(roleToPath(targetRole)));
-    } catch(err) { res.redirect('/login?error=Switch+failed'); }
+        req.session.save(err => {
+            if (err) return res.redirect('/login?error=Session+error');
+            res.redirect(roleToPath(targetRole));
+        });
+    } catch(err) {
+        console.error('Switch role error:', err);
+        res.redirect('/login?error=Switch+failed');
+    }
 });
 
 // ── Register ──────────────────────────────────────────────────
@@ -690,7 +735,8 @@ app.post('/register-super-admin', async (req, res) => {
 app.get('/logout', (req, res) => {
     const destroy = () => req.session.destroy(err => {
         if (err) console.error('Session destroy error:', err);
-        res.clearCookie('connect.sid');
+        res.clearCookie('rku.sid');       // actual session cookie name
+        res.clearCookie('connect.sid');   // legacy fallback
         res.redirect('/login?message=Logged out successfully');
     });
     if (typeof req.logout === 'function') req.logout(err => { if(err) console.error(err); destroy(); });
@@ -809,31 +855,36 @@ app.post('/delete-division/:id', isSuperAdmin, async (req, res) => {
 
 app.post('/assign-user/:id', isSuperAdmin, async (req, res) => {
     try {
-        // `roles` is now an array of checkboxes; `role` (hidden) is the primary/active role
-        let { roles, primaryRole, section, rollNo } = req.body;
+        let { roles, primaryRole, section, sections, rollNo } = req.body;
 
-        // Handle both checkbox array and old single-select fallback
+        // Normalise roles to array
         let rolesArray = Array.isArray(roles) ? roles : (roles ? [roles] : []);
-        if (rolesArray.length === 0 && primaryRole) rolesArray = [primaryRole];
-        if (rolesArray.length === 0) rolesArray = ['Student'];
+        if (!rolesArray.length && primaryRole) rolesArray = [primaryRole];
+        if (!rolesArray.length) rolesArray = ['Student'];
+        const activePrimaryRole = (primaryRole && rolesArray.includes(primaryRole)) ? primaryRole : rolesArray[0];
 
-        // Primary role = explicitly selected primary, or first in array
-        const activePrimaryRole = primaryRole && rolesArray.includes(primaryRole) ? primaryRole : rolesArray[0];
+        // Normalise sections to array (multi-select checkboxes for Master)
+        let sectionsArray = Array.isArray(sections) ? sections : (sections ? [sections] : []);
+        if (section && !sectionsArray.includes(section)) sectionsArray.push(section);
+        sectionsArray = [...new Set(sectionsArray.filter(Boolean))];
+        const primarySection = sectionsArray[0] || '';
 
         const updateData = {
-            roles: rolesArray,
-            role: activePrimaryRole,
-            section: section || '',
+            roles:    rolesArray,
+            role:     activePrimaryRole,
+            sections: sectionsArray,
+            section:  primarySection,
             isApproved: true
         };
-        if (activePrimaryRole === 'Student' || activePrimaryRole === 'Leader') {
-            if (rollNo && rollNo.trim()) updateData.rollNo = rollNo.trim();
+        if (['Student', 'Leader'].includes(activePrimaryRole) && rollNo && rollNo.trim()) {
+            updateData.rollNo = rollNo.trim();
         }
 
         const updatedUser = await User.findByIdAndUpdate(req.params.id, { $set: updateData }, { new: true });
         if (!updatedUser) return res.redirect('/super-admin-dashboard?error=User+not+found.');
 
-        res.redirect(`/super-admin-dashboard?success=User+${encodeURIComponent(updatedUser.name)}+assigned+as+${rolesArray.join('+')}+${section ? 'in+' + encodeURIComponent(section) : ''}.`);
+        const secLabel = sectionsArray.length > 1 ? sectionsArray.join(', ') : (primarySection || 'no section');
+        res.redirect(`/super-admin-dashboard?success=${encodeURIComponent(updatedUser.name)}+assigned+as+${rolesArray.join('+&+')}+in+${encodeURIComponent(secLabel)}.`);
     } catch(err) {
         console.error('Assign user error:', err);
         res.redirect('/super-admin-dashboard?error=Failed+to+assign+user.');
@@ -961,11 +1012,14 @@ app.get('/fix-database', isSuperAdmin, async (req, res) => {
             let changed = false;
             if (u.rollno && !u.rollNo) { u.rollNo = u.rollno; changed = true; }
             if (!u.role) { u.role = 'Student'; changed = true; }
-            // Migrate: ensure roles array is populated
             if (!u.roles || u.roles.length === 0) { u.roles = [u.role]; changed = true; }
+            // Migrate: populate sections[] from section string
+            if ((!u.sections || u.sections.length === 0) && u.section) {
+                u.sections = [u.section]; changed = true;
+            }
             if (changed) { await u.save(); count++; }
         }
-        res.send(`Database fixed. Updated ${count} users.`);
+        res.send(`✅ Database fixed. Updated ${count} users. Reload the page and test login.`);
     } catch(err) { res.status(500).send('Error: ' + err.message); }
 });
 
