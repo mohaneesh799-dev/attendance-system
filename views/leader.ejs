@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -141,19 +141,6 @@
             <p>Leader: <strong><%= user.name %></strong> &nbsp;·&nbsp; Section: <strong><%= user.section %></strong></p>
         </div>
         <div class="topbar-btns">
-            <% var leaderRoles = user.roles && user.roles.length > 1 ? user.roles : null; %>
-            <% if (leaderRoles) { %>
-            <form action="/switch-role" method="POST" style="display:flex;gap:6px;align-items:center;">
-                <select name="targetRole" style="padding:7px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.1);color:#fff;font-size:12px;font-weight:700;outline:none;cursor:pointer;">
-                    <% leaderRoles.forEach(function(r){ %>
-                        <option value="<%= r %>" style="background:#1a2a4a;" <%= r === user.role ? 'selected' : '' %>><%= r %></option>
-                    <% }); %>
-                </select>
-                <button type="submit" style="padding:7px 12px;background:rgba(59,130,246,.3);color:#93c5fd;border:1px solid rgba(59,130,246,.3);border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">
-                    <i class="fas fa-exchange-alt"></i> Switch
-                </button>
-            </form>
-            <% } %>
             <a href="/attendance-history" class="tb-btn tb-white"><i class="fas fa-history"></i> History</a>
             <a href="/settings" class="tb-btn tb-white"><i class="fas fa-cog"></i> Settings</a>
             <a href="/logout" class="tb-btn tb-danger"><i class="fas fa-sign-out-alt"></i> Logout</a>
@@ -245,9 +232,10 @@
                         <tbody>
                             <% let idx = 0;
                                allUsers.forEach(function(u){
-                                 if(u.role==='Master'||u.role==='Lecturer'||u.role==='SuperAdmin') return; %>
-                            <tr id="row-<%= idx %>">
-                                <td style="color:var(--muted);font-size:12px;"><%= idx + 1 %></td>
+                                 if(u.role==='Master'||u.role==='Lecturer'||u.role==='SuperAdmin') return;
+                                 var rowIdx = idx; %>
+                            <tr id="row-<%= rowIdx %>">
+                                <td style="color:var(--muted);font-size:12px;"><%= rowIdx + 1 %></td>
                                 <td class="roll-col" style="font-family:monospace;font-weight:700;color:var(--accent);">
                                     <%= u.rollNo || u.rollno || '—' %>
                                 </td>
@@ -258,14 +246,14 @@
                                     <% } %>
                                 </td>
                                 <td>
-                                    <input type="hidden" name="students[<%= idx %>][id]"   value="<%= u.rollNo || u.rollno || '' %>">
-                                    <input type="hidden" name="students[<%= idx %>][name]" value="<%= u.name %>">
+                                    <input type="hidden" name="students[<%= rowIdx %>][id]"   value="<%= u.rollNo || u.rollno || '' %>">
+                                    <input type="hidden" name="students[<%= rowIdx %>][name]" value="<%= u.name %>">
                                     <label class="cb-wrap">
                                         <input type="checkbox"
-                                               name="students[<%= idx %>][status]"
+                                               name="students[<%= rowIdx %>][status]"
                                                value="Present"
                                                class="student-checkbox"
-                                               data-row="<%= idx %>"
+                                               data-row="<%= rowIdx %>"
                                                onchange="updateCount()">
                                         <span>Present</span>
                                     </label>
@@ -274,15 +262,6 @@
                             <% idx++; }); %>
                         </tbody>
                     </table>
-                </div>
-
-                <div class="action-bar">
-                    <button type="button" class="btn btn-success" onclick="markAll(true)">
-                        <i class="fas fa-check-double"></i> Mark All Present
-                    </button>
-                    <button type="button" class="btn btn-ghost" onclick="markAll(false)">
-                        <i class="fas fa-times"></i> Clear All
-                    </button>
                 </div>
 
             <% } else { %>
@@ -390,7 +369,7 @@ function applyQuickMark() {
     // Parse input — supports commas, spaces, newlines as separators
     var rollsToMark = input.split(/[\s,;|\n\t]+/)
         .map(function(r){ return normalizeRoll(r); })
-        .filter(function(r){ return r && r.trim().length > 0; });
+        .filter(function(r){ return r && r !== '0' || r === '0'; });
 
     // Remove duplicates
     rollsToMark = rollsToMark.filter(function(v, i, a){ return a.indexOf(v) === i; });
