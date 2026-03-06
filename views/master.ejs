@@ -262,15 +262,36 @@ tbody tr:hover td{background:rgba(59,127,244,.03);}
 
         <% var masterRoles = user.roles && user.roles.length > 1 ? user.roles : null; %>
         <% if (masterRoles) { %>
-        <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:9px;padding:11px 14px;margin-bottom:14px;">
-            <small style="font-size:10px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:7px;"><i class="fas fa-exchange-alt" style="margin-right:4px;"></i> Switch Role</small>
+        <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:9px;padding:11px 14px;margin-bottom:10px;">
+            <small style="font-size:10px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:5px;margin-bottom:7px;"><i class="fas fa-exchange-alt"></i> Switch Role</small>
             <form action="/switch-role" method="POST" style="display:flex;gap:6px;">
-                <select name="targetRole" style="flex:1;padding:7px 9px;border-radius:7px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:#fff;font-size:12.5px;font-family:inherit;outline:none;cursor:pointer;">
+                <select name="targetRole" style="flex:1;padding:7px 9px;border-radius:7px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:#fff;font-size:12.5px;font-family:inherit;outline:none;cursor:pointer;-webkit-appearance:none;">
                     <% masterRoles.forEach(function(r){ %>
                         <option value="<%= r %>" style="background:#0f1f3d;" <%= r === user.role ? 'selected' : '' %>><%= r %></option>
                     <% }); %>
                 </select>
                 <button type="submit" style="padding:7px 12px;border-radius:7px;background:var(--acc);color:#fff;border:none;font-size:12px;font-weight:700;cursor:pointer;transition:.18s;">Go</button>
+            </form>
+        </div>
+        <% } %>
+
+        <%
+          var masterSections = (user.sections && user.sections.length > 1) ? user.sections : null;
+        %>
+        <% if (masterSections) { %>
+        <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:9px;padding:11px 14px;margin-bottom:10px;">
+            <small style="font-size:10px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:5px;margin-bottom:7px;"><i class="fas fa-layer-group"></i> Change Division</small>
+            <form action="/switch-section" method="POST" style="display:flex;gap:6px;">
+                <select name="targetSection" style="flex:1;padding:7px 9px;border-radius:7px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:#fff;font-size:12.5px;font-family:inherit;outline:none;cursor:pointer;-webkit-appearance:none;">
+                    <% masterSections.forEach(function(s){ %>
+                        <option value="<%= s %>" style="background:#0f1f3d;" <%= s === user.section ? 'selected' : '' %>>
+                            <% if(s === user.section){ %>[Active] <% } %><%= s %>
+                        </option>
+                    <% }); %>
+                </select>
+                <button type="submit" style="padding:7px 12px;border-radius:7px;background:rgba(16,185,129,.8);color:#fff;border:none;font-size:12px;font-weight:700;cursor:pointer;transition:.18s;" title="Switch to this division">
+                    <i class="fas fa-arrow-right"></i>
+                </button>
             </form>
         </div>
         <% } %>

@@ -164,7 +164,16 @@ tbody tr:hover td{background:rgba(59,127,244,.04);}
     <!-- Topbar -->
     <div class="topbar">
         <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
-            <a href="/<%= user.role.toLowerCase() %>" class="back-btn">
+            <%
+                var _hBackPath = {
+                    'superadmin': '/super-admin-dashboard',
+                    'master': '/master',
+                    'lecturer': '/lecturer',
+                    'leader': '/leader',
+                    'student': '/student'
+                }[(user.role||'').toLowerCase()] || '/login';
+            %>
+            <a href="<%= _hBackPath %>" class="back-btn">
                 <i class="fas fa-arrow-left"></i> Dashboard
             </a>
             <h1 class="page-title"><i class="fas fa-history" style="color:var(--acc);"></i> Attendance <span>History</span></h1>

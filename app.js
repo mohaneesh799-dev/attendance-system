@@ -315,16 +315,6 @@ app.get('/auth/google/callback', (req, res, next) => {
             });
         }
         const roles = user.roles && user.roles.length ? user.roles : [user.role];
-        if (roles.length > 1) {
-            return req.logout(e => {
-                if (e) console.error('Logout error:', e);
-                req.session.pendingUserId = user._id.toString();
-                req.session.save(err2 => {
-                    if (err2) return res.redirect('/login?error=Session+error');
-                    res.redirect('/select-role');
-                });
-            });
-        }
         const sessionUser = buildSessionUser(user, roles[0]);
         req.logout(e => {
             if (e) console.error('Logout error:', e);
@@ -592,16 +582,16 @@ app.get('/export-attendance', async (req, res) => {
 
 app.get('/ping', (req, res) => res.status(200).send('OK'));
 
-// ── Role Selection (for multi-role users) ──
+// ── /select-role — legacy path, redirect to dashboard (choose-role.ejs removed) ──
 app.get('/select-role', (req, res) => {
-    if (!req.session.pendingUserId) return res.redirect('/login?error=Session+expired.+Please+log+in+again.');
-    User.findById(req.session.pendingUserId).lean()
-        .then(user => {
-            if (!user) return res.redirect('/login?error=User+not+found');
-            const roles = user.roles && user.roles.length ? user.roles : [user.role];
-            res.render('choose-role', { user, roles, error: req.query.error || null });
-        })
-        .catch(() => res.redirect('/login?error=Session+error'));
+    const u = getUser(req);
+    if (u) return res.redirect(roleToPath(u.role));
+    res.redirect('/login');
+});
+app.get('/choose-role', (req, res) => {
+    const u = getUser(req);
+    if (u) return res.redirect(roleToPath(u.role));
+    res.redirect('/login');
 });
 
 // ================================================================
@@ -625,16 +615,8 @@ app.post('/login', loginLimiter, async (req, res) => {
             return res.render('login', { error: 'Your account is awaiting admin approval.', message: null });
         }
 
-        // Multi-role: show inline role switcher (no separate page needed)
+        // Log in directly with first role — user can switch via sidebar role switcher
         const roles = user.roles && user.roles.length > 0 ? user.roles : [user.role];
-        if (roles.length > 1) {
-            req.session.pendingUserId = user._id.toString();
-            return req.session.save(err => {
-                if (err) return res.status(500).send('Session error.');
-                res.redirect('/select-role');
-            });
-        }
-
         req.session.user = buildSessionUser(user, roles[0]);
         req.session.save(err => {
             if (err) return res.status(500).send('Login failed — session error.');
@@ -646,32 +628,17 @@ app.post('/login', loginLimiter, async (req, res) => {
     }
 });
 
-// ── Select Role / Choose Role (POST) ─────────────────────────
-// choose-role.ejs posts to /choose-role — register BOTH to handle either
-async function handleRoleSelection(req, res) {
-    try {
-        if (!req.session.pendingUserId) return res.redirect('/login?error=Session+expired.+Please+log+in+again.');
-        const { selectedRole } = req.body;
-        if (!selectedRole) return res.redirect('/select-role?error=Please+select+a+role+to+continue.');
-        const user = await User.findById(req.session.pendingUserId);
-        if (!user) return res.redirect('/login?error=User+not+found');
-        const roles = user.roles && user.roles.length ? user.roles : [user.role];
-        if (!roles.includes(selectedRole)) {
-            return res.redirect('/select-role?error=Invalid+role.+Please+choose+one+of+your+assigned+roles.');
-        }
-        delete req.session.pendingUserId;
-        req.session.user = buildSessionUser(user, selectedRole);
-        req.session.save(err => {
-            if (err) { console.error('Session save error:', err); return res.status(500).send('Session error.'); }
-            res.redirect(roleToPath(selectedRole));
-        });
-    } catch(err) {
-        console.error('Role selection error:', err);
-        res.status(500).render('error', { message: 'Role selection failed. Please try again.' });
-    }
-}
-app.post('/select-role', handleRoleSelection);   // internal redirect path
-app.post('/choose-role', handleRoleSelection);   // ← choose-role.ejs form action
+// ── /select-role / /choose-role POST — legacy handlers, now use /switch-role instead ──
+app.post('/select-role', (req, res) => {
+    const u = getUser(req);
+    if (u) return res.redirect(roleToPath(u.role));
+    res.redirect('/login');
+});
+app.post('/choose-role', (req, res) => {
+    const u = getUser(req);
+    if (u) return res.redirect(roleToPath(u.role));
+    res.redirect('/login');
+});
 
 // ── Switch Role (while logged in) ────────────────────────────
 app.post('/switch-role', async (req, res) => {
@@ -692,6 +659,30 @@ app.post('/switch-role', async (req, res) => {
     } catch(err) {
         console.error('Switch role error:', err);
         res.redirect('/login?error=Switch+failed');
+    }
+});
+// ── Switch Section (Master with multiple sections) ───────────
+app.post('/switch-section', async (req, res) => {
+    try {
+        const user = getUser(req);
+        if (!user) return res.redirect('/login');
+        const { targetSection } = req.body;
+        if (!targetSection) return res.redirect('back');
+        const dbUser = await User.findById(user._id);
+        if (!dbUser) return res.redirect('/login');
+        const userSections = dbUser.sections && dbUser.sections.length
+            ? dbUser.sections
+            : (dbUser.section ? [dbUser.section] : []);
+        if (!userSections.includes(targetSection)) return res.redirect('/master?error=Section+not+assigned');
+        // Update the active section in the session
+        if (req.session.user) req.session.user.section = targetSection;
+        req.session.save(err => {
+            if (err) return res.redirect('/master?error=Session+error');
+            res.redirect('/master');
+        });
+    } catch(err) {
+        console.error('Switch section error:', err);
+        res.redirect('/master?error=Switch+failed');
     }
 });
 

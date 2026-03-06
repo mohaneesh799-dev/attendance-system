@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -390,7 +390,7 @@ function applyQuickMark() {
     // Parse input — supports commas, spaces, newlines as separators
     var rollsToMark = input.split(/[\s,;|\n\t]+/)
         .map(function(r){ return normalizeRoll(r); })
-        .filter(function(r){ return r && r !== '0' || r === '0'; });
+        .filter(function(r){ return r && r.trim().length > 0; });
 
     // Remove duplicates
     rollsToMark = rollsToMark.filter(function(v, i, a){ return a.indexOf(v) === i; });
