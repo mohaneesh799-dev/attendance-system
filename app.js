@@ -33,14 +33,18 @@ const app = express();
 
 // ── Helmet ───────────────────────────────────────────────────
 app.use(helmet({
+    // Cloudflare handles HSTS — don't double-set it or it can confuse the browser
+    hsts: false,
     contentSecurityPolicy: {
         directives: {
-            defaultSrc: ["'self'"],
-            scriptSrc:  ["'self'", "'unsafe-inline'", "cdn.jsdelivr.net", "cdnjs.cloudflare.com"],
-            styleSrc:   ["'self'", "'unsafe-inline'", "cdn.jsdelivr.net", "cdnjs.cloudflare.com"],
-            imgSrc:     ["'self'", "data:", "upload.wikimedia.org"],
-            fontSrc:    ["'self'", "cdnjs.cloudflare.com"],
-            connectSrc: ["'self'"],
+            defaultSrc:  ["'self'"],
+            scriptSrc:   ["'self'", "'unsafe-inline'", "cdn.jsdelivr.net", "cdnjs.cloudflare.com"],
+            styleSrc:    ["'self'", "'unsafe-inline'", "cdn.jsdelivr.net", "cdnjs.cloudflare.com", "fonts.googleapis.com"],
+            fontSrc:     ["'self'", "cdnjs.cloudflare.com", "fonts.gstatic.com"],
+            imgSrc:      ["'self'", "data:", "upload.wikimedia.org", "lh3.googleusercontent.com"],
+            connectSrc:  ["'self'"],
+            frameSrc:    ["'none'"],
+            objectSrc:   ["'none'"],
         }
     }
 }));
@@ -61,7 +65,8 @@ mongoose.connect(mongoURI)
 
 // ── Session ───────────────────────────────────────────────────
 if (!process.env.SESSION_SECRET) { console.error('❌ FATAL: SESSION_SECRET not set.'); process.exit(1); }
-app.set('trust proxy', 1);
+// Render sits behind Cloudflare (1 hop) + Render's own proxy (1 hop) = trust 2 proxies
+app.set('trust proxy', 2);
 const isProd = process.env.NODE_ENV === 'production';
 app.use(session({
     secret: process.env.SESSION_SECRET,
@@ -77,9 +82,9 @@ app.use(session({
         autoRemoveInterval: 60
     }),
     cookie: {
-        secure: isProd,
+        secure: isProd,           // HTTPS-only in prod
         httpOnly: true,
-        sameSite: isProd ? 'none' : 'lax',  // 'none' required on Render proxy
+        sameSite: isProd ? 'none' : 'lax',   // 'none' needed for cross-site Cloudflare proxy
         maxAge: 24 * 60 * 60 * 1000
     }
 }));
@@ -1026,14 +1031,20 @@ app.use((err, req, res, next) => {
 // START
 // ================================================================
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`✅ Server running on port ${PORT}`);
+// CRITICAL: Must bind to 0.0.0.0 on Render — binding to localhost/127.0.0.1 causes
+// Cloudflare error 521 "web server is down" because external traffic can't reach it
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`✅ Server running on port ${PORT} (0.0.0.0)`);
+    // Keep-alive ping to prevent Render free tier from spinning down
     if (process.env.NODE_ENV === 'production') {
-        const https = require('https');
         const BASE = process.env.APP_BASE_URL || '';
         if (BASE) {
+            // Use http module for internal Render ping (avoids Cloudflare SSL overhead)
+            const http = require('http');
+            const https = require('https');
+            const pingUrl = BASE.startsWith('https') ? https : http;
             setInterval(() => {
-                https.get(`${BASE}/ping`, r => console.log(`🏓 Keep-alive: ${r.statusCode}`))
+                pingUrl.get(`${BASE}/ping`, r => console.log(`🏓 Keep-alive: ${r.statusCode}`))
                     .on('error', e => console.warn('Keep-alive failed:', e.message));
             }, 14 * 60 * 1000);
         }
