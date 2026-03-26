@@ -1,318 +1,402 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Attendance — <%= user.rollNo %></title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script>(function(){var t=localStorage.getItem('rku-theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
-    <style>
-        :root{
-            --bg:#f0f4f8;--card:#fff;--border:#e2e8f0;--text:#1e293b;
-            --muted:#64748b;--accent:#3b82f6;--success:#16a34a;
-            --danger:#dc2626;--warning:#d97706;--shadow:0 4px 12px rgba(0,0,0,.07);
-        }
-        [data-theme="dark"]{
-            --bg:#0d1117;--card:#161b22;--border:#21262d;--text:#c9d1d9;
-            --muted:#8b949e;--accent:#58a6ff;--success:#3fb950;
-            --danger:#f85149;--warning:#d29922;--shadow:0 4px 12px rgba(0,0,0,.4);
-        }
-        *{box-sizing:border-box;margin:0;padding:0;}
-        body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);padding:12px;min-height:100vh;}
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Attendance — <%= user.name %></title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script>(function(){var t=localStorage.getItem('rku-theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
+<style>
+:root{
+  --pri:#0d1b3e;--pri2:#162d5a;
+  --acc:#4f7ef7;--acc2:#2563eb;--acc-glow:rgba(79,126,247,.18);
+  --suc:#10b981;--dan:#ef4444;--war:#f59e0b;
+  --bg:#f0f4fb;--card:#fff;--border:#e4eaf4;
+  --text:#0e1526;--muted:#64748b;
+  --input-bg:#f6f9ff;--input-bd:#d4daea;
+  --shadow:0 2px 16px rgba(14,21,38,.07);
+  --shadow-lg:0 8px 36px rgba(14,21,38,.13);
+  --radius:16px;--radius-sm:10px;
+}
+[data-theme="dark"]{
+  --bg:#080e1d;--card:#0e1828;--border:#172035;
+  --text:#cdd9ee;--muted:#5e7898;
+  --input-bg:#0a1120;--input-bd:#1b2d4a;
+  --shadow:0 2px 20px rgba(0,0,0,.35);
+  --shadow-lg:0 8px 40px rgba(0,0,0,.55);
+  --pri:#060e20;--pri2:#0d1b36;
+  --acc:#6b93fa;--acc2:#4f7ef7;--acc-glow:rgba(107,147,250,.15);
+  --suc:#34d399;--dan:#f87171;--war:#fbbf24;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{transition:background .25s,color .25s;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px 16px 40px;}
 
-        /* ── Topbar ── */
-        .topbar{
-            background:linear-gradient(135deg,#0f2557,#1d4ed8);
-            color:#fff;border-radius:18px;padding:20px 22px;
-            display:flex;align-items:center;justify-content:space-between;
-            flex-wrap:wrap;gap:12px;margin-bottom:16px;
-            box-shadow:0 8px 24px rgba(29,78,216,.3);
-        }
-        .topbar h1{font-size:1.3rem;font-weight:800;}
-        .topbar p{font-size:13px;opacity:.8;margin-top:4px;}
-        .topbar-right{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
-        .chip{background:rgba(255,255,255,.15);color:#fff;padding:6px 13px;border-radius:20px;font-size:12px;font-weight:700;}
-        .chip-btn{background:rgba(255,255,255,.12);color:#fff;padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;text-decoration:none;border:none;cursor:pointer;transition:.2s;}
-        .chip-btn:hover{background:rgba(255,255,255,.22);}
-        .role-switcher{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.10);border:1.5px solid rgba(255,255,255,.22);border-radius:10px;padding:5px 5px 5px 12px;transition:.2s;}
-        .role-switcher select{background:rgba(255,255,255,.14);color:#fff;border:1.5px solid rgba(255,255,255,.2);border-radius:7px;padding:5px 30px 5px 10px;font-size:12.5px;font-weight:700;outline:none;cursor:pointer;font-family:inherit;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7'%3E%3Cpath d='M0 0l5 7 5-7z' fill='rgba(255,255,255,0.7)'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 9px center;max-width:110px;}
-        .role-switcher select option{background:#0f2557;color:#fff;}
+.page{max-width:1040px;margin:0 auto;}
 
-        /* ── Banners ── */
-        .banner{display:flex;align-items:flex-start;gap:12px;padding:13px 16px;border-radius:12px;font-size:14px;font-weight:500;margin-bottom:14px;}
-        .ban-warn{background:#fef3c7;color:#92400e;border-left:4px solid #f59e0b;}
-        .ban-good{background:#dcfce7;color:#14532d;border-left:4px solid #22c55e;}
-        [data-theme="dark"] .ban-warn{background:rgba(245,158,11,.1);color:#fbbf24;}
-        [data-theme="dark"] .ban-good{background:rgba(34,197,94,.08);color:#4ade80;}
+/* ── HEADER ── */
+.hero{
+  background:linear-gradient(135deg,var(--pri) 0%,var(--pri2) 60%,#1e4fd8 100%);
+  border-radius:var(--radius);padding:24px 28px;margin-bottom:22px;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;
+  box-shadow:0 8px 32px rgba(13,27,62,.35);position:relative;overflow:hidden;
+}
+.hero::before{
+  content:'';position:absolute;right:-60px;top:-60px;
+  width:220px;height:220px;border-radius:50%;
+  background:rgba(255,255,255,.04);pointer-events:none;
+}
+.hero-left h1{font-size:1.35rem;font-weight:800;color:#fff;letter-spacing:-.2px;}
+.hero-left p{font-size:13px;color:rgba(255,255,255,.65);margin-top:5px;}
+.hero-right{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.chip{background:rgba(255,255,255,.12);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;border:1px solid rgba(255,255,255,.15);}
+.hero-btn{
+  display:inline-flex;align-items:center;gap:7px;padding:8px 15px;
+  border-radius:var(--radius-sm);font-size:12.5px;font-weight:700;
+  text-decoration:none;border:none;cursor:pointer;transition:.2s;
+  background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.18);
+}
+.hero-btn:hover{background:rgba(255,255,255,.22);}
+.hero-btn.danger{background:rgba(239,68,68,.2);border-color:rgba(239,68,68,.3);color:#fca5a5;}
+.hero-btn.danger:hover{background:rgba(239,68,68,.35);}
 
-        /* ── Stats ── */
-        .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:16px;}
-        .stat{background:var(--card);border-radius:14px;padding:18px 14px;text-align:center;border:1px solid var(--border);box-shadow:var(--shadow);transition:.2s;}
-        .stat:hover{transform:translateY(-2px);}
-        .stat .lbl{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);}
-        .stat .val{font-size:2rem;font-weight:800;line-height:1.1;margin:7px 0 4px;}
-        .stat .sub{font-size:11px;color:var(--muted);}
-        .pbar{height:7px;background:var(--border);border-radius:4px;overflow:hidden;margin-top:7px;}
-        .pfill{height:100%;border-radius:4px;transition:width 1.2s ease;}
+/* ── BANNERS ── */
+.banner{display:flex;align-items:flex-start;gap:12px;padding:13px 16px;border-radius:var(--radius-sm);font-size:13.5px;font-weight:500;margin-bottom:16px;}
+.ban-warn{background:rgba(245,158,11,.08);color:#92400e;border:1px solid rgba(245,158,11,.25);border-left:4px solid var(--war);}
+.ban-good{background:rgba(16,185,129,.07);color:#064e3b;border:1px solid rgba(16,185,129,.2);border-left:4px solid var(--suc);}
+[data-theme="dark"] .ban-warn{background:rgba(245,158,11,.1);color:#fbbf24;}
+[data-theme="dark"] .ban-good{background:rgba(16,185,129,.08);color:#34d399;}
 
-        /* ── Cards ── */
-        .card{background:var(--card);border-radius:16px;border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:16px;overflow:hidden;}
-        .card-hdr{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
-        .card-hdr h3{margin:0;font-size:.95rem;font-weight:700;display:flex;align-items:center;gap:9px;}
-        .card-body{padding:18px 20px;}
+/* ── STATS ── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:22px;}
+.stat-card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:20px 18px;box-shadow:var(--shadow);transition:.22s;display:flex;flex-direction:column;gap:10px;
+}
+.stat-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg);}
+.stat-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.15rem;flex-shrink:0;}
+.stat-val{font-size:2.1rem;font-weight:900;letter-spacing:-1px;line-height:1;}
+.stat-lbl{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:700;}
+.pbar{height:6px;background:var(--border);border-radius:4px;overflow:hidden;margin-top:8px;}
+.pfill{height:100%;border-radius:4px;transition:width 1.2s cubic-bezier(.4,0,.2,1);}
 
-        /* ── Subject cards ── */
-        .subj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:20px;}
-        .sc{background:var(--card);border:2px solid var(--border);border-radius:13px;padding:16px;transition:.2s;position:relative;}
-        .sc:hover{border-color:var(--accent);box-shadow:0 4px 16px rgba(59,130,246,.1);}
-        .sc .sn{font-weight:700;font-size:.9rem;margin-bottom:3px;color:var(--text);}
-        .sc .sc2{font-size:12px;color:var(--muted);margin-bottom:10px;}
-        .sc .sp{font-size:1.75rem;font-weight:800;}
-        .sc-tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;display:inline-block;margin-top:5px;}
-        .t-ok  {color:#15803d;background:rgba(22,163,74,.1);}
-        .t-risk{color:#d97706;background:rgba(217,119,6,.1);}
-        .t-low {color:#dc2626;background:rgba(220,38,38,.1);}
-        [data-theme="dark"] .t-ok  {color:#4ade80;background:rgba(74,222,128,.12);}
-        [data-theme="dark"] .t-risk{color:#fbbf24;background:rgba(251,191,36,.12);}
-        [data-theme="dark"] .t-low {color:#f87171;background:rgba(248,113,113,.12);}
+/* ── CARD ── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:20px;overflow:hidden;}
+.card-hdr{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+.card-hdr h3{font-size:1rem;font-weight:800;display:flex;align-items:center;gap:9px;margin:0;}
+.card-body{padding:20px 22px;}
 
-        /* ── Table ── */
-        .tbl-wrap{overflow-x:auto;}
-        table{width:100%;border-collapse:collapse;}
-        th{background:var(--bg);color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.4px;padding:10px 14px;border-bottom:2px solid var(--border);text-align:left;white-space:nowrap;}
-        td{padding:12px 14px;border-bottom:1px solid var(--border);font-size:13px;}
-        tr:last-child td{border-bottom:none;}
-        .tfoot-row td{background:var(--bg);font-weight:700;}
-        .pill{padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;white-space:nowrap;}
-        .p-present{background:#dcfce7;color:#15803d;}
-        .p-absent{background:#fee2e2;color:#dc2626;}
-        .p-na{background:var(--bg);color:var(--muted);}
-        [data-theme="dark"] .p-present{background:rgba(74,222,128,.15);color:#4ade80;}
-        [data-theme="dark"] .p-absent{background:rgba(248,113,113,.12);color:#f87171;}
+/* ── SUBJECT GRID ── */
+.subj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;margin-bottom:22px;}
+.sc{
+  background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius-sm);
+  padding:18px;transition:.22s;position:relative;overflow:hidden;
+}
+.sc::after{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:currentColor;opacity:.35;}
+.sc:hover{border-color:var(--acc);box-shadow:var(--shadow-lg);}
+.sc .sn{font-weight:800;font-size:.95rem;margin-bottom:4px;}
+.sc .sc2{font-size:12px;color:var(--muted);margin-bottom:12px;}
+.sc .sp{font-size:2rem;font-weight:900;letter-spacing:-1px;line-height:1;}
+.sc-tag{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;display:inline-block;margin-top:8px;}
+.t-ok{color:#047857;background:rgba(16,185,129,.1);}
+.t-risk{color:#b45309;background:rgba(245,158,11,.1);}
+.t-low{color:#b91c1c;background:rgba(239,68,68,.1);}
+[data-theme="dark"] .t-ok{color:#34d399;background:rgba(52,211,153,.12);}
+[data-theme="dark"] .t-risk{color:#fbbf24;background:rgba(251,191,36,.12);}
+[data-theme="dark"] .t-low{color:#f87171;background:rgba(248,113,113,.12);}
 
-        /* ── Buttons ── */
-        .btn-sm{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;border:none;cursor:pointer;transition:.2s;}
-        .btn-dark{background:var(--text);color:var(--card);}
-        .btn-dark:hover{opacity:.85;}
-        .btn-out{background:transparent;color:var(--text);border:1.5px solid var(--border);}
-        .btn-out:hover{border-color:var(--accent);color:var(--accent);}
+/* ── TABLE ── */
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+thead th{
+  background:var(--input-bg);color:var(--muted);
+  font-size:11px;text-transform:uppercase;letter-spacing:.5px;
+  padding:12px 16px;border-bottom:2px solid var(--border);text-align:left;white-space:nowrap;
+}
+tbody td{padding:13px 16px;border-bottom:1px solid var(--border);font-size:13.5px;vertical-align:middle;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover td{background:rgba(79,126,247,.025);}
+.tfoot-row td{background:var(--input-bg);font-weight:700;}
 
-        @media(max-width:560px){
-            .topbar{padding:14px 16px;border-radius:14px;}
-            .topbar h1{font-size:1.05rem;}
-            .topbar-right{gap:6px;}
-            .chip,.chip-btn{padding:5px 10px;font-size:11px;}
-            .card-hdr,.card-body{padding:12px 14px;}
-            .stats-grid{grid-template-columns:repeat(2,1fr);gap:10px;}
-            .stat .val{font-size:1.6rem;}
-            .subj-grid{grid-template-columns:1fr;}
-        }
-        @media(max-width:360px){
-            .stats-grid{grid-template-columns:1fr 1fr;}
-        }
-    </style>
+/* ── PILLS / STATUS ── */
+.pill{padding:4px 11px;border-radius:7px;font-size:11.5px;font-weight:700;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;}
+.p-present{background:rgba(16,185,129,.1);color:#047857;}
+.p-absent{background:rgba(239,68,68,.08);color:#b91c1c;}
+.p-na{background:var(--input-bg);color:var(--muted);}
+[data-theme="dark"] .p-present{background:rgba(52,211,153,.12);color:#34d399;}
+[data-theme="dark"] .p-absent{background:rgba(248,113,113,.1);color:#f87171;}
+
+/* ── BUTTONS ── */
+.btn-sm{display:inline-flex;align-items:center;gap:6px;padding:8px 15px;border-radius:var(--radius-sm);font-size:13px;font-weight:700;text-decoration:none;border:1.5px solid var(--border);cursor:pointer;transition:.2s;background:var(--card);color:var(--text);}
+.btn-sm:hover{border-color:var(--acc);color:var(--acc);}
+.btn-sm.filled{background:var(--acc);color:#fff;border-color:var(--acc);}
+.btn-sm.filled:hover{background:var(--acc2);border-color:var(--acc2);}
+
+/* ── THEME TOGGLE ── */
+.theme-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);color:#fff;padding:7px 11px;border-radius:var(--radius-sm);cursor:pointer;font-size:14px;transition:.2s;}
+.theme-btn:hover{background:rgba(255,255,255,.2);}
+
+@media(max-width:600px){
+  body{padding:14px 10px 32px;}
+  .hero{padding:18px 16px;border-radius:14px;}
+  .hero-left h1{font-size:1.1rem;}
+  .stats-grid{grid-template-columns:repeat(2,1fr);}
+  .card-hdr,.card-body{padding:15px 16px;}
+  .subj-grid{grid-template-columns:1fr;}
+}
+</style>
 </head>
 <body>
 <%
-    var pct = totalCount > 0 ? +((presentCount / totalCount) * 100).toFixed(1) : 0;
-    var barColor = pct >= 75 ? 'var(--success)' : (pct >= 60 ? 'var(--warning)' : 'var(--danger)');
+  var pct = totalCount > 0 ? +((presentCount / totalCount) * 100).toFixed(1) : 0;
+  var barColor = pct >= 75 ? 'var(--suc)' : (pct >= 60 ? 'var(--war)' : 'var(--dan)');
 %>
+<div class="page">
 
-<!-- Header -->
-<div class="topbar">
-    <div>
-        <h1><i class="fas fa-graduation-cap"></i> My Attendance</h1>
-        <p><%= user.name %> &nbsp;·&nbsp; Roll No: <strong><%= user.rollNo %></strong></p>
-    </div>
-    <div class="topbar-right">
-        <span class="chip"><i class="fas fa-layer-group"></i> <%= user.section %></span>
-        <button id="themeToggleBtn" class="chip-btn" title="Toggle theme"
-            onclick="(function(){var t=document.documentElement.getAttribute('data-theme')||'light';var nt=t==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',nt);localStorage.setItem('rku-theme',nt);var i=document.getElementById('themeIco');if(i)i.className=nt==='dark'?'fas fa-sun':'fas fa-moon';})()">
-            <i class="fas fa-moon" id="themeIco"></i>
-        </button>
-        <a href="/settings" class="chip-btn" title="Settings"><i class="fas fa-cog"></i></a>
-        <% var _allRoles = (user.roles && user.roles.length > 1) ? user.roles : null; %>
-        <% if (_allRoles) { %>
-        <form action="/switch-role" method="POST" class="role-switcher" title="Switch your active role">
-            <i class="fas fa-exchange-alt" style="font-size:11px;color:rgba(255,255,255,.55);flex-shrink:0;"></i>
-            <select name="targetRole" onchange="this.form.submit()">
-                <% _allRoles.forEach(function(r){ %>
-                <option value="<%= r %>" <%= r===user.role?'selected':'' %>><%= r %></option>
-                <% }); %>
-            </select>
-        </form>
-        <% } %>
-        <a href="/logout" class="chip-btn"><i class="fas fa-sign-out-alt"></i></a>
-    </div>
+<!-- Hero Header -->
+<div class="hero">
+  <div class="hero-left">
+    <h1><i class="fas fa-graduation-cap" style="margin-right:8px;opacity:.8;"></i><%= user.name %></h1>
+    <p><i class="fas fa-id-card" style="opacity:.5;"></i> Roll No: <strong style="color:#fff;"><%= user.rollNo %></strong> &nbsp;·&nbsp; <i class="fas fa-layer-group" style="opacity:.5;"></i> <%= user.section %></p>
+  </div>
+  <div class="hero-right">
+    <% var _myRoles = (user.roles && user.roles.length > 1) ? user.roles : null; %>
+    <% if (_myRoles) { %>
+    <form action="/switch-role" method="POST" style="display:inline-flex;align-items:center;gap:6px;">
+      <select name="targetRole" style="background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:6px 10px;font-size:12px;font-family:inherit;outline:none;cursor:pointer;">
+        <% _myRoles.forEach(function(r){ %><option value="<%= r %>" style="background:#0d1b3e;" <%= r===user.role?'selected':'' %>><%= r %></option><% }); %>
+      </select>
+      <button type="submit" class="hero-btn">Switch</button>
+    </form>
+    <% } %>
+    <span class="chip"><i class="fas fa-user-graduate"></i> Student</span>
+    <button class="theme-btn" id="themeToggle" aria-label="Toggle theme"><i class="fas fa-moon" id="themeIco"></i></button>
+    <a href="/settings" class="hero-btn"><i class="fas fa-cog"></i> Settings</a>
+    <a href="/logout" class="hero-btn danger"><i class="fas fa-power-off"></i> Logout</a>
+  </div>
 </div>
 
-<!-- Banner -->
-<% if (totalCount > 0) { %>
-    <% if (pct < 75) { %>
-        <div class="banner ban-warn">
-            <i class="fas fa-exclamation-triangle fa-lg" style="flex-shrink:0;margin-top:1px;"></i>
-            <span><strong>Low Attendance Warning:</strong> Your overall attendance is <%= pct %>% — below the required 75%. Attend more classes to avoid restrictions.</span>
-        </div>
-    <% } else { %>
-        <div class="banner ban-good">
-            <i class="fas fa-check-circle fa-lg" style="flex-shrink:0;margin-top:1px;"></i>
-            <span><strong>Good Standing:</strong> Your overall attendance is <%= pct %>%. Keep it up!</span>
-        </div>
+<!-- Attendance Warning Banner -->
+<% if (pct > 0 && pct < 75) { %>
+<div class="banner ban-warn">
+  <i class="fas fa-triangle-exclamation" style="font-size:1.1rem;flex-shrink:0;margin-top:1px;"></i>
+  <div>
+    <strong>Attendance Alert!</strong> Your overall attendance is <strong><%= pct %>%</strong>.
+    <% if (pct < 60) { %> You are at critical risk. Attend all remaining classes immediately.
+    <% } else { %> Improve attendance to reach the required 75% threshold.
     <% } %>
+  </div>
+</div>
+<% } else if (pct >= 75) { %>
+<div class="banner ban-good">
+  <i class="fas fa-circle-check" style="font-size:1.1rem;flex-shrink:0;margin-top:1px;"></i>
+  <strong>Great work!</strong> Your attendance is <strong><%= pct %>%</strong> — above the required 75%.
+</div>
 <% } %>
 
-<!-- Overall stats -->
+<!-- Stats Grid -->
 <div class="stats-grid">
-    <div class="stat">
-        <div class="lbl">Sessions</div>
-        <div class="val"><%= totalCount %></div>
-        <div class="sub">Total classes</div>
+  <div class="stat-card">
+    <div class="stat-icon" style="background:rgba(79,126,247,.1);color:var(--acc);"><i class="fas fa-chart-pie"></i></div>
+    <div>
+      <div class="stat-lbl">Overall</div>
+      <div class="stat-val" style="color:<%= barColor %>;"><%= pct %>%</div>
+      <div class="pbar"><div class="pfill" style="width:<%= pct %>%;background:<%= barColor %>;"></div></div>
     </div>
-    <div class="stat">
-        <div class="lbl">Present</div>
-        <div class="val" style="color:var(--success);"><%= presentCount %></div>
-        <div class="sub">Attended</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon" style="background:rgba(16,185,129,.1);color:var(--suc);"><i class="fas fa-circle-check"></i></div>
+    <div>
+      <div class="stat-lbl">Present</div>
+      <div class="stat-val" style="color:var(--suc);"><%= presentCount %></div>
     </div>
-    <div class="stat">
-        <div class="lbl">Absent</div>
-        <div class="val" style="color:var(--danger);"><%= totalCount - presentCount %></div>
-        <div class="sub">Missed</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon" style="background:rgba(239,68,68,.1);color:var(--dan);"><i class="fas fa-circle-xmark"></i></div>
+    <div>
+      <div class="stat-lbl">Absent</div>
+      <div class="stat-val" style="color:var(--dan);"><%= totalCount - presentCount %></div>
     </div>
-    <div class="stat">
-        <div class="lbl">Overall %</div>
-        <div class="val" style="color:<%= barColor %>;"><%= pct %>%</div>
-        <div class="pbar"><div class="pfill" style="width:<%= pct %>%;background:<%= barColor %>;"></div></div>
-        <div class="sub">75% required</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon" style="background:rgba(245,158,11,.1);color:var(--war);"><i class="fas fa-calendar-days"></i></div>
+    <div>
+      <div class="stat-lbl">Total Classes</div>
+      <div class="stat-val"><%= totalCount %></div>
     </div>
+  </div>
+  <% var subCount = typeof subjectStats !== 'undefined' ? subjectStats.length : 0; %>
+  <div class="stat-card">
+    <div class="stat-icon" style="background:rgba(139,92,246,.1);color:#8b5cf6;"><i class="fas fa-book-open"></i></div>
+    <div>
+      <div class="stat-lbl">Subjects</div>
+      <div class="stat-val" style="color:#8b5cf6;"><%= subCount %></div>
+    </div>
+  </div>
 </div>
 
-<!-- Subject-wise breakdown -->
+<!-- Subject-wise Attendance -->
 <div class="card">
-    <div class="card-hdr">
-        <h3><i class="fas fa-book-open" style="color:var(--accent);"></i> Subject-wise Attendance</h3>
-        <span style="font-size:12px;color:var(--muted);"><%= typeof subjectStats !== 'undefined' ? subjectStats.length : 0 %> subject(s)</span>
-    </div>
-    <div class="card-body">
-        <% if (typeof subjectStats !== 'undefined' && subjectStats.length > 0) { %>
-            <div class="subj-grid">
-                <% subjectStats.forEach(function(s) {
-                    var sc   = s.percentage >= 75 ? 't-ok' : (s.percentage >= 60 ? 't-risk' : 't-low');
-                    var slbl = s.percentage >= 75 ? '✓ On Track' : (s.percentage >= 60 ? '⚠ At Risk' : '✗ Critical');
-                    var sp   = s.percentage >= 75 ? 'var(--success)' : (s.percentage >= 60 ? 'var(--warning)' : 'var(--danger)');
-                %>
-                <div class="sc">
-                    <div class="sn"><%= s.subject %></div>
-                    <div class="sc2"><%= s.present %> present · <%= s.absent %> absent · <%= s.total %> total</div>
-                    <div class="sp" style="color:<%= sp %>;"><%= s.percentage %>%</div>
-                    <div class="pbar"><div class="pfill" style="width:<%= s.percentage %>%;background:<%= sp %>;"></div></div>
-                    <span class="sc-tag <%= sc %>"><%= slbl %></span>
-                </div>
-                <% }); %>
-            </div>
-
-            <div class="tbl-wrap">
-                <table>
-                    <thead><tr><th>Subject</th><th style="text-align:center;">Present</th><th style="text-align:center;">Absent</th><th style="text-align:center;">Total</th><th>Percentage</th><th>Status</th></tr></thead>
-                    <tbody>
-                        <% subjectStats.forEach(function(s) {
-                            var sc2  = s.percentage >= 75 ? 't-ok' : (s.percentage >= 60 ? 't-risk' : 't-low');
-                            var slb2 = s.percentage >= 75 ? '✓ On Track' : (s.percentage >= 60 ? '⚠ At Risk' : '✗ Critical');
-                            var sp2  = s.percentage >= 75 ? 'var(--success)' : (s.percentage >= 60 ? 'var(--warning)' : 'var(--danger)');
-                        %>
-                        <tr>
-                            <td><strong><%= s.subject %></strong></td>
-                            <td style="text-align:center;color:var(--success);font-weight:700;"><%= s.present %></td>
-                            <td style="text-align:center;color:var(--danger);font-weight:700;"><%= s.absent %></td>
-                            <td style="text-align:center;"><%= s.total %></td>
-                            <td>
-                                <div style="display:flex;align-items:center;gap:8px;">
-                                    <strong style="color:<%= sp2 %>;min-width:42px;"><%= s.percentage %>%</strong>
-                                    <div style="flex:1;max-width:70px;" class="pbar"><div class="pfill" style="width:<%= s.percentage %>%;background:<%= sp2 %>;"></div></div>
-                                </div>
-                            </td>
-                            <td><span class="sc-tag <%= sc2 %>"><%= slb2 %></span></td>
-                        </tr>
-                        <% }); %>
-                        <tr class="tfoot-row">
-                            <td><strong>OVERALL TOTAL</strong></td>
-                            <td style="text-align:center;color:var(--success);font-weight:700;"><%= presentCount %></td>
-                            <td style="text-align:center;color:var(--danger);font-weight:700;"><%= totalCount - presentCount %></td>
-                            <td style="text-align:center;font-weight:700;"><%= totalCount %></td>
-                            <td>
-                                <div style="display:flex;align-items:center;gap:8px;">
-                                    <strong style="color:<%= barColor %>;min-width:42px;"><%= pct %>%</strong>
-                                    <div style="flex:1;max-width:70px;" class="pbar"><div class="pfill" style="width:<%= pct %>%;background:<%= barColor %>;"></div></div>
-                                </div>
-                            </td>
-                            <td><span class="sc-tag <%= pct >= 75 ? 't-ok' : (pct >= 60 ? 't-risk' : 't-low') %>"><%= pct >= 75 ? '✓ Good' : (pct >= 60 ? '⚠ At Risk' : '✗ Low') %></span></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        <% } else { %>
-            <div style="text-align:center;padding:40px 20px;color:var(--muted);">
-                <i class="fas fa-book" style="font-size:2.5rem;opacity:.3;display:block;margin-bottom:10px;"></i>
-                No attendance records found yet.
-            </div>
-        <% } %>
-    </div>
-</div>
-
-<!-- Recent logs -->
-<div class="card">
-    <div class="card-hdr">
-        <h3><i class="fas fa-clock" style="color:var(--accent);"></i> Recent Activity</h3>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <a href="/settings" class="btn-sm btn-out"><i class="fas fa-cog"></i> Settings</a>
-            <a href="/attendance-history" class="btn-sm btn-dark"><i class="fas fa-calendar-alt"></i> Full History</a>
+  <div class="card-hdr">
+    <h3><i class="fas fa-book-open" style="color:var(--acc);"></i> Subject-wise Attendance</h3>
+    <span style="font-size:12px;color:var(--muted);"><%= subCount %> subject(s)</span>
+  </div>
+  <div class="card-body">
+    <% if (typeof subjectStats !== 'undefined' && subjectStats.length > 0) { %>
+      <div class="subj-grid">
+        <% subjectStats.forEach(function(s) {
+          var sc   = s.percentage >= 75 ? 't-ok' : (s.percentage >= 60 ? 't-risk' : 't-low');
+          var slbl = s.percentage >= 75 ? '✓ On Track' : (s.percentage >= 60 ? '⚠ At Risk' : '✗ Critical');
+          var sp   = s.percentage >= 75 ? 'var(--suc)' : (s.percentage >= 60 ? 'var(--war)' : 'var(--dan)');
+        %>
+        <div class="sc" style="color:<%= sp %>">
+          <div class="sn"><%= s.subject %></div>
+          <div class="sc2"><%= s.present %> present · <%= s.absent %> absent · <%= s.total %> total</div>
+          <div class="sp"><%= s.percentage %>%</div>
+          <div class="pbar"><div class="pfill" style="width:<%= s.percentage %>%;background:<%= sp %>;"></div></div>
+          <span class="sc-tag <%= sc %>"><%= slbl %></span>
         </div>
-    </div>
-    <div class="tbl-wrap">
+        <% }); %>
+      </div>
+
+      <div class="tbl-wrap">
         <table>
-            <thead><tr><th>Date</th><th>Subject</th><th>Time Slot</th><th>Status</th></tr></thead>
-            <tbody>
-                <% if (records && records.length > 0) { %>
-                    <% records.forEach(function(rec) {
-                        var me = rec.students.find(function(s){ return s.studentId === user.rollNo; });
-                    %>
-                    <tr>
-                        <td style="font-weight:600;white-space:nowrap;"><%= rec.date %></td>
-                        <td><strong><%= rec.subject || '—' %></strong></td>
-                        <td style="color:var(--muted);font-size:12px;white-space:nowrap;"><i class="far fa-clock"></i> <%= rec.manualTime || 'N/A' %></td>
-                        <td>
-                            <% if (me) { %>
-                                <span class="pill <%= me.status === 'Present' ? 'p-present' : 'p-absent' %>">
-                                    <i class="fas fa-<%= me.status === 'Present' ? 'check' : 'times' %>"></i> <%= me.status %>
-                                </span>
-                            <% } else { %>
-                                <span class="pill p-na">Not Marked</span>
-                            <% } %>
-                        </td>
-                    </tr>
-                    <% }); %>
-                <% } else { %>
-                    <tr><td colspan="4" style="text-align:center;padding:50px;color:var(--muted);">
-                        <i class="fas fa-folder-open" style="font-size:2rem;opacity:.3;display:block;margin-bottom:8px;"></i>
-                        No records found for your roll number.
-                    </td></tr>
-                <% } %>
-            </tbody>
+          <thead>
+            <tr>
+              <th>Subject</th>
+              <th style="text-align:center;">Present</th>
+              <th style="text-align:center;">Absent</th>
+              <th style="text-align:center;">Total</th>
+              <th>Percentage</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% subjectStats.forEach(function(s) {
+              var sc2  = s.percentage >= 75 ? 't-ok' : (s.percentage >= 60 ? 't-risk' : 't-low');
+              var slb2 = s.percentage >= 75 ? '✓ On Track' : (s.percentage >= 60 ? '⚠ At Risk' : '✗ Critical');
+              var sp2  = s.percentage >= 75 ? 'var(--suc)' : (s.percentage >= 60 ? 'var(--war)' : 'var(--dan)');
+            %>
+            <tr>
+              <td><strong><%= s.subject %></strong></td>
+              <td style="text-align:center;color:var(--suc);font-weight:700;"><%= s.present %></td>
+              <td style="text-align:center;color:var(--dan);font-weight:700;"><%= s.absent %></td>
+              <td style="text-align:center;"><%= s.total %></td>
+              <td>
+                <div style="display:flex;align-items:center;gap:9px;">
+                  <strong style="color:<%= sp2 %>;min-width:44px;"><%= s.percentage %>%</strong>
+                  <div style="flex:1;max-width:80px;" class="pbar">
+                    <div class="pfill" style="width:<%= s.percentage %>%;background:<%= sp2 %>;"></div>
+                  </div>
+                </div>
+              </td>
+              <td><span class="sc-tag <%= sc2 %>"><%= slb2 %></span></td>
+            </tr>
+            <% }); %>
+            <tr class="tfoot-row">
+              <td><strong>OVERALL</strong></td>
+              <td style="text-align:center;color:var(--suc);font-weight:700;"><%= presentCount %></td>
+              <td style="text-align:center;color:var(--dan);font-weight:700;"><%= totalCount - presentCount %></td>
+              <td style="text-align:center;font-weight:700;"><%= totalCount %></td>
+              <td>
+                <div style="display:flex;align-items:center;gap:9px;">
+                  <strong style="color:<%= barColor %>;min-width:44px;"><%= pct %>%</strong>
+                  <div style="flex:1;max-width:80px;" class="pbar">
+                    <div class="pfill" style="width:<%= pct %>%;background:<%= barColor %>;"></div>
+                  </div>
+                </div>
+              </td>
+              <td><span class="sc-tag <%= pct>=75?'t-ok':(pct>=60?'t-risk':'t-low') %>"><%= pct>=75?'✓ Good':(pct>=60?'⚠ At Risk':'✗ Low') %></span></td>
+            </tr>
+          </tbody>
         </table>
-    </div>
-    <% if (records && records.length >= 50) { %>
-        <div style="text-align:center;padding:12px;font-size:12px;color:var(--muted);border-top:1px solid var(--border);">
-            Showing recent 50 entries. <a href="/attendance-history" style="color:var(--accent);font-weight:600;">View all →</a>
-        </div>
+      </div>
+    <% } else { %>
+      <div style="text-align:center;padding:50px 20px;color:var(--muted);">
+        <i class="fas fa-book-open" style="font-size:2.5rem;opacity:.2;display:block;margin-bottom:12px;"></i>
+        <p>No attendance records found yet.</p>
+      </div>
     <% } %>
+  </div>
 </div>
+
+<!-- Recent Activity -->
+<div class="card">
+  <div class="card-hdr">
+    <h3><i class="fas fa-clock-rotate-left" style="color:var(--acc);"></i> Recent Activity</h3>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <a href="/attendance-history" class="btn-sm filled"><i class="fas fa-calendar-alt"></i> Full History</a>
+    </div>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Subject</th>
+          <th>Time Slot</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (records && records.length > 0) { %>
+          <% records.forEach(function(rec) {
+            var me = rec.students.find(function(s){ return s.studentId === user.rollNo; });
+          %>
+          <tr>
+            <td style="font-weight:700;white-space:nowrap;"><%= rec.date %></td>
+            <td><strong><%= rec.subject || '—' %></strong></td>
+            <td style="color:var(--muted);font-size:12.5px;white-space:nowrap;"><i class="far fa-clock"></i> <%= rec.manualTime || 'N/A' %></td>
+            <td>
+              <% if (me) { %>
+                <span class="pill <%= me.status === 'Present' ? 'p-present' : 'p-absent' %>">
+                  <i class="fas fa-<%= me.status === 'Present' ? 'check' : 'xmark' %>"></i> <%= me.status %>
+                </span>
+              <% } else { %>
+                <span class="pill p-na">Not Marked</span>
+              <% } %>
+            </td>
+          </tr>
+          <% }); %>
+        <% } else { %>
+          <tr>
+            <td colspan="4" style="text-align:center;padding:50px;color:var(--muted);">
+              <i class="fas fa-folder-open" style="font-size:2rem;opacity:.25;display:block;margin-bottom:10px;"></i>
+              No records found for your roll number.
+            </td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+  <% if (records && records.length >= 50) { %>
+    <div style="text-align:center;padding:12px;font-size:12.5px;color:var(--muted);border-top:1px solid var(--border);">
+      Showing recent 50 entries. <a href="/attendance-history" style="color:var(--acc);font-weight:700;">View all →</a>
+    </div>
+  <% } %>
+</div>
+
+</div><!-- /page -->
 
 <script>
 (function(){
-    var t = document.documentElement.getAttribute('data-theme') || 'light';
-    var i = document.getElementById('themeIco');
-    if (i) i.className = t === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+  function setTheme(t){
+    document.documentElement.setAttribute('data-theme',t);
+    localStorage.setItem('rku-theme',t);
+    var i=document.getElementById('themeIco');
+    if(i) i.className = t==='dark'?'fas fa-sun':'fas fa-moon';
+  }
+  document.addEventListener('DOMContentLoaded',function(){
+    var t=document.documentElement.getAttribute('data-theme')||'light';
+    var i=document.getElementById('themeIco');
+    if(i) i.className = t==='dark'?'fas fa-sun':'fas fa-moon';
+    var btn=document.getElementById('themeToggle');
+    if(btn) btn.addEventListener('click',function(){
+      var cur=document.documentElement.getAttribute('data-theme')||'light';
+      setTheme(cur==='dark'?'light':'dark');
+    });
+  });
 })();
 </script>
-
 </body>
 </html>

@@ -1,459 +1,439 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leader Dashboard — Attendance</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        :root{
-            --primary:#1a2a4a;--accent:#3b82f6;--success:#16a34a;
-            --danger:#dc2626;--warning:#d97706;--wa:#25D366;
-            --bg:#f1f5f9;--card:#fff;--border:#e2e8f0;--text:#1e293b;--muted:#64748b;
-        }
-        [data-theme="dark"]{
-            --bg:#0f1117;--card:#1c1e2a;--border:#2a2d3e;--text:#e1e4eb;--muted:#8892a4;
-            --accent:#60a5fa;--success:#4ade80;--danger:#f87171;
-        }
-        *{box-sizing:border-box;}
-        body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);margin:0;padding:0;color:var(--text);}
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leader Portal — <%= user.section %></title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script>(function(){var t=localStorage.getItem('rku-theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
+<style>
+:root{
+  --pri:#0d1b3e;--pri2:#162d5a;
+  --acc:#4f7ef7;--acc2:#2563eb;
+  --suc:#10b981;--dan:#ef4444;--war:#f59e0b;--wa:#25d366;
+  --bg:#f0f4fb;--card:#fff;--border:#e4eaf4;
+  --text:#0e1526;--muted:#64748b;
+  --input-bg:#f6f9ff;--input-bd:#d4daea;
+  --shadow:0 2px 16px rgba(14,21,38,.07);
+  --shadow-lg:0 8px 36px rgba(14,21,38,.13);
+  --radius:16px;--radius-sm:10px;
+}
+[data-theme="dark"]{
+  --bg:#080e1d;--card:#0e1828;--border:#172035;
+  --text:#cdd9ee;--muted:#5e7898;
+  --input-bg:#0a1120;--input-bd:#1b2d4a;
+  --shadow:0 2px 20px rgba(0,0,0,.35);
+  --shadow-lg:0 8px 40px rgba(0,0,0,.55);
+  --pri:#060e20;--pri2:#0d1b36;
+  --acc:#6b93fa;--acc2:#4f7ef7;
+  --suc:#34d399;--dan:#f87171;--war:#fbbf24;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{transition:background .25s,color .25s;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:18px 16px 50px;}
+.page{max-width:1040px;margin:0 auto;}
 
-        /* ── Layout ── */
-        .page{max-width:1080px;margin:0 auto;padding:16px;}
+/* ── HERO HEADER ── */
+.hero{
+  background:linear-gradient(135deg,var(--pri) 0%,var(--pri2) 60%,#1e4fd8 100%);
+  border-radius:var(--radius);padding:22px 26px;margin-bottom:20px;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;
+  box-shadow:0 8px 32px rgba(13,27,62,.35);position:relative;overflow:hidden;
+}
+.hero::before{content:'';position:absolute;right:-60px;top:-60px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.04);pointer-events:none;}
+.hero-left h1{font-size:1.3rem;font-weight:900;color:#fff;}
+.hero-left p{font-size:13px;color:rgba(255,255,255,.65);margin-top:5px;}
+.hero-right{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.chip{background:rgba(255,255,255,.12);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;border:1px solid rgba(255,255,255,.15);}
+.hero-btn{display:inline-flex;align-items:center;gap:7px;padding:8px 15px;border-radius:var(--radius-sm);font-size:12.5px;font-weight:700;text-decoration:none;border:1px solid rgba(255,255,255,.18);cursor:pointer;transition:.2s;background:rgba(255,255,255,.12);color:#fff;}
+.hero-btn:hover{background:rgba(255,255,255,.22);}
+.hero-btn.danger{background:rgba(239,68,68,.2);border-color:rgba(239,68,68,.3);color:#fca5a5;}
+.theme-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);color:#fff;padding:7px 11px;border-radius:var(--radius-sm);cursor:pointer;font-size:14px;transition:.2s;}
+.theme-btn:hover{background:rgba(255,255,255,.2);}
 
-        /* ── Header ── */
-        .topbar{
-            display:flex;justify-content:space-between;align-items:center;
-            background:linear-gradient(135deg,var(--primary),#1d4ed8);
-            color:#fff;border-radius:16px;padding:18px 22px;
-            margin-bottom:18px;flex-wrap:wrap;gap:12px;
-        }
-        .topbar h1{margin:0;font-size:1.25rem;font-weight:800;}
-        .topbar p{margin:4px 0 0;font-size:13px;opacity:.8;}
-        .topbar-btns{display:flex;gap:8px;flex-wrap:wrap;}
-        .tb-btn{
-            display:inline-flex;align-items:center;gap:6px;padding:8px 14px;
-            border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;border:none;cursor:pointer;transition:.2s;
-        }
-        .tb-btn:hover{opacity:.85;transform:translateY(-1px);}
-        .tb-white{background:rgba(255,255,255,.15);color:#fff;}
-        .tb-danger{background:rgba(255,100,100,.2);color:#fecaca;}
+/* ── ALERTS ── */
+.alert{display:flex;align-items:center;gap:10px;padding:13px 16px;border-radius:var(--radius-sm);margin-bottom:16px;font-size:13.5px;animation:slideIn .3s ease;}
+@keyframes slideIn{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:none;}}
+.alert-ok{background:rgba(16,185,129,.08);color:#047857;border:1px solid rgba(16,185,129,.2);border-left:4px solid var(--suc);}
+.alert-err{background:rgba(239,68,68,.07);color:#b91c1c;border:1px solid rgba(239,68,68,.18);border-left:4px solid var(--dan);}
+[data-theme="dark"] .alert-ok{background:rgba(16,185,129,.1);color:var(--suc);}
+[data-theme="dark"] .alert-err{background:rgba(239,68,68,.1);color:var(--dan);}
 
-        /* ── Alerts ── */
-        .alert{padding:11px 15px;border-radius:10px;font-size:13px;display:flex;align-items:center;gap:9px;margin-bottom:14px;}
-        .alert-ok {background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;}
-        .alert-err{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;}
-        [data-theme="dark"] .alert-ok {background:rgba(74,222,128,.1);color:#4ade80;border-color:rgba(74,222,128,.2);}
-        [data-theme="dark"] .alert-err{background:rgba(248,113,113,.1);color:#f87171;border-color:rgba(248,113,113,.2);}
+/* ── QUICK MARK ── */
+.qm-box{
+  background:linear-gradient(135deg,rgba(79,126,247,.06),rgba(37,99,235,.04));
+  border:1.5px solid rgba(79,126,247,.2);border-radius:var(--radius);padding:18px 20px;margin-bottom:18px;
+}
+[data-theme="dark"] .qm-box{background:linear-gradient(135deg,rgba(79,126,247,.08),rgba(37,99,235,.06));border-color:rgba(107,147,250,.25);}
+.qm-box h4{font-size:.9rem;font-weight:800;display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+.qm-row{display:flex;gap:10px;flex-wrap:wrap;}
+.qm-row input{flex:1;min-width:180px;}
+.qm-tip{font-size:12px;color:var(--muted);margin-top:9px;}
+.qm-feedback{display:none;padding:11px 14px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;margin-top:10px;align-items:center;gap:8px;}
+.qm-feedback.show{display:flex;}
+.qm-feedback.ok{background:rgba(16,185,129,.08);color:#047857;border:1px solid rgba(16,185,129,.2);}
+.qm-feedback.no{background:rgba(239,68,68,.07);color:#b91c1c;border:1px solid rgba(239,68,68,.15);}
 
-        /* ── Cards ── */
-        .card{background:var(--card);border-radius:14px;border:1px solid var(--border);padding:20px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,.05);}
+/* ── CARD ── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:16px;overflow:hidden;}
+.card-hdr{padding:16px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;background:var(--input-bg);}
+.card-hdr h3{font-size:.95rem;font-weight:800;display:flex;align-items:center;gap:8px;margin:0;}
+.card-body{padding:20px 22px;}
+.sec-heading{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:16px 22px 0;}
+.sec-heading h3{font-size:.95rem;font-weight:800;display:flex;align-items:center;gap:8px;margin:0;border-left:4px solid var(--acc);padding-left:10px;}
 
-        /* ── Quick mark ── */
-        .qm-box{background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1px solid #bfdbfe;border-radius:14px;padding:18px;margin-bottom:16px;}
-        [data-theme="dark"] .qm-box{background:linear-gradient(135deg,rgba(59,130,246,.08),rgba(37,99,235,.12));border-color:rgba(96,165,250,.25);}
-        .qm-box h4{margin:0 0 10px 0;font-size:.9rem;font-weight:700;display:flex;align-items:center;gap:7px;}
-        .qm-row{display:flex;gap:10px;flex-wrap:wrap;}
-        .qm-row input{flex:1;min-width:160px;}
-        .qm-tip{font-size:11.5px;color:var(--muted);margin:7px 0 0;}
+/* ── FORM ── */
+.grid-inputs{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;padding:18px 22px;}
+.fg{display:flex;flex-direction:column;gap:5px;}
+.fg label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+.fc{
+  padding:11px 13px;border-radius:var(--radius-sm);border:1.5px solid var(--input-bd);
+  font-size:13.5px;font-family:inherit;background:var(--input-bg);color:var(--text);outline:none;transition:.2s;width:100%;
+}
+.fc:focus{border-color:var(--acc);background:var(--card);box-shadow:0 0 0 3px rgba(79,126,247,.12);}
+select.fc option{background:var(--card);color:var(--text);}
 
-        /* ── Form fields ── */
-        .grid-inputs{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:14px;}
-        .fg{display:flex;flex-direction:column;gap:5px;}
-        .fg label{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;}
-        .fc{
-            padding:11px 13px;border-radius:9px;border:1.5px solid var(--border);
-            font-size:14px;font-family:inherit;background:var(--bg);color:var(--text);outline:none;transition:.2s;
-            width:100%;
-        }
-        .fc:focus{border-color:var(--accent);background:var(--card);box-shadow:0 0 0 3px rgba(59,130,246,.12);}
+/* ── TABLE ── */
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;min-width:380px;}
+thead th{background:var(--pri);color:#fff;padding:11px 14px;font-size:11.5px;text-transform:uppercase;letter-spacing:.4px;text-align:left;white-space:nowrap;}
+tbody td{padding:12px 14px;border-bottom:1px solid var(--border);font-size:13.5px;vertical-align:middle;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover{background:rgba(79,126,247,.03);}
+tbody tr.qm-hit{background:rgba(16,185,129,.05)!important;}
+[data-theme="dark"] tbody tr.qm-hit{background:rgba(52,211,153,.06)!important;}
 
-        /* ── Section heading ── */
-        .sec-heading{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin:20px 0 12px;}
-        .sec-heading h3{margin:0;font-size:1rem;font-weight:700;border-left:4px solid var(--accent);padding-left:10px;}
+/* ── CHECKBOX ── */
+.cb-wrap{display:flex;align-items:center;gap:8px;cursor:pointer;}
+input[type="checkbox"]{width:17px;height:17px;accent-color:var(--acc);cursor:pointer;flex-shrink:0;}
 
-        /* ── Table ── */
-        .tbl-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border);}
-        table{width:100%;border-collapse:collapse;background:var(--card);}
-        thead th{background:var(--primary);color:#fff;padding:12px 14px;font-size:12px;text-transform:uppercase;letter-spacing:.4px;text-align:left;white-space:nowrap;}
-        tbody td{padding:12px 14px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle;}
-        tbody tr:last-child td{border-bottom:none;}
-        tbody tr:hover{background:rgba(59,130,246,.03);}
-        tbody tr.qm-hit{background:#f0fdf4!important;}
-        [data-theme="dark"] tbody tr.qm-hit{background:rgba(74,222,128,.08)!important;}
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:10px 18px;border:none;border-radius:var(--radius-sm);font-size:13.5px;font-weight:700;cursor:pointer;transition:.2s;text-decoration:none;white-space:nowrap;}
+.btn:hover{opacity:.88;transform:translateY(-1px);}
+.btn:active{transform:scale(.98);}
+.btn-acc{background:var(--acc);color:#fff;}
+.btn-suc{background:var(--suc);color:#fff;}
+.btn-dan{background:var(--dan);color:#fff;}
+.btn-ghost{background:var(--input-bg);color:var(--text);border:1.5px solid var(--input-bd);}
+.btn-ghost:hover{border-color:var(--acc);color:var(--acc);}
+.btn-full{width:100%;justify-content:center;}
+.btn-wa{background:var(--wa);color:#fff;}
 
-        /* ── Checkbox ── */
-        .cb-wrap{display:flex;align-items:center;gap:8px;cursor:pointer;}
-        input[type="checkbox"]{width:17px;height:17px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;}
+/* ── BADGE ── */
+.badge-leader{background:rgba(139,92,246,.12);color:#7c3aed;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;}
+[data-theme="dark"] .badge-leader{background:rgba(167,139,250,.15);color:#a78bfa;}
 
-        /* ── Buttons ── */
-        .btn{display:inline-flex;align-items:center;gap:7px;padding:10px 18px;border:none;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;transition:.2s;text-decoration:none;}
-        .btn:hover{opacity:.88;transform:translateY(-1px);}
-        .btn-primary{background:var(--primary);color:#fff;}
-        .btn-accent {background:var(--accent);color:#fff;}
-        .btn-success{background:var(--success);color:#fff;}
-        .btn-danger {background:var(--danger);color:#fff;}
-        .btn-wa     {background:var(--wa);color:#fff;}
-        .btn-ghost  {background:var(--bg);color:var(--text);border:1.5px solid var(--border);}
-        .btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
-        .btn-full{width:100%;justify-content:center;}
+/* ── PRESENT COUNT ── */
+#presentCount{font-size:13px;font-weight:700;color:var(--acc);}
 
-        /* ── Action bar ── */
-        .action-bar{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;}
-        .action-bar .btn{flex:1;min-width:130px;}
+/* ── REPORT GRID ── */
+.report-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:500px){.report-grid{grid-template-columns:1fr;}}
 
-        /* ── Report card ── */
-        .report-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-        @media(max-width:500px){.report-grid{grid-template-columns:1fr;}}
-
-        /* ── Badge ── */
-        .badge{padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;}
-        .badge-leader{background:#ede9fe;color:#7c3aed;}
-
-        /* ── Present counter ── */
-        #presentCount{font-size:13px;font-weight:600;color:var(--accent);}
-
-        /* ── Quick mark feedback ── */
-        .qm-feedback{
-            display:none;padding:10px 14px;border-radius:9px;font-size:13px;
-            font-weight:600;margin-top:10px;align-items:center;gap:8px;
-        }
-        .qm-feedback.show{display:flex;}
-        .qm-feedback.ok {background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;}
-        .qm-feedback.no {background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;}
-
-        @media(max-width:640px){
-            .topbar{padding:14px 16px;}
-            .topbar h1{font-size:1.1rem;}
-            .card{padding:14px;}
-            .qm-box{padding:14px;}
-        }
-    </style>
-    <script>(function(){var t=localStorage.getItem('rku-theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
+@media(max-width:640px){
+  body{padding:14px 10px 40px;}
+  .hero{padding:18px 16px;border-radius:14px;}
+  .hero-left h1{font-size:1.1rem;}
+  .card-body,.card-hdr,.sec-heading,.grid-inputs{padding:14px 16px;}
+  .qm-box{padding:14px;}
+}
+</style>
 </head>
 <body>
 <div class="page">
 
-    <!-- Header -->
-    <div class="topbar">
-        <div>
-            <h1><i class="fas fa-clipboard-check"></i> Attendance Entry</h1>
-            <p>Leader: <strong><%= user.name %></strong> &nbsp;·&nbsp; Section: <strong><%= user.section %></strong></p>
-        </div>
-        <div class="topbar-btns">
-            <a href="/attendance-history" class="tb-btn tb-white"><i class="fas fa-history"></i> History</a>
-            <a href="/settings" class="tb-btn tb-white"><i class="fas fa-cog"></i> Settings</a>
-            <a href="/logout" class="tb-btn tb-danger"><i class="fas fa-sign-out-alt"></i> Logout</a>
-        </div>
+<!-- Hero Header -->
+<div class="hero">
+  <div class="hero-left">
+    <h1><i class="fas fa-clipboard-check" style="margin-right:8px;opacity:.8;"></i> Attendance Entry</h1>
+    <p>Leader: <strong style="color:#fff;"><%= user.name %></strong> &nbsp;·&nbsp; Section: <strong style="color:#fff;"><%= user.section %></strong></p>
+  </div>
+  <div class="hero-right">
+    <span class="chip"><i class="fas fa-layer-group"></i> <%= user.section %></span>
+    <button class="theme-btn" id="themeToggle" aria-label="Toggle theme"><i class="fas fa-moon" id="themeIco"></i></button>
+    <a href="/attendance-history" class="hero-btn"><i class="fas fa-clock-rotate-left"></i> History</a>
+    <a href="/settings" class="hero-btn"><i class="fas fa-gear"></i> Settings</a>
+    <a href="/logout" class="hero-btn danger"><i class="fas fa-power-off"></i> Logout</a>
+  </div>
+</div>
+
+<!-- Flash Messages -->
+<% if (typeof success !== 'undefined' && success) { %>
+  <div class="alert alert-ok"><i class="fas fa-circle-check"></i> <%= success %></div>
+<% } %>
+<% if (typeof error !== 'undefined' && error) { %>
+  <div class="alert alert-err"><i class="fas fa-circle-exclamation"></i> <%= error %></div>
+<% } %>
+
+<!-- Quick Mark -->
+<div class="qm-box">
+  <h4><i class="fas fa-bolt" style="color:var(--war);"></i> Quick Mark Present by Roll Numbers</h4>
+  <div class="qm-row">
+    <input type="text" id="quickInput" class="fc" placeholder="e.g. 101, 102, 105 or paste a list…">
+    <button type="button" class="btn btn-acc" onclick="applyQuickMark()">
+      <i class="fas fa-check-double"></i> Mark Present
+    </button>
+    <button type="button" class="btn btn-ghost" onclick="markAll(true)"><i class="fas fa-users"></i> All Present</button>
+    <button type="button" class="btn btn-ghost" onclick="markAll(false)"><i class="fas fa-user-xmark"></i> Clear All</button>
+  </div>
+  <p class="qm-tip"><i class="fas fa-circle-info" style="color:var(--acc);"></i> Enter comma-separated roll numbers. Supports leading zeros. Press <strong>Enter</strong> to apply.</p>
+  <div class="qm-feedback" id="qmFeedback"></div>
+</div>
+
+<!-- Attendance Form -->
+<form action="/lock-attendance" method="POST" id="attendanceForm">
+  <input type="hidden" name="section" value="<%= user.section %>">
+
+  <!-- Session Details -->
+  <div class="card">
+    <div class="card-hdr">
+      <h3><i class="fas fa-circle-info" style="color:var(--acc);"></i> Session Details</h3>
     </div>
-
-    <!-- Flash messages -->
-    <% if (typeof success !== 'undefined' && success) { %>
-        <div class="alert alert-ok"><i class="fas fa-check-circle"></i> <%= success %></div>
-    <% } %>
-    <% if (typeof error !== 'undefined' && error) { %>
-        <div class="alert alert-err"><i class="fas fa-exclamation-circle"></i> <%= error %></div>
-    <% } %>
-
-    <!-- ── Quick Mark Panel ── -->
-    <div class="qm-box">
-        <h4><i class="fas fa-bolt" style="color:#f59e0b;"></i> Quick Mark Present by Roll Numbers</h4>
-        <div class="qm-row">
-            <input type="text" id="quickInput" class="fc" placeholder="e.g. 101, 102, 105 or paste a list…">
-            <button type="button" class="btn btn-accent" onclick="applyQuickMark()">
-                <i class="fas fa-check-double"></i> Mark Present
-            </button>
-        </div>
-        <p class="qm-tip"><i class="fas fa-info-circle"></i> Enter comma-separated roll numbers. Supports leading zeros (01 = 1). Hit <strong>Mark Present</strong> to highlight matching students in the table below.</p>
-        <div class="qm-feedback" id="qmFeedback"></div>
+    <div class="grid-inputs">
+      <div class="fg">
+        <label>Assigned Lecturer</label>
+        <select name="lecturerEmail" class="fc" required>
+          <option value="">— Select Lecturer —</option>
+          <% var lecturerList = typeof lecturers !== 'undefined' ? lecturers : [];
+             lecturerList.forEach(function(l){ %>
+            <option value="<%= l.email %>"><%= l.name %> &lt;<%= l.email %>&gt;</option>
+          <% }); %>
+        </select>
+      </div>
+      <div class="fg">
+        <label>Period / Time Slot</label>
+        <input type="text" name="manualTime" class="fc" placeholder="e.g. 09:00 AM – 10:00 AM" required>
+      </div>
+      <div class="fg">
+        <label>Class Date</label>
+        <input type="date" name="date" id="currentDate" class="fc" value="<%= new Date().toISOString().split('T')[0] %>" required>
+      </div>
+      <div class="fg">
+        <label>Subject</label>
+        <select name="subject" class="fc" required>
+          <option value="">— Select Subject —</option>
+          <% if (masterSubjects && masterSubjects.length > 0) {
+               masterSubjects.forEach(function(sub){ %>
+            <option value="<%= sub.name %>"><%= sub.name %><% if(sub.code){ %> (<%= sub.code %>)<% } %></option>
+          <% }); } else { %>
+            <option disabled>No subjects — ask Master to add subjects</option>
+          <% } %>
+        </select>
+      </div>
     </div>
+  </div>
 
-    <!-- ── Attendance Form ── -->
-    <form action="/lock-attendance" method="POST" id="attendanceForm">
-        <input type="hidden" name="section" value="<%= user.section %>">
+  <!-- Student Table -->
+  <div class="card">
+    <div class="sec-heading">
+      <h3><i class="fas fa-users" style="color:var(--acc);"></i> Students — Section <%= user.section %></h3>
+      <span id="presentCount">0 marked present</span>
+    </div>
+    <div style="height:14px;"></div>
 
-        <div class="card">
-            <div class="sec-heading">
-                <h3><i class="fas fa-info-circle"></i> Session Details</h3>
-            </div>
-            <div class="grid-inputs">
-                <div class="fg">
-                    <label>Assigned Lecturer</label>
-                    <select name="lecturerEmail" class="fc" required>
-                        <option value="">— Select Lecturer —</option>
-                        <% const lecturerList = typeof lecturers !== 'undefined' ? lecturers : [];
-                           lecturerList.forEach(function(l){ %>
-                            <option value="<%= l.email %>"><%= l.name %> &lt;<%= l.email %>&gt;</option>
-                        <% }); %>
-                    </select>
-                </div>
-                <div class="fg">
-                    <label>Period / Time Slot</label>
-                    <input type="text" name="manualTime" class="fc" placeholder="e.g. 09:00 AM – 10:00 AM" required>
-                </div>
-                <div class="fg">
-                    <label>Class Date</label>
-                    <input type="date" name="date" id="currentDate" class="fc" value="<%= new Date().toISOString().split('T')[0] %>" required>
-                </div>
-                <div class="fg">
-                    <label>Subject</label>
-                    <select name="subject" class="fc" required>
-                        <option value="">— Select Subject —</option>
-                        <% if (masterSubjects && masterSubjects.length > 0) {
-                               masterSubjects.forEach(function(sub){ %>
-                            <option value="<%= sub.name %>"><%= sub.name %><% if(sub.code){ %> (<%= sub.code %>)<% } %></option>
-                        <% }); } else { %>
-                            <option disabled>No subjects — ask Master to add subjects</option>
-                        <% } %>
-                    </select>
-                </div>
-            </div>
-        </div>
+    <% if (allUsers && allUsers.length > 0) { %>
+    <div class="tbl-wrap">
+      <table id="studentTable">
+        <thead>
+          <tr>
+            <th style="width:44px;">#</th>
+            <th style="width:110px;">Roll No</th>
+            <th>Student Name</th>
+            <th style="width:140px;text-align:center;">Present</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% var _idx = 0;
+             allUsers.forEach(function(u){
+               if(u.role==='Master'||u.role==='Lecturer'||u.role==='SuperAdmin') return;
+               var ri = _idx; %>
+          <tr id="row-<%= ri %>">
+            <td style="color:var(--muted);font-size:12px;"><%= ri + 1 %></td>
+            <td class="roll-col" style="font-family:monospace;font-weight:700;color:var(--acc);">
+              <%= u.rollNo || u.rollno || '—' %>
+            </td>
+            <td>
+              <%= u.name %>
+              <% if(u.role==='Leader'){ %>
+                <span class="badge-leader">Leader</span>
+              <% } %>
+            </td>
+            <td style="text-align:center;">
+              <input type="hidden" name="students[<%= ri %>][id]"   value="<%= u.rollNo || u.rollno || '' %>">
+              <input type="hidden" name="students[<%= ri %>][name]" value="<%= u.name %>">
+              <label class="cb-wrap" style="justify-content:center;">
+                <input type="checkbox"
+                  name="students[<%= ri %>][status]"
+                  value="Present"
+                  class="student-checkbox"
+                  data-row="<%= ri %>"
+                  onchange="updateCount()">
+                <span style="font-size:13px;font-weight:600;">Present</span>
+              </label>
+            </td>
+          </tr>
+          <% _idx++; }); %>
+        </tbody>
+      </table>
+    </div>
+    <% } else { %>
+    <div style="text-align:center;padding:50px 20px;color:var(--muted);">
+      <i class="fas fa-user-slash" style="font-size:2.5rem;opacity:.2;display:block;margin-bottom:12px;"></i>
+      <p>No students found in Section <%= user.section %>. Ask your Master to add students.</p>
+    </div>
+    <% } %>
 
-        <!-- ── Student Table ── -->
-        <div class="card">
-            <div class="sec-heading">
-                <h3><i class="fas fa-users"></i> Students — Section <%= user.section %></h3>
-                <span id="presentCount">0 marked present</span>
-            </div>
+    <div style="padding:16px 22px 20px;">
+      <button type="submit" class="btn btn-dan btn-full" style="padding:15px;font-size:15px;letter-spacing:-.2px;">
+        <i class="fas fa-lock"></i> Finalize &amp; Lock Attendance
+      </button>
+    </div>
+  </div>
+</form>
 
-            <% if (allUsers && allUsers.length > 0) { %>
-                <!-- Desktop table -->
-                <div class="tbl-wrap">
-                    <table id="studentTable">
-                        <thead>
-                            <tr>
-                                <th style="width:50px;">#</th>
-                                <th style="width:110px;">Roll No</th>
-                                <th>Student Name</th>
-                                <th style="width:160px;">Present</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <% let idx = 0;
-                               allUsers.forEach(function(u){
-                                 if(u.role==='Master'||u.role==='Lecturer'||u.role==='SuperAdmin') return;
-                                 var rowIdx = idx; %>
-                            <tr id="row-<%= rowIdx %>">
-                                <td style="color:var(--muted);font-size:12px;"><%= rowIdx + 1 %></td>
-                                <td class="roll-col" style="font-family:monospace;font-weight:700;color:var(--accent);">
-                                    <%= u.rollNo || u.rollno || '—' %>
-                                </td>
-                                <td>
-                                    <%= u.name %>
-                                    <% if(u.role==='Leader'){ %>
-                                        <span class="badge badge-leader">Leader</span>
-                                    <% } %>
-                                </td>
-                                <td>
-                                    <input type="hidden" name="students[<%= rowIdx %>][id]"   value="<%= u.rollNo || u.rollno || '' %>">
-                                    <input type="hidden" name="students[<%= rowIdx %>][name]" value="<%= u.name %>">
-                                    <label class="cb-wrap">
-                                        <input type="checkbox"
-                                               name="students[<%= rowIdx %>][status]"
-                                               value="Present"
-                                               class="student-checkbox"
-                                               data-row="<%= rowIdx %>"
-                                               onchange="updateCount()">
-                                        <span>Present</span>
-                                    </label>
-                                </td>
-                            </tr>
-                            <% idx++; }); %>
-                        </tbody>
-                    </table>
-                </div>
-
-            <% } else { %>
-                <div style="text-align:center;padding:50px 20px;color:var(--muted);">
-                    <i class="fas fa-user-slash" style="font-size:2.5rem;opacity:.3;display:block;margin-bottom:12px;"></i>
-                    <p>No students found in Section <%= user.section %>.<br>Ask your Master to add students.</p>
-                </div>
-            <% } %>
-
-            <button type="submit" class="btn btn-danger btn-full" style="margin-top:18px;padding:15px;font-size:15px;">
-                <i class="fas fa-lock"></i> Finalize &amp; Lock Attendance
-            </button>
-        </div>
-    </form>
-
-    <!-- ── Reports ── -->
-    <div class="card">
-        <div class="sec-heading">
-            <h3><i class="fas fa-file-alt"></i> Report Management</h3>
-        </div>
-        <div class="report-grid">
-            <div class="fg">
-                <label>Filter By Status</label>
-                <select id="reportFilter" class="fc">
-                    <option value="">Full List (All Students)</option>
-                    <option value="Present">Present Students Only</option>
-                    <option value="Absent">Absent Students Only</option>
-                </select>
-            </div>
-            <div class="fg" style="justify-content:flex-end;">
-                <label>&nbsp;</label>
-                <button type="button" class="btn btn-accent" onclick="downloadPDF()">
-                    <i class="fas fa-file-pdf"></i> Download PDF
-                </button>
-            </div>
-        </div>
-        <button type="button" class="btn btn-wa btn-full" style="margin-top:12px;" onclick="submitToWhatsApp()">
-            <i class="fab fa-whatsapp"></i> Share Report via WhatsApp
+<!-- Reports -->
+<div class="card">
+  <div class="card-hdr">
+    <h3><i class="fas fa-file-lines" style="color:var(--acc);"></i> Report Management</h3>
+  </div>
+  <div class="card-body">
+    <div class="report-grid" style="margin-bottom:14px;">
+      <div class="fg">
+        <label>Filter By Status</label>
+        <select id="reportFilter" class="fc">
+          <option value="">Full List (All Students)</option>
+          <option value="Present">Present Students Only</option>
+          <option value="Absent">Absent Students Only</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label style="opacity:0;">.</label>
+        <button type="button" class="btn btn-acc" onclick="downloadPDF()">
+          <i class="fas fa-file-pdf"></i> Download PDF
         </button>
+      </div>
     </div>
+    <button type="button" class="btn btn-wa btn-full" onclick="submitToWhatsApp()">
+      <i class="fab fa-whatsapp"></i> Share Report via WhatsApp
+    </button>
+  </div>
+</div>
 
 </div><!-- /page -->
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    updateCount();
+document.addEventListener('DOMContentLoaded', function(){
+  updateCount();
 
-    // ── Form submit: append Absent for unchecked students ──
-    document.getElementById('attendanceForm').addEventListener('submit', function(e) {
-        if (!confirm('Lock this attendance? This cannot be undone.')) {
-            e.preventDefault();
-            return;
-        }
-        var form = this;
-        document.querySelectorAll('.student-checkbox').forEach(function(cb) {
-            if (!cb.checked) {
-                var h = document.createElement('input');
-                h.type  = 'hidden';
-                h.name  = cb.name;
-                h.value = 'Absent';
-                form.appendChild(h);
-            }
-        });
+  // Theme
+  var themeBtn = document.getElementById('themeToggle');
+  if (themeBtn) themeBtn.addEventListener('click', function(){
+    var c = document.documentElement.getAttribute('data-theme') || 'light';
+    var t = c === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', t);
+    localStorage.setItem('rku-theme', t);
+    var i = document.getElementById('themeIco');
+    if (i) i.className = t === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+  });
+  var _ti = document.getElementById('themeIco');
+  var _tc = document.documentElement.getAttribute('data-theme') || 'light';
+  if (_ti) _ti.className = _tc === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+
+  // Quick input enter key
+  var qi = document.getElementById('quickInput');
+  if (qi) qi.addEventListener('keydown', function(e){ if(e.key==='Enter'){e.preventDefault();applyQuickMark();} });
+
+  // Form submit
+  document.getElementById('attendanceForm').addEventListener('submit', function(e){
+    if (!confirm('Lock this attendance? This cannot be undone.')) { e.preventDefault(); return; }
+    var form = this;
+    document.querySelectorAll('.student-checkbox').forEach(function(cb){
+      if (!cb.checked) {
+        var h = document.createElement('input');
+        h.type = 'hidden'; h.name = cb.name; h.value = 'Absent';
+        form.appendChild(h);
+      }
     });
-});
+  });
 
-// ── Live present counter ──
-function updateCount() {
-    var total   = document.querySelectorAll('.student-checkbox').length;
-    var present = document.querySelectorAll('.student-checkbox:checked').length;
-    var el = document.getElementById('presentCount');
-    if (el) el.textContent = present + ' / ' + total + ' marked present';
-}
-
-// ── Mark All / Clear All ──
-function markAll(val) {
-    document.querySelectorAll('.student-checkbox').forEach(function(cb) {
-        cb.checked = val;
-        var row = cb.closest('tr');
-        if (row) row.classList.toggle('qm-hit', val);
-    });
-    updateCount();
-}
-
-// ── Normalize roll numbers (strips leading zeros, trims whitespace) ──
-function normalizeRoll(r) {
-    return String(r).replace(/\s+/g, '').toLowerCase().replace(/^0+/, '') || '0';
-}
-
-// ── Quick Mark ──
-function applyQuickMark() {
-    var input = (document.getElementById('quickInput').value || '').trim();
-    var feedback = document.getElementById('qmFeedback');
-
-    // Reset feedback
-    feedback.className = 'qm-feedback';
-    feedback.textContent = '';
-
-    if (!input) {
-        feedback.className = 'qm-feedback show no';
-        feedback.innerHTML = '<i class="fas fa-exclamation-circle"></i> Please enter at least one roll number.';
-        return;
-    }
-
-    // Parse input — supports commas, spaces, newlines as separators
-    var rollsToMark = input.split(/[\s,;|\n\t]+/)
-        .map(function(r){ return normalizeRoll(r); })
-        .filter(function(r){ return r && r !== '0' || r === '0'; });
-
-    // Remove duplicates
-    rollsToMark = rollsToMark.filter(function(v, i, a){ return a.indexOf(v) === i; });
-
-    if (rollsToMark.length === 0) {
-        feedback.className = 'qm-feedback show no';
-        feedback.innerHTML = '<i class="fas fa-exclamation-circle"></i> No valid roll numbers found in input.';
-        return;
-    }
-
-    var rows = document.querySelectorAll('#studentTable tbody tr');
-    var matchedCount = 0;
-    var notFound = [];
-
-    rows.forEach(function(row) {
-        var cellEl = row.querySelector('.roll-col');
-        if (!cellEl) return;
-        // Use textContent (more reliable than innerText) and normalize
-        var cellRoll = normalizeRoll(cellEl.textContent || cellEl.innerText || '');
-        if (!cellRoll || cellRoll === '—' || cellRoll === '-') return;
-
-        var checkbox = row.querySelector('.student-checkbox');
-        if (!checkbox) return;
-
-        if (rollsToMark.indexOf(cellRoll) !== -1) {
-            checkbox.checked = true;
-            row.classList.add('qm-hit');
-            matchedCount++;
-        }
-    });
-
-    // Find which rolls were NOT found in the table
-    var foundRolls = [];
-    rows.forEach(function(row) {
-        var cellEl = row.querySelector('.roll-col');
-        if (cellEl) foundRolls.push(normalizeRoll(cellEl.textContent || ''));
-    });
-    notFound = rollsToMark.filter(function(r){ return foundRolls.indexOf(r) === -1; });
-
-    updateCount();
-
-    if (matchedCount > 0) {
-        document.getElementById('quickInput').value = '';
-        var msg = '<i class="fas fa-check-circle"></i> ' + matchedCount + ' student(s) marked Present.';
-        if (notFound.length > 0) {
-            msg += ' &nbsp;<span style="font-weight:400;opacity:.8;">Not found: ' + notFound.join(', ') + '</span>';
-        }
-        feedback.className = 'qm-feedback show ok';
-        feedback.innerHTML = msg;
-    } else {
-        feedback.className = 'qm-feedback show no';
-        feedback.innerHTML = '<i class="fas fa-times-circle"></i> No matching roll numbers found. Entered: ' + rollsToMark.join(', ');
-    }
-
-    // Auto-hide feedback after 5 seconds
-    setTimeout(function() {
-        feedback.className = 'qm-feedback';
+  // Auto-dismiss alerts
+  document.querySelectorAll('.alert').forEach(function(a){
+    setTimeout(function(){
+      a.style.transition = 'opacity .5s'; a.style.opacity = '0';
+      setTimeout(function(){ if(a.parentNode) a.parentNode.removeChild(a); }, 500);
     }, 5000);
-}
-
-// ── Allow pressing Enter in quick input ──
-document.addEventListener('DOMContentLoaded', function() {
-    var qi = document.getElementById('quickInput');
-    if (qi) {
-        qi.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') { e.preventDefault(); applyQuickMark(); }
-        });
-    }
+  });
 });
 
-function downloadPDF() {
-    var date   = document.getElementById('currentDate').value;
-    var filter = document.getElementById('reportFilter').value;
-    if (!date) { alert('Please select a date first.'); return; }
-    window.open('/generate-day-pdf/' + date + '?filter=' + encodeURIComponent(filter), '_blank');
+function updateCount(){
+  var total = document.querySelectorAll('.student-checkbox').length;
+  var present = document.querySelectorAll('.student-checkbox:checked').length;
+  var el = document.getElementById('presentCount');
+  if (el) el.textContent = present + ' / ' + total + ' marked present';
 }
 
-function submitToWhatsApp() {
-    var date   = document.getElementById('currentDate').value;
-    var filter = document.getElementById('reportFilter').value;
-    if (!date) { alert('Please select a date first.'); return; }
-    var pdfUrl = window.location.origin + '/generate-day-pdf/' + date + '?filter=' + encodeURIComponent(filter);
-    var msg = '*Attendance Report — ' + date + '*\nSection: <%= user.section %>\nType: ' + (filter || 'Full List') + '\n\nPDF Link:\n' + pdfUrl;
-    window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(msg), '_blank');
+function markAll(val){
+  document.querySelectorAll('.student-checkbox').forEach(function(cb){
+    cb.checked = val;
+    var row = cb.closest('tr');
+    if (row) row.classList.toggle('qm-hit', val);
+  });
+  updateCount();
+}
+
+function normalizeRoll(r){ return String(r).replace(/\s+/g,'').toLowerCase().replace(/^0+/,'')||'0'; }
+
+function applyQuickMark(){
+  var input = (document.getElementById('quickInput').value||'').trim();
+  var fb = document.getElementById('qmFeedback');
+  fb.className = 'qm-feedback'; fb.textContent = '';
+  if (!input){
+    fb.className = 'qm-feedback show no';
+    fb.innerHTML = '<i class="fas fa-circle-exclamation"></i> Please enter at least one roll number.'; return;
+  }
+  var rolls = input.split(/[\s,;|\n\t]+/).map(normalizeRoll).filter(Boolean);
+  rolls = rolls.filter(function(v,i,a){ return a.indexOf(v)===i; });
+  if (!rolls.length){
+    fb.className = 'qm-feedback show no';
+    fb.innerHTML = '<i class="fas fa-circle-exclamation"></i> No valid roll numbers found.'; return;
+  }
+  var rows = document.querySelectorAll('#studentTable tbody tr');
+  var matched = 0; var foundRolls = [];
+  rows.forEach(function(row){
+    var cellEl = row.querySelector('.roll-col'); if (!cellEl) return;
+    var cellRoll = normalizeRoll(cellEl.textContent||'');
+    foundRolls.push(cellRoll);
+    var cb = row.querySelector('.student-checkbox'); if (!cb) return;
+    if (rolls.indexOf(cellRoll) !== -1){ cb.checked = true; row.classList.add('qm-hit'); matched++; }
+  });
+  var notFound = rolls.filter(function(r){ return foundRolls.indexOf(r)===-1; });
+  updateCount();
+  if (matched > 0){
+    document.getElementById('quickInput').value = '';
+    var msg = '<i class="fas fa-circle-check"></i> ' + matched + ' student(s) marked Present.';
+    if (notFound.length) msg += ' &nbsp;<span style="opacity:.75;font-weight:400;">Not found: ' + notFound.join(', ') + '</span>';
+    fb.className = 'qm-feedback show ok'; fb.innerHTML = msg;
+  } else {
+    fb.className = 'qm-feedback show no';
+    fb.innerHTML = '<i class="fas fa-circle-xmark"></i> No matching roll numbers found. Entered: ' + rolls.join(', ');
+  }
+  setTimeout(function(){ fb.className='qm-feedback'; }, 5000);
+}
+
+function downloadPDF(){
+  var date = document.getElementById('currentDate').value;
+  var filter = document.getElementById('reportFilter').value;
+  if (!date){ alert('Please select a date first.'); return; }
+  window.open('/generate-day-pdf/' + date + '?filter=' + encodeURIComponent(filter), '_blank');
+}
+
+function submitToWhatsApp(){
+  var date = document.getElementById('currentDate').value;
+  var filter = document.getElementById('reportFilter').value;
+  if (!date){ alert('Please select a date first.'); return; }
+  var pdfUrl = window.location.origin + '/generate-day-pdf/' + date + '?filter=' + encodeURIComponent(filter);
+  var msg = '*Attendance Report — ' + date + '*\nSection: <%= user.section %>\nType: ' + (filter||'Full List') + '\n\nPDF Link:\n' + pdfUrl;
+  window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(msg), '_blank');
 }
 </script>
 </body>

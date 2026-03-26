@@ -1,512 +1,343 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Account Settings</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Account Settings — RKU</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script>(function(){var t=localStorage.getItem('rku-theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
+<style>
+:root{
+  --pri:#0d1b3e;--pri2:#162d5a;
+  --acc:#4f7ef7;--acc2:#2563eb;
+  --suc:#10b981;--dan:#ef4444;--war:#f59e0b;
+  --bg:#f0f4fb;--card:#fff;--border:#e4eaf4;
+  --text:#0e1526;--muted:#64748b;
+  --input-bg:#f6f9ff;--input-bd:#d4daea;
+  --shadow:0 4px 24px rgba(14,21,38,.09);
+  --radius:16px;--radius-sm:10px;
+}
+[data-theme="dark"]{
+  --bg:#080e1d;--card:#0e1828;--border:#172035;
+  --text:#cdd9ee;--muted:#5e7898;
+  --input-bg:#0a1120;--input-bd:#1b2d4a;
+  --shadow:0 4px 28px rgba(0,0,0,.45);
+  --pri:#060e20;--pri2:#0d1b36;
+  --acc:#6b93fa;--acc2:#4f7ef7;
+  --suc:#34d399;--dan:#f87171;--war:#fbbf24;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{transition:background .25s,color .25s;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px 16px 50px;}
 
-    <%#
-    ─────────────────────────────────────────────────────────
-    BUG FIXED #1 (THEME):
-      The original file had `data-theme="light"` hardcoded on
-      <html> and relied on an inline script to override it.
-      That caused a Flash-Of-Wrong-Theme (FOWT) on reload AND
-      broke the Active-tag / toggle visual because
-      syncThemeUI() read the attribute BEFORE the inline
-      script had a chance to set it in some browsers.
+.page{max-width:620px;margin:0 auto;}
 
-    FIX: Apply the theme synchronously via a blocking
-    <script> in <head> (before any CSS paints) so the
-    attribute is correct from the very first paint.
-    ─────────────────────────────────────────────────────────
-    %>
-    <script>
-        // Runs BEFORE first paint — no FOWT
-        (function () {
-            var t = localStorage.getItem('rku-theme') || 'light';
-            document.documentElement.setAttribute('data-theme', t);
-        })();
-    </script>
+/* ── TOP BAR ── */
+.topnav{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:24px;flex-wrap:wrap;gap:10px;
+}
+.back-link{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--card);border:1.5px solid var(--border);
+  color:var(--text);text-decoration:none;padding:9px 15px;
+  border-radius:var(--radius-sm);font-size:13px;font-weight:700;
+  box-shadow:var(--shadow);transition:.2s;
+}
+.back-link:hover{border-color:var(--acc);color:var(--acc);}
+.page-title{font-size:1.2rem;font-weight:900;letter-spacing:-.3px;}
 
-    <style>
-        /* ── CSS Variables — Light & Dark ── */
-        :root{
-            --bg:#f0f4f8;--card:#fff;--border:#e2e8f0;--text:#1e293b;
-            --muted:#64748b;--input-bg:#f8fafc;--input-bd:#e2e8f0;
-            --accent:#3b82f6;--accent-d:#2563eb;--success:#16a34a;--danger:#dc2626;
-            --shadow:0 8px 24px rgba(0,0,0,.08);
-            --tog-off:#d1d5db;--tog-on:#3b82f6;
-        }
-        [data-theme="dark"]{
-            --bg:#0d1117;--card:#161b22;--border:#21262d;--text:#c9d1d9;
-            --muted:#8b949e;--input-bg:#0d1117;--input-bd:#30363d;
-            --accent:#58a6ff;--accent-d:#388bfd;--success:#3fb950;--danger:#f85149;
-            --shadow:0 8px 24px rgba(0,0,0,.4);
-            --tog-off:#30363d;--tog-on:#58a6ff;
-        }
-        *{box-sizing:border-box;margin:0;padding:0;}
-        html,body{transition:background .25s,color .25s;}
-        body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:16px;}
+/* ── ALERT ── */
+.msg{display:flex;align-items:center;gap:10px;padding:13px 16px;border-radius:var(--radius-sm);font-size:13.5px;font-weight:500;margin-bottom:18px;}
+.msg.ok{background:rgba(16,185,129,.08);color:#047857;border:1px solid rgba(16,185,129,.2);border-left:4px solid var(--suc);}
+.msg.err{background:rgba(239,68,68,.07);color:#b91c1c;border:1px solid rgba(239,68,68,.18);border-left:4px solid var(--dan);}
+[data-theme="dark"] .msg.ok{background:rgba(16,185,129,.1);color:var(--suc);}
+[data-theme="dark"] .msg.err{background:rgba(239,68,68,.1);color:var(--dan);}
 
-        .page{max-width:600px;margin:20px auto;}
+/* ── CARD ── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:16px;overflow:hidden;}
+.card-hdr{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:13px;}
+.card-icon{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.ic-blue{background:rgba(79,126,247,.12);color:var(--acc);}
+.ic-purple{background:rgba(139,92,246,.12);color:#8b5cf6;}
+.ic-green{background:rgba(16,185,129,.12);color:var(--suc);}
+.card-hdr-text h3{font-size:.95rem;font-weight:800;margin:0;}
+.card-hdr-text p{font-size:12px;color:var(--muted);margin-top:3px;}
+.card-body{padding:22px;}
 
-        .back-link{
-            display:inline-flex;align-items:center;gap:7px;
-            color:var(--muted);text-decoration:none;font-size:13px;font-weight:600;
-            padding:6px 0;margin-bottom:18px;transition:.15s;
-        }
-        .back-link:hover{color:var(--accent);}
+/* ── FORM ── */
+.fg{margin-bottom:17px;}
+.fg label{display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px;}
+.fc{
+  width:100%;padding:11px 14px;border-radius:var(--radius-sm);border:1.5px solid var(--input-bd);
+  font-size:14px;font-family:inherit;background:var(--input-bg);color:var(--text);
+  outline:none;transition:.2s;
+}
+.fc:focus{border-color:var(--acc);background:var(--card);box-shadow:0 0 0 3px rgba(79,126,247,.12);}
+.fc[readonly]{opacity:.55;cursor:not-allowed;}
+.divider{border:none;border-top:1px solid var(--border);margin:20px 0;}
 
-        .card{
-            background:var(--card);border-radius:16px;border:1px solid var(--border);
-            box-shadow:var(--shadow);margin-bottom:14px;overflow:hidden;
-        }
-        .card-hdr{
-            padding:18px 22px;border-bottom:1px solid var(--border);
-            display:flex;align-items:center;gap:12px;
-        }
-        .card-icon{
-            width:38px;height:38px;border-radius:10px;
-            display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;
-        }
-        .ic-blue  {background:rgba(59,130,246,.12);color:var(--accent);}
-        .ic-purple{background:rgba(139,92,246,.12);color:#8b5cf6;}
-        .card-hdr-text h3{margin:0;font-size:.95rem;font-weight:700;}
-        .card-hdr-text p {margin:2px 0 0;font-size:12px;color:var(--muted);}
-        .card-body{padding:20px 22px;}
+.btn-save{
+  width:100%;padding:13px;border:none;border-radius:var(--radius-sm);
+  font-size:15px;font-weight:800;cursor:pointer;transition:.2s;
+  background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;
+  display:flex;align-items:center;justify-content:center;gap:9px;
+  letter-spacing:-.2px;
+}
+.btn-save:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(79,126,247,.35);}
+.btn-save:active{transform:scale(.98);}
 
-        /* ── Alerts ── */
-        .msg{
-            display:flex;align-items:center;gap:9px;padding:12px 16px;
-            border-radius:10px;font-size:13px;font-weight:500;margin-bottom:16px;
-        }
-        .msg.ok {background:rgba(22,163,74,.1);color:var(--success);border:1px solid rgba(22,163,74,.25);}
-        .msg.err{background:rgba(220,38,38,.08);color:var(--danger);border:1px solid rgba(220,38,38,.2);}
+/* ── THEME SECTION ── */
+.theme-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 12px;border-radius:var(--radius-sm);cursor:pointer;transition:.18s;
+  border:1.5px solid transparent;margin-bottom:8px;
+}
+.theme-row:hover{background:rgba(79,126,247,.04);}
+[data-theme="light"] .theme-row[data-for="light"]{background:rgba(79,126,247,.07);border-color:rgba(79,126,247,.22);}
+[data-theme="dark"]  .theme-row[data-for="dark"] {background:rgba(79,126,247,.07);border-color:rgba(79,126,247,.22);}
+.theme-info{display:flex;align-items:center;gap:13px;}
+.theme-emoji{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.te-sun{background:#fef9c3;}
+.te-moon{background:#1e1b4b;}
+.t-label{font-weight:700;font-size:14px;}
+.t-desc{font-size:12px;color:var(--muted);margin-top:3px;}
+.active-tag{font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;}
+.at-light{background:#fef3c7;color:#92400e;}
+.at-dark{background:rgba(107,147,250,.15);color:var(--acc);}
+#lightTag{display:none;}
+#darkTag{display:none;}
+[data-theme="light"] #lightTag{display:inline-block;}
+[data-theme="dark"]  #darkTag {display:inline-block;}
 
-        /* ── Form fields ── */
-        .fg{margin-bottom:16px;}
-        .fg label{display:block;font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.45px;margin-bottom:6px;}
-        .fc{
-            width:100%;padding:11px 14px;border-radius:10px;border:1.5px solid var(--input-bd);
-            font-size:14px;font-family:inherit;background:var(--input-bg);color:var(--text);
-            outline:none;transition:.2s;
-        }
-        .fc:focus{border-color:var(--accent);background:var(--card);box-shadow:0 0 0 3px rgba(59,130,246,.1);}
-        .fc[readonly]{opacity:.55;cursor:not-allowed;}
-        .divider{border:none;border-top:1px solid var(--border);margin:18px 0;}
+/* ── TOGGLE ── */
+.tog-row{display:flex;align-items:center;gap:12px;padding-top:16px;border-top:1px solid var(--border);margin-top:14px;}
+.tog-row span{font-size:13px;font-weight:600;color:var(--muted);}
+.tog{width:52px;height:28px;border-radius:14px;border:none;cursor:pointer;background:#d1d5db;position:relative;transition:background .25s;outline:none;flex-shrink:0;}
+.tog::after{content:'';position:absolute;width:22px;height:22px;background:#fff;border-radius:50%;top:3px;left:3px;transition:transform .25s;box-shadow:0 1px 4px rgba(0,0,0,.25);}
+.tog.on{background:var(--acc);}
+.tog.on::after{transform:translateX(24px);}
+#themeStatus{margin-left:auto;font-size:12px;color:var(--muted);}
 
-        .btn-save{
-            width:100%;padding:13px;border:none;border-radius:11px;
-            font-size:15px;font-weight:700;cursor:pointer;transition:.2s;
-            background:linear-gradient(135deg,var(--accent),var(--accent-d));color:#fff;
-            display:flex;align-items:center;justify-content:center;gap:8px;
-        }
-        .btn-save:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(59,130,246,.3);}
+/* ── INFO CHIPS ── */
+.info-chip{
+  display:inline-flex;align-items:center;gap:6px;padding:5px 12px;
+  border-radius:20px;font-size:12px;font-weight:700;
+  background:rgba(79,126,247,.1);color:var(--acc);
+  border:1px solid rgba(79,126,247,.2);
+}
 
-        /* ── Theme rows ── */
-        .theme-row{
-            display:flex;align-items:center;justify-content:space-between;
-            padding:14px 0;border-bottom:1px solid var(--border);
-        }
-        .theme-row:last-child{border-bottom:none;}
-        .theme-info{display:flex;align-items:center;gap:14px;}
-        .theme-emoji{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
-        .te-sun {background:#fef3c7;}
-        .te-moon{background:#1e1b4b;}
-        .t-label{font-weight:700;font-size:14px;}
-        .t-desc {font-size:12px;color:var(--muted);margin-top:3px;}
-
-        /* Toggle switch */
-        .tog-wrap{display:flex;align-items:center;gap:10px;}
-        .tog-label{font-size:11px;font-weight:700;color:var(--muted);min-width:34px;}
-        .tog{
-            width:50px;height:26px;border-radius:13px;border:none;cursor:pointer;
-            background:var(--tog-off);position:relative;transition:background .25s;outline:none;flex-shrink:0;
-        }
-        .tog::after{
-            content:'';position:absolute;width:20px;height:20px;
-            background:#fff;border-radius:50%;top:3px;left:3px;
-            transition:transform .25s;box-shadow:0 1px 4px rgba(0,0,0,.25);
-        }
-        .tog.on{background:var(--tog-on);}
-        .tog.on::after{transform:translateX(24px);}
-
-        /* Active theme indicator */
-        .active-tag{
-            font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;
-        }
-        .at-light{background:#fef9c3;color:#854d0e;}
-        .at-dark {background:rgba(88,166,255,.15);color:var(--accent);}
-
-        /* ── Clickable theme rows ── */
-        .theme-row{cursor:pointer;border-radius:10px;padding:14px 10px;transition:background .15s;}
-        .theme-row:hover{background:rgba(59,130,246,.05);}
-        .theme-row.selected{background:rgba(59,130,246,.07);border:1px solid rgba(59,130,246,.2);}
-
-        @media(max-width:460px){
-            .card-body,.card-hdr{padding:16px;}
-        }
-
-        /* ── Avatar Picker ── */
-        .at-card{
-            display:flex;align-items:center;gap:14px;padding:14px 16px;
-            border:2px solid var(--border);border-radius:12px;cursor:pointer;
-            transition:.2s;margin-bottom:8px;background:var(--card);
-        }
-        .at-card:hover{border-color:var(--accent);}
-        .at-card.active{border-color:var(--accent);background:rgba(59,130,246,.05);}
-        .at-icon{font-size:2rem;flex-shrink:0;line-height:1;}
-        .at-info{flex:1;}
-        .at-name{font-weight:700;font-size:.95rem;display:flex;align-items:center;gap:8px;}
-        .at-desc{font-size:12px;color:var(--muted);margin-top:2px;}
-        .at-active-tag{background:var(--accent);color:#fff;font-size:10px;padding:2px 7px;border-radius:20px;font-weight:700;}
-        .at-stages{display:flex;flex-wrap:wrap;gap:7px;padding:4px 0 12px 0;}
-        .at-stages.hidden-stages{display:none;}
-        .at-stage-chip{
-            display:flex;align-items:center;gap:7px;padding:6px 10px;
-            border-radius:8px;border:1px solid transparent;
-            font-size:11.5px;background:var(--bg);
-        }
-        .avatar-toast{
-            position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(10px);
-            background:#1e293b;color:#fff;padding:10px 20px;border-radius:10px;
-            font-size:13px;font-weight:600;opacity:0;transition:.3s;pointer-events:none;
-            z-index:9999;white-space:nowrap;
-        }
-    </style>
+@media(max-width:480px){
+  .card-body,.card-hdr{padding:16px;}
+}
+</style>
 </head>
 <body>
 <div class="page">
 
-    <%
-        var _activeR = (typeof activeRole !== 'undefined' ? activeRole : user.role) || 'student';
-        var _backPath = {
-            'superadmin': '/super-admin-dashboard',
-            'master': '/master',
-            'lecturer': '/lecturer',
-            'leader': '/leader',
-            'student': '/student'
-        }[_activeR.toLowerCase()] || '/login';
-    %>
+  <%
+    var _activeR = (typeof activeRole !== 'undefined' ? activeRole : user.role) || 'student';
+    var _backPath = {
+      'superadmin':'/super-admin-dashboard',
+      'master':'/master',
+      'lecturer':'/lecturer',
+      'leader':'/leader',
+      'student':'/student'
+    }[_activeR.toLowerCase()] || '/login';
+  %>
+
+  <div class="topnav">
     <a href="<%= _backPath %>" class="back-link">
-        <i class="fas fa-arrow-left"></i> Back to Dashboard
+      <i class="fas fa-arrow-left"></i> Back to Dashboard
     </a>
+    <span class="page-title">Account Settings</span>
+  </div>
 
-    <% if (typeof message !== 'undefined' && message) { %>
-        <div class="msg <%= messageType === 'success' ? 'ok' : 'err' %>">
-            <i class="fas fa-<%= messageType === 'success' ? 'check-circle' : 'exclamation-circle' %>"></i>
-            <%= message %>
-        </div>
-    <% } %>
-
-    <!-- ── Profile Card ── -->
-    <div class="card">
-        <div class="card-hdr">
-            <div class="card-icon ic-blue"><i class="fas fa-user-circle"></i></div>
-            <div class="card-hdr-text">
-                <h3>Profile Settings</h3>
-                <p>Update your name, phone and password</p>
-            </div>
-        </div>
-        <div class="card-body">
-            <form action="/update-settings" method="POST">
-                <div class="fg">
-                    <label>Full Name</label>
-                    <input type="text" name="name" class="fc" value="<%= user.name %>" required>
-                </div>
-                <div class="fg">
-                    <label>Email Address</label>
-                    <%# BUG FIXED #2: readonly email had no name attr — safe since it's not submitted %>
-                    <input type="email" class="fc" value="<%= user.email %>" readonly>
-                </div>
-                <div class="fg">
-                    <label>WhatsApp / Phone</label>
-                    <input type="text" name="phone" class="fc" value="<%= user.phone || '' %>" placeholder="e.g. 919876543210">
-                </div>
-                <div class="fg">
-                    <label>Active Role (this session)</label>
-                    <input type="text" class="fc" value="<%= typeof activeRole !== 'undefined' ? activeRole : user.role %>" readonly>
-                </div>
-                <% var _allRoles = (user.roles && user.roles.length > 0) ? user.roles : [user.role]; %>
-                <% if (_allRoles.length > 1) { %>
-                <div class="fg">
-                    <label>All Your Roles</label>
-                    <div style="display:flex;flex-wrap:wrap;gap:7px;padding:10px 12px;background:var(--input-bg);border:1.5px solid var(--input-bd);border-radius:10px">
-                        <% _allRoles.forEach(function(r){ %>
-                        <span style="padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;background:rgba(59,130,246,.1);color:var(--accent);border:1px solid rgba(59,130,246,.2)"><%= r %></span>
-                        <% }); %>
-                    </div>
-                    <small style="color:var(--muted);font-size:11px;margin-top:5px">You have multiple roles. Use the role switcher widget in your dashboard sidebar.</small>
-                </div>
-                <% } %>
-                <% if (user.section) { %>
-                <div class="fg">
-                    <label>Division / Section</label>
-                    <input type="text" class="fc" value="<%= user.section %>" readonly>
-                </div>
-                <% } %>
-
-                <hr class="divider">
-                <div style="font-size:.85rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;">
-                    <i class="fas fa-lock"></i> &nbsp;Change Password
-                </div>
-                <% if (user.googleId && !user.password) { %>
-                <div class="msg ok" style="margin-bottom:14px;">
-                    <i class="fas fa-info-circle"></i> You signed in with Google — password change is not available.
-                </div>
-                <% } else { %>
-                <div class="fg">
-                    <label>Current Password</label>
-                    <input type="password" name="currentPassword" class="fc" placeholder="Required to authorize changes">
-                </div>
-                <div class="fg">
-                    <label>New Password <span style="font-weight:400;text-transform:none;">(leave blank to keep current)</span></label>
-                    <input type="password" name="newPassword" class="fc" placeholder="Min. 6 characters">
-                </div>
-                <% } %>
-                <button type="submit" class="btn-save">
-                    <i class="fas fa-save"></i> Save Changes
-                </button>
-            </form>
-        </div>
+  <% if (typeof message !== 'undefined' && message) { %>
+    <div class="msg <%= messageType === 'success' ? 'ok' : 'err' %>">
+      <i class="fas fa-<%= messageType === 'success' ? 'circle-check' : 'circle-exclamation' %>"></i>
+      <%= message %>
     </div>
+  <% } %>
 
-    <!-- ── Appearance Card ── -->
-    <div class="card">
-        <div class="card-hdr">
-            <div class="card-icon ic-purple"><i class="fas fa-palette"></i></div>
-            <div class="card-hdr-text">
-                <h3>Appearance</h3>
-                <p>Choose your preferred theme</p>
-            </div>
-        </div>
-        <div class="card-body">
-
-            <%#
-            BUG FIXED #3 (THEME TOGGLE — MAIN FIX):
-              Original problem: The "Active" tags and toggle knob
-              were rendered with display:none and only updated by
-              syncThemeUI() on DOMContentLoaded. If the event
-              already fired (e.g. script at bottom, fast browser)
-              or the function reference was stale the UI stayed
-              blank.
-
-            FIX A — Clickable rows: each row calls setTheme()
-              directly so users can click the whole row too.
-            FIX B — syncThemeUI() is now called BOTH on
-              DOMContentLoaded AND immediately (in case DOM is
-              already ready when the script tag is evaluated).
-            FIX C — Toggle reads/writes through a single
-              setTheme() helper so there is only ONE place that
-              mutates the theme — no divergence possible.
-            FIX D — Active tags now default to correct
-              visibility via CSS driven by [data-theme] instead
-              of relying on JS to un-hide them. This means they
-              are correct even if JS is slow.
-            %>
-
-            <style>
-                /* FIX D: drive visibility purely by CSS attribute selector
-                   so it is correct from first paint, JS just adds interactivity */
-                #lightTag { display: none; }
-                #darkTag  { display: none; }
-                [data-theme="light"] #lightTag { display: inline-block; }
-                [data-theme="dark"]  #darkTag  { display: inline-block; }
-
-                /* Selected row highlight driven by attribute */
-                [data-theme="light"] .theme-row[data-for="light"],
-                [data-theme="dark"]  .theme-row[data-for="dark"]  {
-                    background: rgba(59,130,246,.07);
-                    outline: 1.5px solid rgba(59,130,246,.25);
-                    border-radius: 10px;
-                }
-            </style>
-
-            <div class="theme-row" data-for="light" onclick="setTheme('light')">
-                <div class="theme-info">
-                    <div class="theme-emoji te-sun">☀️</div>
-                    <div>
-                        <div class="t-label">Light Mode</div>
-                        <div class="t-desc">Clean white background — default</div>
-                    </div>
-                </div>
-                <span class="active-tag at-light" id="lightTag">Active</span>
-            </div>
-
-            <div class="theme-row" data-for="dark" onclick="setTheme('dark')">
-                <div class="theme-info">
-                    <div class="theme-emoji te-moon">🌙</div>
-                    <div>
-                        <div class="t-label">Dark Mode</div>
-                        <div class="t-desc">Warm deep-blue — reduces eye strain at night</div>
-                    </div>
-                </div>
-                <span class="active-tag at-dark" id="darkTag">Active</span>
-            </div>
-
-            <div style="display:flex;align-items:center;gap:14px;padding-top:16px;border-top:1px solid var(--border);margin-top:14px;">
-                <span style="font-size:13px;font-weight:600;color:var(--muted);">☀️ Light</span>
-                <%# type="button" prevents accidental form submit — was correct, kept %>
-                <button class="tog" id="themeToggle" type="button" aria-label="Toggle dark mode"></button>
-                <span style="font-size:13px;font-weight:600;color:var(--muted);">🌙 Dark</span>
-                <span id="themeStatus" style="margin-left:auto;font-size:12px;color:var(--muted);"></span>
-            </div>
-
-        </div>
+  <!-- Profile Card -->
+  <div class="card">
+    <div class="card-hdr">
+      <div class="card-icon ic-blue"><i class="fas fa-user-circle"></i></div>
+      <div class="card-hdr-text">
+        <h3>Profile Information</h3>
+        <p>Update your name, phone and password</p>
+      </div>
     </div>
-
-    <!-- ── Your Character Card ── -->
-    <div class="card" style="margin-top:20px;">
-        <div class="card-hdr">
-            <h2>🎮 Your Character</h2>
-            <span style="font-size:12px;color:var(--muted);">Shown on your attendance dashboard</span>
+    <div class="card-body">
+      <form action="/update-settings" method="POST">
+        <div class="fg">
+          <label>Full Name</label>
+          <input type="text" name="name" class="fc" value="<%= user.name %>" required>
         </div>
-        <div class="card-body">
-            <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">
-                Choose a character theme that grows and evolves as your attendance improves.
-                Your selection is saved on this device.
-            </p>
-            <div id="avatarPickerInner">
-                <!-- Rendered by JS -->
-            </div>
+        <div class="fg">
+          <label>Email Address</label>
+          <input type="email" class="fc" value="<%= user.email %>" readonly>
         </div>
+        <div class="fg">
+          <label>WhatsApp / Phone</label>
+          <input type="text" name="phone" class="fc" value="<%= user.phone || '' %>" placeholder="e.g. 919876543210">
+        </div>
+        <div class="fg">
+          <label>Active Role</label>
+          <input type="text" class="fc" value="<%= typeof activeRole !== 'undefined' ? activeRole : user.role %>" readonly>
+        </div>
+        <% var _allRoles = (user.roles && user.roles.length > 0) ? user.roles : [user.role]; %>
+        <% if (_allRoles.length > 1) { %>
+        <div class="fg">
+          <label>All Your Roles</label>
+          <div style="display:flex;flex-wrap:wrap;gap:7px;padding:10px 12px;background:var(--input-bg);border:1.5px solid var(--input-bd);border-radius:var(--radius-sm);">
+            <% _allRoles.forEach(function(r){ %>
+              <span class="info-chip"><%= r %></span>
+            <% }); %>
+          </div>
+          <small style="color:var(--muted);font-size:11px;margin-top:6px;display:block;">Use the role switcher in your dashboard sidebar to switch roles.</small>
+        </div>
+        <% } %>
+        <% if (user.section) { %>
+        <div class="fg">
+          <label>Division / Section</label>
+          <input type="text" class="fc" value="<%= user.section %>" readonly>
+        </div>
+        <% } %>
+        <hr class="divider">
+        <div style="font-size:.8rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:16px;display:flex;align-items:center;gap:7px;">
+          <i class="fas fa-lock"></i> Change Password
+        </div>
+        <% if (user.googleId && !user.password) { %>
+          <div class="msg ok" style="margin-bottom:14px;">
+            <i class="fas fa-circle-info"></i> You signed in with Google — password change is not available.
+          </div>
+        <% } else { %>
+          <div class="fg">
+            <label>Current Password</label>
+            <input type="password" name="currentPassword" class="fc" placeholder="Required to save changes">
+          </div>
+          <div class="fg">
+            <label>New Password <span style="font-weight:400;text-transform:none;">(leave blank to keep current)</span></label>
+            <input type="password" name="newPassword" class="fc" placeholder="Min. 6 characters">
+          </div>
+        <% } %>
+        <button type="submit" class="btn-save">
+          <i class="fas fa-floppy-disk"></i> Save Changes
+        </button>
+      </form>
     </div>
+  </div>
+
+  <!-- Appearance Card -->
+  <div class="card">
+    <div class="card-hdr">
+      <div class="card-icon ic-purple"><i class="fas fa-palette"></i></div>
+      <div class="card-hdr-text">
+        <h3>Appearance</h3>
+        <p>Choose your preferred interface theme</p>
+      </div>
+    </div>
+    <div class="card-body">
+      <style>
+        [data-theme="light"] .theme-row[data-for="light"],
+        [data-theme="dark"]  .theme-row[data-for="dark"]  {
+          background: rgba(79,126,247,.07);
+          border-color: rgba(79,126,247,.22);
+        }
+      </style>
+
+      <div class="theme-row" data-for="light" onclick="setTheme('light')">
+        <div class="theme-info">
+          <div class="theme-emoji te-sun">☀️</div>
+          <div>
+            <div class="t-label">Light Mode</div>
+            <div class="t-desc">Clean white background — ideal for daytime</div>
+          </div>
+        </div>
+        <span class="active-tag at-light" id="lightTag">Active</span>
+      </div>
+
+      <div class="theme-row" data-for="dark" onclick="setTheme('dark')">
+        <div class="theme-info">
+          <div class="theme-emoji te-moon">🌙</div>
+          <div>
+            <div class="t-label">Dark Mode</div>
+            <div class="t-desc">Deep blue-dark — reduces eye strain at night</div>
+          </div>
+        </div>
+        <span class="active-tag at-dark" id="darkTag">Active</span>
+      </div>
+
+      <div class="tog-row">
+        <span>☀️ Light</span>
+        <button class="tog" id="themeToggle" type="button" aria-label="Toggle dark mode"></button>
+        <span>🌙 Dark</span>
+        <span id="themeStatus"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Account Info -->
+  <div class="card">
+    <div class="card-hdr">
+      <div class="card-icon ic-green"><i class="fas fa-shield-halved"></i></div>
+      <div class="card-hdr-text">
+        <h3>Account Information</h3>
+        <p>Read-only account details</p>
+      </div>
+    </div>
+    <div class="card-body">
+      <div style="display:grid;gap:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
+          <span style="font-size:13px;color:var(--muted);font-weight:600;">Email</span>
+          <span style="font-size:13.5px;font-weight:700;"><%= user.email %></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
+          <span style="font-size:13px;color:var(--muted);font-weight:600;">Role</span>
+          <span class="info-chip"><%= user.role %></span>
+        </div>
+        <% if (user.rollNo) { %>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
+          <span style="font-size:13px;color:var(--muted);font-weight:600;">Roll No</span>
+          <span style="font-size:13.5px;font-weight:700;font-family:monospace;color:var(--acc);"><%= user.rollNo %></span>
+        </div>
+        <% } %>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;">
+          <span style="font-size:13px;color:var(--muted);font-weight:600;">Account Status</span>
+          <span style="font-size:12px;font-weight:700;padding:4px 11px;border-radius:20px;<%= user.isApproved ? 'background:rgba(16,185,129,.1);color:#047857;' : 'background:rgba(245,158,11,.1);color:#b45309;' %>">
+            <%= user.isApproved ? '✓ Approved' : '⏳ Pending' %>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
 
 </div><!-- /page -->
 
-<div class="avatar-toast" id="avatarToast"></div>
-
 <script>
-    // ─────────────────────────────────────────────────────
-    // FIX: Single source-of-truth theme helper.
-    // setTheme()  → applies + persists a named theme.
-    // toggleTheme() → flips between light/dark.
-    // syncThemeUI() → updates toggle knob & status text.
-    //
-    // Key fixes vs original:
-    //   1. setTheme() is the ONLY place that writes to
-    //      localStorage and data-theme. No divergence.
-    //   2. syncThemeUI() is called synchronously (not just
-    //      on DOMContentLoaded) so it runs even on fast
-    //      browsers where DOMContentLoaded already fired.
-    //   3. Toggle button click is wired via addEventListener
-    //      (more reliable than inline onclick in all browsers).
-    //   4. Active-tag visibility is handled by CSS (see FIX D
-    //      above) — JS just handles the toggle knob & status.
-    // ─────────────────────────────────────────────────────
-
-    function setTheme(theme) {
-        document.documentElement.setAttribute('data-theme', theme);
-        localStorage.setItem('rku-theme', theme);
-        syncThemeUI();
-    }
-
-    function toggleTheme() {
-        var current = document.documentElement.getAttribute('data-theme') || 'light';
-        setTheme(current === 'dark' ? 'light' : 'dark');
-    }
-
-    function syncThemeUI() {
-        var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        var tog = document.getElementById('themeToggle');
-        var st  = document.getElementById('themeStatus');
-        if (tog) {
-            // FIX: classList is safer than replacing the whole className
-            tog.classList.toggle('on', isDark);
-        }
-        if (st) st.textContent = isDark ? 'Dark mode active' : 'Light mode active';
-    }
-
-    // Wire toggle button safely via addEventListener
-    // (works even if the button is inside a form)
-    document.addEventListener('DOMContentLoaded', function () {
-        var tog = document.getElementById('themeToggle');
-        if (tog) tog.addEventListener('click', toggleTheme);
-        syncThemeUI(); // initial paint sync
-    });
-
-    // Also call immediately in case DOMContentLoaded already fired
-    if (document.readyState === 'interactive' || document.readyState === 'complete') {
-        syncThemeUI();
-    }
-</script>
-<script>
-/* ══ AVATAR THEME PICKER ══ */
-(function(){
-    var THEMES = {
-        warrior: {
-            label: 'Warrior', icon: '⚔️',
-            desc: 'A legendary warrior who rises with your attendance.',
-            stages: [
-                { min:0,  label:'Fallen Warrior',        emoji:'😔', color:'#94a3b8' },
-                { min:30, label:'Struggling Apprentice', emoji:'🚶', color:'#f59e0b' },
-                { min:50, label:'Rising Soldier',        emoji:'🛡️', color:'#3b82f6' },
-                { min:65, label:'Brave Fighter',         emoji:'⚡', color:'#8b5cf6' },
-                { min:75, label:'Valiant Knight',        emoji:'🌟', color:'#f59e0b' },
-                { min:90, label:'Legendary Champion',    emoji:'🏆', color:'#10b981' }
-            ]
-        },
-        bloom: {
-            label: 'Bloom', icon: '🌸',
-            desc: 'A magical garden spirit that blossoms with every class you attend.',
-            stages: [
-                { min:0,  label:'Withered Seed',     emoji:'🌱', color:'#94a3b8' },
-                { min:30, label:'Sprouting Bud',     emoji:'🌿', color:'#84cc16' },
-                { min:50, label:'Growing Vine',      emoji:'🍃', color:'#22c55e' },
-                { min:65, label:'Blooming Flower',   emoji:'🌺', color:'#ec4899' },
-                { min:75, label:'Radiant Garden',    emoji:'🌸', color:'#a855f7' },
-                { min:90, label:'Enchanted Goddess', emoji:'🦋', color:'#f0abfc' }
-            ]
-        }
-    };
-
-    var savedTheme = localStorage.getItem('rku-avatar-theme') || 'warrior';
-
-    function renderPicker() {
-        var html = '';
-        Object.keys(THEMES).forEach(function(key) {
-            var t = THEMES[key];
-            var active = savedTheme === key;
-            html += '<div class="at-card' + (active ? ' active' : '') + '" onclick="selectAvatarTheme(\'' + key + '\')">' +
-                '<div class="at-icon">' + t.icon + '</div>' +
-                '<div class="at-info">' +
-                    '<div class="at-name">' + t.label + (active ? ' <span class="at-active-tag">Active</span>' : '') + '</div>' +
-                    '<div class="at-desc">' + t.desc + '</div>' +
-                '</div></div>';
-            html += '<div class="at-stages' + (active ? '' : ' hidden-stages') + '" id="stages-' + key + '">';
-            t.stages.forEach(function(s) {
-                html += '<div class="at-stage-chip" style="border-color:' + s.color + '33;background:' + s.color + '11;">' +
-                    '<span style="font-size:15px;">' + s.emoji + '</span>' +
-                    '<div><div style="font-size:11px;font-weight:700;color:var(--text);">' + s.label + '</div>' +
-                    '<div style="font-size:10px;color:var(--muted);">from ' + s.min + '%</div></div>' +
-                '</div>';
-            });
-            html += '</div>';
-        });
-        var el = document.getElementById('avatarPickerInner');
-        if (el) el.innerHTML = html;
-    }
-
-    window.selectAvatarTheme = function(key) {
-        savedTheme = key;
-        localStorage.setItem('rku-avatar-theme', key);
-        renderPicker();
-        var toast = document.getElementById('avatarToast');
-        if (toast) {
-            toast.textContent = (THEMES[key] ? THEMES[key].icon + ' ' + THEMES[key].label : key) + ' character selected!';
-            toast.style.opacity = '1';
-            toast.style.transform = 'translateX(-50%) translateY(0)';
-            setTimeout(function(){
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateX(-50%) translateY(10px)';
-            }, 2500);
-        }
-    };
-
-    document.addEventListener('DOMContentLoaded', renderPicker);
-    if (document.readyState === 'interactive' || document.readyState === 'complete') renderPicker();
-})();
+function setTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  localStorage.setItem('rku-theme',t);
+  syncThemeUI();
+}
+function syncThemeUI(){
+  var isDark=document.documentElement.getAttribute('data-theme')==='dark';
+  var tog=document.getElementById('themeToggle');
+  var st=document.getElementById('themeStatus');
+  if(tog) tog.classList.toggle('on',isDark);
+  if(st) st.textContent = isDark?'Dark mode active':'Light mode active';
+}
+document.addEventListener('DOMContentLoaded',function(){
+  var tog=document.getElementById('themeToggle');
+  if(tog) tog.addEventListener('click',function(){
+    var cur=document.documentElement.getAttribute('data-theme')||'light';
+    setTheme(cur==='dark'?'light':'dark');
+  });
+  syncThemeUI();
+});
+if(document.readyState==='interactive'||document.readyState==='complete') syncThemeUI();
 </script>
 </body>
 </html>

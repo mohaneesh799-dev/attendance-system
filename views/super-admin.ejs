@@ -4,135 +4,151 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SuperAdmin — RKU Attendance</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-<!-- THEME: Apply before first paint — no flash -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <script>(function(){var t=localStorage.getItem('rku-theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
 <style>
 :root{
-    --pri:#0f1f3d;--pri2:#1a3560;--acc:#3b7ff4;--acc2:#2563eb;
-    --suc:#10b981;--dan:#ef4444;--war:#f59e0b;--pur:#8b5cf6;
-    --bg:#f0f4fa;--card:#fff;--border:#e2e8f0;
-    --text:#0f172a;--muted:#64748b;--input-bg:#f8fafc;--input-bd:#cbd5e1;
-    --shadow:0 4px 20px rgba(0,0,0,.07);--shadow-lg:0 10px 40px rgba(0,0,0,.1);
-    --radius:14px;--radius-sm:9px;--sidebar-w:250px;
+  --pri:#0d1b3e;--pri2:#162d5a;
+  --acc:#4f7ef7;--acc2:#2563eb;
+  --suc:#10b981;--dan:#ef4444;--war:#f59e0b;--pur:#8b5cf6;
+  --bg:#f0f4fb;--card:#fff;--border:#e4eaf4;
+  --text:#0e1526;--muted:#64748b;
+  --input-bg:#f6f9ff;--input-bd:#d4daea;
+  --shadow:0 2px 16px rgba(14,21,38,.07);
+  --shadow-lg:0 8px 36px rgba(14,21,38,.13);
+  --radius:16px;--radius-sm:10px;--sidebar-w:256px;
 }
 [data-theme="dark"]{
-    --bg:#080d18;--card:#0f1624;--border:#1a2740;
-    --text:#dde6f0;--muted:#6b7f97;--input-bg:#0b1220;--input-bd:#1e3050;
-    --shadow:0 4px 24px rgba(0,0,0,.3);--shadow-lg:0 12px 40px rgba(0,0,0,.45);
-    --pri:#061128;--pri2:#0d1b36;--acc:#60a5fa;--acc2:#3b82f6;
-    --suc:#34d399;--dan:#f87171;--war:#fbbf24;--pur:#a78bfa;
+  --bg:#080e1d;--card:#0e1828;--border:#172035;
+  --text:#cdd9ee;--muted:#5e7898;
+  --input-bg:#0a1120;--input-bd:#1b2d4a;
+  --shadow:0 2px 20px rgba(0,0,0,.35);
+  --shadow-lg:0 8px 40px rgba(0,0,0,.55);
+  --pri:#060e20;--pri2:#0d1b36;
+  --acc:#6b93fa;--acc2:#4f7ef7;
+  --suc:#34d399;--dan:#f87171;--war:#fbbf24;--pur:#a78bfa;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-html,body{transition:background .22s,color .22s;}
+html,body{transition:background .25s,color .25s;}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;}
 
 /* ══ SIDEBAR ══ */
 .sidebar{
-    width:var(--sidebar-w);background:var(--pri);height:100vh;
-    position:fixed;top:0;left:0;
-    display:flex;flex-direction:column;
-    z-index:400;overflow-y:auto;
-    transition:transform .28s ease;
-    box-shadow:4px 0 24px rgba(0,0,0,.2);
+  width:var(--sidebar-w);background:linear-gradient(180deg,var(--pri) 0%,var(--pri2) 100%);
+  height:100vh;position:fixed;top:0;left:0;display:flex;flex-direction:column;
+  z-index:400;overflow-y:auto;transition:transform .28s cubic-bezier(.4,0,.2,1);
+  box-shadow:4px 0 28px rgba(0,0,0,.25);
 }
-.sb-top{padding:20px 16px 0;}
-.brand{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
-.brand-icon{width:38px;height:38px;background:var(--acc);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;color:#fff;flex-shrink:0;}
+.sb-top{padding:22px 16px 0;}
+.brand{display:flex;align-items:center;gap:11px;margin-bottom:18px;}
+.brand-icon{width:42px;height:42px;flex-shrink:0;border-radius:12px;background:linear-gradient(135deg,var(--acc),var(--pur));display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;box-shadow:0 4px 14px rgba(79,126,247,.4);}
 .brand-name{font-size:.9rem;font-weight:800;color:#fff;letter-spacing:-.2px;}
-.brand-sub{font-size:11px;color:rgba(255,255,255,.4);margin-top:1px;}
-.admin-chip{
-    background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);
-    border-radius:var(--radius-sm);padding:10px 13px;margin-bottom:14px;
-}
-.admin-chip small{font-size:10.5px;color:rgba(255,255,255,.35);display:block;margin-bottom:3px;text-transform:uppercase;letter-spacing:.4px;}
+.brand-sub{font-size:10.5px;color:rgba(255,255,255,.4);margin-top:2px;}
+.admin-chip{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:var(--radius-sm);padding:11px 13px;margin-bottom:14px;}
+.admin-chip small{font-size:10px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px;}
 .admin-chip span{color:#fff;font-size:13px;font-weight:600;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.nav-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:rgba(255,255,255,.25);padding:10px 10px 4px;}
+
+.role-sw{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:12px;}
+.role-sw small{font-size:10px;color:rgba(255,255,255,.35);text-transform:uppercase;display:flex;align-items:center;gap:5px;margin-bottom:6px;}
+.role-sw-row{display:flex;gap:6px;}
+.role-sel{flex:1;padding:6px 9px;border-radius:7px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:#fff;font-size:12px;font-family:inherit;outline:none;cursor:pointer;}
+.role-sel option{background:#0d1b3e;color:#fff;}
+.role-go{padding:6px 11px;border-radius:7px;background:var(--acc);color:#fff;border:none;font-size:12px;font-weight:700;cursor:pointer;transition:.18s;}
+.role-go:hover{background:var(--acc2);}
+
+.sb-nav{padding:0 10px 14px;flex:1;}
+.nav-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:rgba(255,255,255,.28);padding:10px 8px 4px;}
 .nav-btn{
-    color:rgba(255,255,255,.5);display:flex;align-items:center;gap:10px;
-    padding:11px 12px;border-radius:var(--radius-sm);transition:.15s;
-    margin-bottom:2px;font-size:13px;cursor:pointer;font-weight:600;
-    border:none;background:none;width:100%;text-align:left;text-decoration:none;
+  display:flex;align-items:center;gap:10px;padding:10px 11px;border-radius:var(--radius-sm);margin-bottom:2px;
+  color:rgba(255,255,255,.52);text-decoration:none;font-size:13px;font-weight:600;
+  transition:.18s;border:none;background:none;cursor:pointer;width:100%;text-align:left;
 }
 .nav-btn:hover{background:rgba(255,255,255,.08);color:#fff;}
-.nav-btn.active{background:rgba(59,127,244,.2);color:#fff;border-left:3px solid var(--acc);}
-.nav-btn i{width:18px;text-align:center;flex-shrink:0;font-size:14px;}
-.nav-btn .nb{background:var(--dan);color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;margin-left:auto;min-width:20px;text-align:center;}
-.nav-btn.export{color:rgba(52,211,153,.7);}
+.nav-btn.active{background:rgba(79,126,247,.22);color:#fff;border-left:3px solid var(--acc);padding-left:8px;}
+.nav-btn i{width:18px;text-align:center;flex-shrink:0;font-size:13.5px;}
+.nb{background:var(--dan);color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;margin-left:auto;min-width:20px;text-align:center;}
+.nav-btn.export{color:rgba(52,211,153,.65);}
 .nav-btn.export:hover{background:rgba(16,185,129,.12);color:var(--suc);}
-.nav-btn.danger{color:rgba(248,113,113,.7);}
+.nav-btn.danger{color:rgba(248,113,113,.65);}
 .nav-btn.danger:hover{background:rgba(239,68,68,.12);color:var(--dan);}
-.sb-foot{padding:12px 14px;border-top:1px solid rgba(255,255,255,.07);}
+.sb-foot{padding:11px 14px;border-top:1px solid rgba(255,255,255,.07);}
 .clock-sb{font-size:.78rem;color:rgba(255,255,255,.3);text-align:center;font-variant-numeric:tabular-nums;}
 
-/* ══ HAMBURGER + OVERLAY ══ */
-.ham{
-    display:none;position:fixed;top:13px;left:13px;z-index:500;
-    background:var(--pri);border:none;color:#fff;
-    padding:10px 13px;border-radius:var(--radius-sm);font-size:18px;cursor:pointer;
-    box-shadow:0 3px 12px rgba(0,0,0,.3);
-}
-.sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:350;}
+/* ══ OVERLAY + HAM ══ */
+.sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:350;}
 .sb-overlay.open{display:block;}
+.ham{display:none;position:fixed;top:14px;left:14px;z-index:500;background:var(--pri);border:none;color:#fff;padding:10px 13px;border-radius:var(--radius-sm);font-size:18px;cursor:pointer;box-shadow:0 3px 14px rgba(0,0,0,.35);}
 
-/* ══ MOBILE TOP BAR ══ */
-.mob-topbar{
-    display:none;background:linear-gradient(135deg,var(--pri),var(--pri2));
-    color:#fff;padding:14px 16px 14px 56px;font-size:15px;font-weight:800;
-    position:fixed;top:0;left:0;right:0;z-index:300;
-    box-shadow:0 2px 10px rgba(0,0,0,.25);
-    align-items:center;justify-content:space-between;
-}
-.mob-topbar-actions{display:flex;gap:6px;align-items:center;}
+/* ══ MOBILE TOPBAR ══ */
+.mob-topbar{display:none;position:fixed;top:0;left:0;right:0;height:54px;z-index:300;background:var(--pri);padding:0 16px 0 60px;align-items:center;justify-content:space-between;box-shadow:0 2px 12px rgba(0,0,0,.2);}
+.mob-topbar span{color:#fff;font-size:13.5px;font-weight:700;}
+.btn-theme-sm{background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:7px 11px;border-radius:7px;cursor:pointer;font-size:14px;transition:.18s;}
+.btn-theme-sm:hover{background:rgba(255,255,255,.18);color:#fff;}
+
+/* ══ MOBILE BOTTOM NAV ══ */
+.mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);z-index:400;padding:4px 0 6px;}
+.mob-nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;border:none;background:none;color:var(--muted);font-size:10px;font-weight:700;padding:6px 4px;cursor:pointer;transition:.15s;font-family:inherit;}
+.mob-nav button i{font-size:16px;}
+.mob-nav button.active{color:var(--acc);}
+.mob-nav-wrap{display:flex;}
 
 /* ══ MAIN ══ */
-.main{margin-left:var(--sidebar-w);padding:28px 26px 80px;flex:1;min-width:0;transition:margin .28s;}
+.main{margin-left:var(--sidebar-w);padding:28px 26px 80px;flex:1;min-width:0;}
 .page{display:none;}
 .page.active{display:block;}
 
 /* ══ PAGE HEADER ══ */
-.pg-hdr{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:22px;}
-.pg-hdr h1{font-size:1.4rem;font-weight:900;letter-spacing:-.3px;margin-bottom:3px;}
-.pg-hdr p{color:var(--muted);font-size:13px;}
+.pg-hdr{
+  background:linear-gradient(135deg,var(--pri) 0%,var(--pri2) 60%,#1e4fd8 100%);
+  border-radius:var(--radius);padding:22px 26px;margin-bottom:22px;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;
+  box-shadow:0 6px 28px rgba(13,27,62,.35);position:relative;overflow:hidden;
+}
+.pg-hdr::before{content:'';position:absolute;right:-50px;top:-50px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.04);pointer-events:none;}
+.pg-hdr h1{font-size:1.25rem;font-weight:900;color:#fff;letter-spacing:-.2px;}
+.pg-hdr p{font-size:13px;color:rgba(255,255,255,.65);margin-top:4px;}
+.pg-hdr-right{display:flex;align-items:center;gap:10px;}
 
 /* ══ ALERTS ══ */
-.alert{display:flex;align-items:center;gap:10px;padding:12px 18px;border-radius:var(--radius-sm);margin-bottom:18px;font-size:13.5px;animation:slideIn .3s ease;}
+.alert{display:flex;align-items:center;gap:10px;padding:13px 16px;border-radius:var(--radius-sm);margin-bottom:18px;font-size:13.5px;animation:slideIn .3s ease;}
 @keyframes slideIn{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:none;}}
-.alert-ok{background:rgba(16,185,129,.1);color:var(--suc);border:1px solid rgba(16,185,129,.25);}
-.alert-err{background:rgba(239,68,68,.08);color:var(--dan);border:1px solid rgba(239,68,68,.2);}
+.alert-ok{background:rgba(16,185,129,.08);color:#047857;border:1px solid rgba(16,185,129,.2);border-left:4px solid var(--suc);}
+.alert-err{background:rgba(239,68,68,.07);color:#b91c1c;border:1px solid rgba(239,68,68,.18);border-left:4px solid var(--dan);}
+[data-theme="dark"] .alert-ok{background:rgba(16,185,129,.1);color:var(--suc);}
+[data-theme="dark"] .alert-err{background:rgba(239,68,68,.1);color:var(--dan);}
 
 /* ══ STATS ══ */
-.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
 .stat-card{
-    background:var(--card);padding:18px 20px;border-radius:var(--radius);
-    box-shadow:var(--shadow);border-left:4px solid var(--acc);
-    cursor:pointer;transition:.18s;
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:18px 20px;box-shadow:var(--shadow);cursor:pointer;transition:.22s;
+  display:flex;align-items:center;gap:14px;
 }
-.stat-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg);}
-.stat-card small{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:700;}
-.stat-card .val{font-size:2rem;font-weight:900;margin-top:4px;line-height:1;}
+.stat-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg);}
+.stat-icon{width:48px;height:48px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;}
+.stat-body small{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:700;display:block;margin-bottom:3px;}
+.stat-body .val{font-size:2rem;font-weight:900;line-height:1;}
 
 /* ══ CARD ══ */
-.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:20px;overflow:hidden;border:1px solid var(--border);}
-.card-hdr{padding:15px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
-.card-hdr h3{font-size:.9rem;font-weight:800;display:flex;align-items:center;gap:8px;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:18px;overflow:hidden;}
+.card-hdr{padding:15px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;background:var(--input-bg);}
+.card-hdr h3{font-size:.9rem;font-weight:800;display:flex;align-items:center;gap:8px;margin:0;}
 .card-body{padding:20px;}
 
 /* ══ SETUP GUIDE ══ */
 .setup-guide{
-    background:linear-gradient(135deg,rgba(59,127,244,.06),rgba(139,92,246,.05));
-    border:2px dashed rgba(59,127,244,.25);border-radius:var(--radius);
-    padding:28px;text-align:center;margin-bottom:20px;
+  background:linear-gradient(135deg,rgba(79,126,247,.06),rgba(139,92,246,.04));
+  border:2px dashed rgba(79,126,247,.22);border-radius:var(--radius);padding:28px;text-align:center;margin-bottom:18px;
 }
-[data-theme="dark"] .setup-guide{background:linear-gradient(135deg,rgba(96,165,250,.06),rgba(167,139,250,.04));border-color:rgba(96,165,250,.2);}
+[data-theme="dark"] .setup-guide{background:linear-gradient(135deg,rgba(107,147,250,.06),rgba(167,139,250,.04));border-color:rgba(107,147,250,.2);}
 .setup-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:18px;text-align:left;}
-.step{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;box-shadow:var(--shadow);}
+.step{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;box-shadow:var(--shadow);}
 .step-num{width:26px;height:26px;border-radius:50%;background:var(--acc);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;margin-bottom:8px;}
 .step-title{font-weight:800;font-size:12.5px;margin-bottom:4px;}
 .step-desc{font-size:12px;color:var(--muted);line-height:1.5;}
 
 /* ══ BUTTONS ══ */
-.btn{padding:8px 15px;border-radius:var(--radius-sm);cursor:pointer;border:none;font-weight:700;font-size:12.5px;transition:.18s;display:inline-flex;align-items:center;gap:6px;text-decoration:none;white-space:nowrap;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 15px;border-radius:var(--radius-sm);cursor:pointer;border:none;font-weight:700;font-size:12.5px;transition:.18s;text-decoration:none;white-space:nowrap;}
 .btn:hover{opacity:.88;transform:translateY(-1px);}
 .btn:active{transform:scale(.97);}
 .btn-acc{background:var(--acc);color:#fff;}
@@ -148,140 +164,106 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .btn-theme:hover{border-color:var(--acc);color:var(--acc);}
 
 /* ══ TABLE ══ */
-.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
-table{width:100%;border-collapse:collapse;min-width:480px;}
-thead th{text-align:left;padding:10px 14px;background:var(--input-bg);font-size:11px;color:var(--muted);text-transform:uppercase;border-bottom:2px solid var(--border);white-space:nowrap;}
-tbody td{padding:11px 14px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle;}
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;min-width:460px;}
+thead th{text-align:left;padding:11px 14px;background:var(--input-bg);font-size:11px;color:var(--muted);text-transform:uppercase;border-bottom:2px solid var(--border);white-space:nowrap;}
+tbody td{padding:12px 14px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle;}
 tbody tr:last-child td{border-bottom:none;}
-tbody tr:hover td{background:rgba(59,127,244,.03);}
-[data-theme="dark"] tbody tr:hover td{background:rgba(96,165,250,.04);}
+tbody tr:hover td{background:rgba(79,126,247,.025);}
 
-/* ══ PILLS & BADGES ══ */
+/* ══ PILLS / BADGES ══ */
 .pill{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;}
-.pill-a{background:rgba(16,185,129,.12);color:var(--suc);border:1px solid rgba(16,185,129,.22);}
-.pill-p{background:rgba(245,158,11,.12);color:var(--war);border:1px solid rgba(245,158,11,.22);}
-.rb{padding:3px 9px;border-radius:5px;font-size:11px;font-weight:700;}
-.rb-Master{background:rgba(59,127,244,.12);color:var(--acc);}
+.pill-a{background:rgba(16,185,129,.1);color:#047857;border:1px solid rgba(16,185,129,.2);}
+.pill-p{background:rgba(245,158,11,.1);color:#b45309;border:1px solid rgba(245,158,11,.2);}
+[data-theme="dark"] .pill-a{color:var(--suc);}
+[data-theme="dark"] .pill-p{color:var(--war);}
+.rb{padding:3px 9px;border-radius:6px;font-size:11px;font-weight:700;}
+.rb-Master{background:rgba(79,126,247,.12);color:var(--acc);}
 .rb-Lecturer{background:rgba(16,185,129,.12);color:var(--suc);}
 .rb-Leader{background:rgba(245,158,11,.12);color:var(--war);}
 .rb-Student{background:rgba(239,68,68,.1);color:var(--dan);}
 .rb-SuperAdmin{background:rgba(139,92,246,.12);color:var(--pur);}
-.sec-pill{background:rgba(59,127,244,.1);color:var(--acc);padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;}
+.sec-pill{background:rgba(79,126,247,.1);color:var(--acc);padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;}
 .ct-tag{background:rgba(139,92,246,.12);color:var(--pur);padding:2px 7px;border-radius:12px;font-size:10px;font-weight:700;display:inline-block;margin-top:3px;border:1px solid rgba(139,92,246,.2);}
 
 /* ══ DIVISION CARDS ══ */
-.div-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:14px;margin-top:14px;}
-.div-card{background:var(--input-bg);border:2px solid var(--border);border-radius:12px;padding:18px;position:relative;transition:.18s;}
+.div-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;margin-top:14px;}
+.div-card{background:var(--input-bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:18px;position:relative;transition:.22s;}
 .div-card:hover{border-color:var(--acc);box-shadow:var(--shadow-lg);background:var(--card);}
-.div-card-name{font-size:.95rem;font-weight:800;color:var(--text);margin-bottom:6px;padding-right:28px;}
-.div-card-desc{font-size:11.5px;color:var(--muted);margin-bottom:10px;}
+.div-card-name{font-size:.95rem;font-weight:800;margin-bottom:5px;padding-right:28px;display:flex;align-items:center;gap:7px;}
+.div-card-desc{font-size:12px;color:var(--muted);margin-bottom:10px;}
 .div-stats{font-size:12px;color:var(--muted);line-height:2;}
 .div-del{position:absolute;top:10px;right:10px;}
 
-/* ══ FILTER TABS ══ */
+/* ══ TABS ══ */
 .tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px;}
-.tab{padding:6px 15px;border:1.5px solid var(--border);border-radius:20px;cursor:pointer;font-weight:700;font-size:12.5px;background:var(--card);color:var(--muted);transition:.15s;}
+.tab{padding:6px 15px;border:1.5px solid var(--border);border-radius:20px;cursor:pointer;font-weight:700;font-size:12.5px;background:var(--card);color:var(--muted);transition:.15s;font-family:inherit;}
 .tab:hover{border-color:var(--acc);color:var(--acc);}
-.tab.active{background:var(--acc);color:#fff;border-color:var(--acc);box-shadow:0 3px 10px rgba(59,127,244,.25);}
-.tab.warn{border-color:rgba(245,158,11,.4);color:var(--war);}
+.tab.active{background:var(--acc);color:#fff;border-color:var(--acc);box-shadow:0 3px 10px rgba(79,126,247,.25);}
+.tab.warn{border-color:rgba(245,158,11,.3);color:var(--war);}
 .tab.warn.active,.tab.warn:hover{background:var(--war);color:#fff;border-color:var(--war);}
 
-/* ══ DIV BLOCKS ══ */
-.div-block{margin-bottom:22px;}
+/* ══ SECTION BLOCKS ══ */
+.div-block{margin-bottom:20px;}
 .div-block.hidden{display:none;}
-.div-heading{display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,rgba(59,127,244,.06),rgba(139,92,246,.03));border:1px solid rgba(59,127,244,.15);padding:11px 16px;border-radius:var(--radius-sm);margin-bottom:10px;border-left:4px solid var(--acc);}
+.div-heading{display:flex;align-items:center;gap:10px;background:var(--input-bg);border:1px solid rgba(79,126,247,.15);padding:11px 16px;border-radius:var(--radius-sm);margin-bottom:10px;border-left:4px solid var(--acc);}
 .div-badge{background:var(--pri);color:#fff;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:800;text-transform:uppercase;}
-.div-tbl-wrap{background:var(--card);border-radius:10px;overflow:hidden;box-shadow:var(--shadow);}
 
 /* ══ FORM ══ */
 .form-row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;}
 .fg{display:flex;flex-direction:column;gap:5px;flex:1;min-width:120px;}
 .fg label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;}
-.fc{
-    padding:10px 13px;border:1.5px solid var(--input-bd);border-radius:var(--radius-sm);
-    font-size:13.5px;outline:none;width:100%;transition:.18s;
-    background:var(--input-bg);color:var(--text);font-family:inherit;
-}
-.fc:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(59,127,244,.1);}
+.fc{padding:10px 13px;border:1.5px solid var(--input-bd);border-radius:var(--radius-sm);font-size:13.5px;outline:none;width:100%;transition:.18s;background:var(--input-bg);color:var(--text);font-family:inherit;}
+.fc:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(79,126,247,.1);}
 select.fc option{background:var(--card);color:var(--text);}
-
-/* ══ SEARCH ══ */
 .sw{position:relative;}
 .sw i{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;pointer-events:none;}
 .sw .fc{padding-left:34px;}
 
 /* ══ MODAL ══ */
-.overlay-modal{
-    display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);
-    z-index:1000;align-items:center;justify-content:center;padding:16px;
-}
+.overlay-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;align-items:center;justify-content:center;padding:16px;}
 .overlay-modal.open{display:flex;}
-.modal{
-    background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
-    padding:26px;max-width:460px;width:100%;box-shadow:var(--shadow-lg);
-    max-height:90vh;overflow-y:auto;animation:modalIn .25s ease;
-}
-@keyframes modalIn{from{opacity:0;transform:scale(.94);}to{opacity:1;transform:scale(1);}}
-.modal-title{font-size:1rem;font-weight:800;margin-bottom:4px;display:flex;align-items:center;gap:8px;}
-.modal-sub{color:var(--muted);font-size:13px;margin-bottom:18px;}
-.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;flex-wrap:wrap;}
-.modal .fg{margin-bottom:14px;}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:26px;max-width:480px;width:100%;box-shadow:var(--shadow-lg);max-height:90vh;overflow-y:auto;}
+.modal-title{font-size:1rem;font-weight:800;margin-bottom:6px;display:flex;align-items:center;gap:9px;}
+.modal-sub{font-size:13px;color:var(--muted);margin-bottom:18px;}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border);}
 
-/* ══ EMPTY ══ */
-.empty{text-align:center;padding:50px 20px;color:var(--muted);}
-.empty i{font-size:2.8rem;opacity:.18;display:block;margin-bottom:14px;}
-
-/* ══ MOBILE BOTTOM NAV ══ */
-.mob-nav{display:none;}
-
-/* ══ RESPONSIVE ══ */
-@media(max-width:900px){.stats-grid{grid-template-columns:repeat(2,1fr);}}
-@media(max-width:768px){
-    .sidebar{transform:translateX(-100%);}
-    .sidebar.open{transform:translateX(0);}
-    .main{margin-left:0;padding:68px 14px 78px;}
-    .ham{display:flex;}
-    .mob-topbar{display:flex;}
-    .mob-nav{
-        display:flex;position:fixed;bottom:0;left:0;right:0;
-        background:var(--pri);z-index:300;border-top:1px solid rgba(255,255,255,.08);
-    }
-    .mob-nav button{
-        flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
-        padding:8px 4px;color:rgba(255,255,255,.45);background:none;border:none;
-        cursor:pointer;font-size:10px;font-weight:700;transition:.15s;
-    }
-    .mob-nav button i{font-size:18px;}
-    .mob-nav button.active{color:var(--acc);}
-    .pg-hdr{flex-direction:column;}
-    .pg-hdr .sw{width:100%;}
-    .form-row{flex-direction:column;}
-    .form-row .fg{min-width:unset;}
-}
-@media(max-width:480px){
-    .stats-grid{grid-template-columns:1fr 1fr;}
-    .stat-card .val{font-size:1.6rem;}
-    table{min-width:360px;}
-    .modal{padding:18px;}
-}
-
-/* ── Multi-role badges ── */
-.multi-badge{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);color:var(--war);padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;margin-left:4px;}
+/* ══ ROLE CHECKBOXES ══ */
 .role-checks{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px;}
 .rci{display:flex;align-items:center;gap:8px;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:.18s;background:var(--input-bg);}
 .rci:hover{border-color:var(--acc);}
-.rci.checked{border-color:var(--acc);background:rgba(59,127,244,.06);}
+.rci.checked{border-color:var(--acc);background:rgba(79,126,247,.06);}
 .rci input{width:15px;height:15px;accent-color:var(--acc);cursor:pointer;flex-shrink:0;}
 .rci-lbl{font-size:12.5px;font-weight:700;}
 .primary-sel{margin-top:12px;padding-top:12px;border-top:1px solid var(--border);}
-.primary-sel label{font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:5px;}
-.sb-role-switch{background:rgba(255,255,255,.05);border-radius:var(--radius-sm);padding:8px 10px;margin-bottom:10px;}
-.sb-role-switch small{font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;display:block;margin-bottom:5px;}
-.sb-role-switch form{display:flex;gap:6px;align-items:center;}
-.sb-role-switch select{flex:1;font-size:11.5px;padding:5px 8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:6px;outline:none;}
-.sb-role-switch button{font-size:11px;padding:5px 10px;white-space:nowrap;}
-@media(max-width:480px){.role-checks{grid-template-columns:1fr;}}
+.primary-sel label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:5px;}
 
+/* ══ EMPTY ══ */
+.empty{text-align:center;padding:50px 20px;color:var(--muted);}
+.empty i{font-size:2.5rem;opacity:.15;display:block;margin-bottom:12px;}
+
+/* ══ RESPONSIVE ══ */
+@media(max-width:1060px){.stats-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%);}
+  .sidebar.open{transform:translateX(0);}
+  .main{margin-left:0;padding:68px 14px 80px;}
+  .ham{display:flex;}
+  .mob-topbar{display:flex;}
+  .mob-nav{display:flex;}
+  .mob-nav-wrap{width:100%;}
+  .stats-grid{grid-template-columns:1fr 1fr;gap:10px;}
+  .stat-card{padding:14px;}
+  .stat-icon{width:40px;height:40px;font-size:1rem;}
+  .stat-body .val{font-size:1.5rem;}
+  .pg-hdr{padding:18px 16px;border-radius:14px;}
+  .pg-hdr h1{font-size:1.1rem;}
+  .card-body,.card-hdr{padding:14px 16px;}
+}
+@media(max-width:480px){
+  .stats-grid{grid-template-columns:1fr 1fr;}
+  .role-checks{grid-template-columns:1fr;}
+}
 </style>
 </head>
 <body>
@@ -291,836 +273,740 @@ select.fc option{background:var(--card);color:var(--text);}
 
 <!-- Mobile Topbar -->
 <div class="mob-topbar" id="mobTopbar">
-    <span id="mobTitle"><i class="fas fa-shield-alt" style="color:var(--acc);"></i> SuperAdmin</span>
-    <div class="mob-topbar-actions">
-        <button id="themeToggleMob" class="btn-theme" style="border:none;background:transparent;color:rgba(255,255,255,.7);font-size:16px;" aria-label="Toggle theme">
-            <i id="themeIconMob" class="fas fa-moon"></i>
-        </button>
-    </div>
+  <span id="mobTitle"><i class="fas fa-shield-halved" style="color:var(--acc);margin-right:6px;"></i> SuperAdmin</span>
+  <button id="themeToggleMob" class="btn-theme-sm" aria-label="Toggle theme"><i id="themeIconMob" class="fas fa-moon"></i></button>
 </div>
 
 <!-- Sidebar Overlay -->
 <div class="sb-overlay" id="sbOverlay"></div>
 
 <!-- Sidebar -->
-<div class="sidebar" id="sidebar">
-    <div class="sb-top">
-        <div class="brand">
-            <div class="brand-icon"><i class="fas fa-shield-alt"></i></div>
-            <div>
-                <div class="brand-name">SuperAdmin</div>
-                <div class="brand-sub">Full System Control</div>
-            </div>
-        </div>
-        <div class="admin-chip">
-            <small>Logged in as</small>
-            <span><%= user.name %></span>
-        </div>
+<aside class="sidebar" id="sidebar">
+  <div class="sb-top">
+    <div class="brand">
+      <div class="brand-icon"><i class="fas fa-shield-halved"></i></div>
+      <div>
+        <div class="brand-name">SuperAdmin</div>
+        <div class="brand-sub">Full System Control</div>
+      </div>
+    </div>
+    <div class="admin-chip">
+      <small>Logged in as</small>
+      <span><%= user.name %></span>
     </div>
 
-    <div class="nav-lbl">Menu</div>
-    <!-- Role Switcher (shown when user has multiple roles) -->
     <% var _sRoles = (user.roles && user.roles.length > 0) ? user.roles : [user.role]; %>
     <% if (_sRoles.length > 1) { %>
-    <div class="sb-role-switch">
-        <small><i class="fas fa-exchange-alt"></i> Switch Role</small>
-        <form action="/switch-role" method="POST">
-            <select name="targetRole">
-                <% _sRoles.forEach(function(r){ %>
-                    <option value="<%= r %>" <%= r===user.role?'selected':'' %>><%= r %></option>
-                <% }); %>
-            </select>
-            <button type="submit" class="btn btn-acc" style="padding:5px 9px;font-size:11px"><i class="fas fa-arrow-right"></i></button>
+    <div class="role-sw">
+      <small><i class="fas fa-shuffle"></i> Switch Role</small>
+      <form action="/switch-role" method="POST" class="role-sw-row">
+        <select name="targetRole" class="role-sel">
+          <% _sRoles.forEach(function(r){ %>
+            <option value="<%= r %>" <%= r===user.role?'selected':'' %>><%= r %></option>
+          <% }); %>
+        </select>
+        <button type="submit" class="role-go"><i class="fas fa-arrow-right"></i></button>
+      </form>
+    </div>
+    <% } %>
+  </div>
+
+  <div class="nav-lbl">Menu</div>
+  <nav id="sideNav" class="sb-nav" style="padding:0 10px 12px;">
+    <%
+      var pendCount = 0;
+      for (var pi = 0; pi < allUsers.length; pi++) { if (!allUsers[pi].isApproved) pendCount++; }
+    %>
+    <button class="nav-btn active" data-page="overview"><i class="fas fa-chart-pie"></i> Overview</button>
+    <button class="nav-btn" data-page="divisions"><i class="fas fa-layer-group"></i> Divisions</button>
+    <button class="nav-btn" data-page="assign">
+      <i class="fas fa-user-gear"></i> Assign Roles
+      <% if (pendCount > 0) { %><span class="nb"><%= pendCount %></span><% } %>
+    </button>
+    <button class="nav-btn" data-page="users"><i class="fas fa-users"></i> All Users</button>
+    <button class="nav-btn" data-page="subjects"><i class="fas fa-book"></i> Subjects</button>
+    <div class="nav-lbl">Actions</div>
+    <button class="nav-btn" id="themeToggle"><i class="fas fa-moon" id="themeIcon"></i> Toggle Theme</button>
+    <a href="/export-attendance" class="nav-btn export"><i class="fas fa-file-csv"></i> Export CSV</a>
+    <a href="/settings" class="nav-btn" style="color:rgba(255,255,255,.5);"><i class="fas fa-gear"></i> Settings</a>
+    <a href="/logout" class="nav-btn danger"><i class="fas fa-power-off"></i> Logout</a>
+  </nav>
+
+  <div class="sb-foot">
+    <div class="clock-sb" id="sbClock">--:--:--</div>
+  </div>
+</aside>
+
+<!-- Main Content -->
+<main class="main">
+
+  <!-- Alerts -->
+  <% if (typeof success !== 'undefined' && success) { %>
+    <div class="alert alert-ok"><i class="fas fa-circle-check"></i> <%= success %></div>
+  <% } %>
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div class="alert alert-err"><i class="fas fa-circle-exclamation"></i> <%= error %></div>
+  <% } %>
+
+  <!-- ═══ OVERVIEW ═══ -->
+  <div id="pg-overview" class="page active">
+    <div class="pg-hdr">
+      <div>
+        <h1><i class="fas fa-chart-pie" style="opacity:.8;margin-right:8px;"></i> System Overview</h1>
+        <p>Full visibility across all divisions and users</p>
+      </div>
+      <div class="pg-hdr-right">
+        <button id="themeToggleTop" class="btn-theme" aria-label="Toggle theme"><i class="fas fa-moon" id="themeIconTop"></i></button>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card" onclick="navTo('users')">
+        <div class="stat-icon" style="background:rgba(79,126,247,.1);color:var(--acc);"><i class="fas fa-users"></i></div>
+        <div class="stat-body"><small>Total Users</small><div class="val"><%= stats.totalUsers %></div></div>
+      </div>
+      <div class="stat-card" onclick="navTo('assign')">
+        <div class="stat-icon" style="background:rgba(239,68,68,.1);color:var(--dan);"><i class="fas fa-user-clock"></i></div>
+        <div class="stat-body"><small>Pending Approvals</small><div class="val" style="color:var(--dan);"><%= stats.pendingApprovals %></div></div>
+      </div>
+      <div class="stat-card" onclick="navTo('subjects')">
+        <div class="stat-icon" style="background:rgba(16,185,129,.1);color:var(--suc);"><i class="fas fa-book-open"></i></div>
+        <div class="stat-body"><small>Active Subjects</small><div class="val" style="color:var(--suc);"><%= stats.totalSubjects %></div></div>
+      </div>
+      <div class="stat-card" onclick="navTo('divisions')">
+        <div class="stat-icon" style="background:rgba(139,92,246,.1);color:var(--pur);"><i class="fas fa-layer-group"></i></div>
+        <div class="stat-body"><small>Divisions</small><div class="val" style="color:var(--pur);"><%= allDivisions.length %></div></div>
+      </div>
+    </div>
+
+    <% if (allDivisions.length === 0) { %>
+    <div class="setup-guide">
+      <i class="fas fa-rocket" style="font-size:2.5rem;color:var(--acc);margin-bottom:10px;display:block;"></i>
+      <h2 style="font-size:1.15rem;margin-bottom:6px;">Welcome! Set up your system</h2>
+      <p style="color:var(--muted);font-size:13.5px;">Follow these 4 steps to get the attendance system running.</p>
+      <div class="setup-steps">
+        <div class="step"><div class="step-num">1</div><div class="step-title">Create Divisions</div><div class="step-desc">Go to <strong>Divisions</strong> and create class groups (e.g. CS-A, IT-B)</div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-title">Assign Users</div><div class="step-desc">In <strong>Assign Roles</strong>, set each user's role and division</div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-title">Add Subjects</div><div class="step-desc">In <strong>Subjects</strong>, add subjects per division</div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-title">All Done!</div><div class="step-desc">Leaders take attendance, Lecturers review, Masters manage</div></div>
+      </div>
+      <button type="button" class="btn btn-acc btn-lg" style="margin-top:20px;" onclick="navTo('divisions')">
+        <i class="fas fa-plus"></i> Create First Division
+      </button>
+    </div>
+    <% } %>
+
+    <%
+      var pendingUsers = [];
+      for (var i = 0; i < allUsers.length; i++) { if (!allUsers[i].isApproved) pendingUsers.push(allUsers[i]); }
+    %>
+    <% if (pendingUsers.length > 0) { %>
+    <div class="card">
+      <div class="card-hdr">
+        <h3><i class="fas fa-user-clock" style="color:var(--war);"></i> Pending Approvals</h3>
+        <span class="pill pill-p"><%= pendingUsers.length %> waiting</span>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Action</th></tr></thead>
+          <tbody>
+            <% for (var pu = 0; pu < pendingUsers.length; pu++) {
+               var u = pendingUsers[pu];
+               var uSec = (u.sections && u.sections.length ? u.sections.join(',') : (u.section || ''));
+               var uNm = (u.name || '').replace(/'/g, "\\'"); %>
+            <tr>
+              <td><strong><%= u.name || '—' %></strong></td>
+              <td style="color:var(--muted);font-size:12px;"><%= u.email %></td>
+              <td><span class="rb rb-<%= u.role %>"><%= u.role %></span></td>
+              <td>
+                <button type="button" class="btn btn-acc btn-assign"
+                  data-id="<%= u._id %>" data-name="<%= uNm %>"
+                  data-email="<%= u.email %>" data-roles="<%= (u.roles&&u.roles.length?u.roles:[u.role]).join(',') %>" data-sec="<%= uSec %>">
+                  <i class="fas fa-user-gear"></i> Assign &amp; Approve
+                </button>
+              </td>
+            </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <% } %>
+
+    <div class="card">
+      <div class="card-hdr">
+        <h3><i class="fas fa-users" style="color:var(--acc);"></i> All Users (<%= allUsers.length %>)</h3>
+        <button type="button" class="btn btn-ghost" onclick="navTo('assign')"><i class="fas fa-user-gear"></i> Manage All</button>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Division</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody>
+            <% for (var ai = 0; ai < Math.min(allUsers.length, 10); ai++) {
+               var au = allUsers[ai];
+               var auNm = (au.name || '').replace(/'/g, "\\'");
+               var auSec = (au.sections && au.sections.length ? au.sections.join(',') : (au.section || '')); %>
+            <tr>
+              <td>
+                <strong><%= au.name || '—' %></strong>
+                <% if (au.rollNo) { %><div style="font-size:11px;color:var(--muted);font-family:monospace;"><%= au.rollNo %></div><% } %>
+                <% if (au.isClassTeacher) { %><span class="ct-tag"><i class="fas fa-star"></i> CT</span><% } %>
+              </td>
+              <td style="font-size:12px;color:var(--muted);"><%= au.email %></td>
+              <td><span class="rb rb-<%= au.role %>"><%= au.role || '—' %></span></td>
+              <td><%= au.section ? '<span class="sec-pill">'+au.section+'</span>' : '<span style="color:var(--muted);font-size:12px;">—</span>' %></td>
+              <td><span class="pill <%= au.isApproved ? 'pill-a' : 'pill-p' %>"><%= au.isApproved ? '✓ Active' : '⏳ Pending' %></span></td>
+              <td>
+                <button type="button" class="btn btn-ghost btn-assign"
+                  data-id="<%= au._id %>" data-name="<%= auNm %>"
+                  data-email="<%= au.email %>" data-roles="<%= (au.roles&&au.roles.length?au.roles:[au.role]).join(',') %>" data-sec="<%= auSec %>">
+                  <i class="fas fa-pen"></i> Edit
+                </button>
+              </td>
+            </tr>
+            <% } %>
+            <% if (allUsers.length > 10) { %>
+            <tr>
+              <td colspan="6" style="text-align:center;padding:14px;color:var(--muted);font-size:12.5px;">
+                +<%= allUsers.length - 10 %> more —
+                <a href="#" onclick="navTo('assign');return false;" style="color:var(--acc);font-weight:700;">View all</a>
+              </td>
+            </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ DIVISIONS ═══ -->
+  <div id="pg-divisions" class="page">
+    <div class="pg-hdr">
+      <div><h1><i class="fas fa-layer-group" style="opacity:.8;margin-right:8px;"></i> Division Management</h1><p>Create class groups — each has its own students, subjects and leaders.</p></div>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr"><h3><i class="fas fa-plus-circle" style="color:var(--suc);"></i> Create New Division</h3></div>
+      <div class="card-body">
+        <form action="/create-division" method="POST" class="form-row">
+          <div class="fg" style="flex:.8;"><label>Division Name *</label><input type="text" name="divisionName" class="fc" placeholder="e.g. CS-A, IT-B" required></div>
+          <div class="fg" style="flex:1.5;"><label>Description (optional)</label><input type="text" name="description" class="fc" placeholder="e.g. Computer Science Sem 5"></div>
+          <div style="align-self:flex-end;"><button type="submit" class="btn btn-suc btn-lg"><i class="fas fa-plus"></i> Create</button></div>
         </form>
+      </div>
     </div>
-    <% } %>
-    <nav id="sideNav" style="padding:0 10px 12px;">
-        <%
-            var pendCount = 0;
-            for(var pi=0; pi<allUsers.length; pi++){ if(!allUsers[pi].isApproved) pendCount++; }
-        %>
-        <button class="nav-btn active" data-page="overview"><i class="fas fa-chart-pie"></i> Overview</button>
-        <button class="nav-btn" data-page="divisions"><i class="fas fa-layer-group"></i> Divisions</button>
-        <button class="nav-btn" data-page="assign">
-            <i class="fas fa-user-cog"></i> Assign Roles
-            <% if(pendCount > 0){ %><span class="nb"><%= pendCount %></span><% } %>
-        </button>
-        <button class="nav-btn" data-page="users"><i class="fas fa-users"></i> All Users</button>
-        <button class="nav-btn" data-page="subjects"><i class="fas fa-book"></i> Subjects</button>
-        <div class="nav-lbl">Actions</div>
-        <button class="nav-btn" id="themeToggle" data-action="theme"><i class="fas fa-moon" id="themeIcon"></i> Toggle Theme</button>
-        <a href="/export-attendance" class="nav-btn export"><i class="fas fa-file-excel"></i> Export CSV</a>
-        <a href="/settings" class="nav-btn" style="color:rgba(255,255,255,.5);"><i class="fas fa-cog"></i> Settings</a>
-        <a href="/logout" class="nav-btn danger"><i class="fas fa-sign-out-alt"></i> Logout</a>
-    </nav>
 
-    <div class="sb-foot">
-        <div class="clock-sb" id="sbClock"></div>
-    </div>
-</div>
-
-<!-- Main -->
-<div class="main">
-
-    <!-- Alerts -->
-    <% if(typeof success !== 'undefined' && success){ %>
-        <div class="alert alert-ok"><i class="fas fa-check-circle"></i> <%= success %></div>
-    <% } %>
-    <% if(typeof error !== 'undefined' && error){ %>
-        <div class="alert alert-err"><i class="fas fa-exclamation-circle"></i> <%= error %></div>
-    <% } %>
-
-    <!-- ═══ OVERVIEW ═══ -->
-    <div id="pg-overview" class="page active">
-        <div class="pg-hdr">
-            <div>
-                <h1>System Overview</h1>
-                <p>Full visibility across all divisions and users</p>
+    <div class="card">
+      <div class="card-hdr"><h3><i class="fas fa-layer-group" style="color:var(--acc);"></i> All Divisions (<%= allDivisions.length %>)</h3></div>
+      <div class="card-body">
+        <% if (allDivisions.length > 0) { %>
+        <div class="div-grid">
+          <% for (var di = 0; di < allDivisions.length; di++) {
+             var div = allDivisions[di]; var dStu=0,dMas=0,dLec=0,dSub=0;
+             for (var dui = 0; dui < allUsers.length; dui++) {
+               var duu = allUsers[dui];
+               if (duu.section === div.name) {
+                 if (duu.role==='Student') dStu++;
+                 else if (duu.role==='Master') dMas++;
+                 else if (duu.role==='Lecturer') dLec++;
+               }
+             }
+             for (var dsi = 0; dsi < allSubjects.length; dsi++) { if (allSubjects[dsi].section===div.name) dSub++; }
+             var divNmEsc = div.name.replace(/'/g,"\\'"); %>
+          <div class="div-card">
+            <div class="div-del">
+              <form action="/delete-division/<%= div._id %>" method="POST" onsubmit="return confirm('Delete division <%= divNmEsc %>? Users will become Unassigned.')">
+                <button type="submit" class="btn btn-dan" style="padding:4px 8px;font-size:11px;"><i class="fas fa-times"></i></button>
+              </form>
             </div>
-        </div>
-
-        <div class="stats-grid">
-            <div class="stat-card" onclick="navTo('users')" style="cursor:pointer;">
-                <small>Total Users</small>
-                <div class="val"><%= stats.totalUsers %></div>
+            <div class="div-card-name"><i class="fas fa-layer-group" style="color:var(--acc);"></i> <%= div.name %></div>
+            <% if (div.description) { %><div class="div-card-desc"><%= div.description %></div><% } %>
+            <div class="div-stats">
+              <span><i class="fas fa-user-graduate" style="color:var(--acc);width:14px;"></i> <%= dStu %> Students</span><br>
+              <span><i class="fas fa-shield-halved" style="color:#1565c0;width:14px;"></i> <%= dMas %> Master(s)</span><br>
+              <span><i class="fas fa-chalkboard-teacher" style="color:var(--suc);width:14px;"></i> <%= dLec %> Lecturer(s)</span><br>
+              <span><i class="fas fa-book" style="color:var(--pur);width:14px;"></i> <%= dSub %> Subjects</span>
             </div>
-            <div class="stat-card" onclick="navTo('assign')" style="border-left-color:var(--dan);cursor:pointer;">
-                <small>Pending Approvals</small>
-                <div class="val" style="color:var(--dan);"><%= stats.pendingApprovals %></div>
-            </div>
-            <div class="stat-card" onclick="navTo('subjects')" style="border-left-color:var(--suc);cursor:pointer;">
-                <small>Active Subjects</small>
-                <div class="val" style="color:var(--suc);"><%= stats.totalSubjects %></div>
-            </div>
-            <div class="stat-card" onclick="navTo('divisions')" style="border-left-color:var(--pur);cursor:pointer;">
-                <small>Divisions</small>
-                <div class="val" style="color:var(--pur);"><%= allDivisions.length %></div>
-            </div>
-        </div>
-
-        <% if(allDivisions.length === 0){ %>
-        <div class="setup-guide">
-            <i class="fas fa-rocket" style="font-size:2.5rem;color:var(--acc);margin-bottom:10px;display:block;"></i>
-            <h2 style="margin-bottom:6px;font-size:1.15rem;">Welcome! Set up your system</h2>
-            <p style="color:var(--muted);font-size:13.5px;">Follow these 4 steps to get the attendance system running.</p>
-            <div class="setup-steps">
-                <div class="step"><div class="step-num">1</div><div class="step-title">Create Divisions</div><div class="step-desc">Go to <strong>Divisions</strong> and create class groups (e.g. CS-A, IT-B)</div></div>
-                <div class="step"><div class="step-num">2</div><div class="step-title">Assign Users</div><div class="step-desc">In <strong>Assign Roles</strong>, set each user's role and division</div></div>
-                <div class="step"><div class="step-num">3</div><div class="step-title">Add Subjects</div><div class="step-desc">In <strong>Subjects</strong>, add subjects per division</div></div>
-                <div class="step"><div class="step-num">4</div><div class="step-title">Done!</div><div class="step-desc">Leaders take attendance, Lecturers review, Masters manage</div></div>
-            </div>
-            <button type="button" class="btn btn-acc btn-lg" style="margin-top:20px;" onclick="navTo('divisions')">
-                <i class="fas fa-plus"></i> Create First Division
+            <button type="button" class="btn btn-ghost btn-lg" style="width:100%;justify-content:center;margin-top:12px;" onclick="navTo('assign');filterDiv('<%= div.name %>')">
+              <i class="fas fa-user-gear"></i> Manage Users
             </button>
+          </div>
+          <% } %>
         </div>
-        <% } %>
-
-        <%
-            var pendingUsers = [];
-            for(var i=0; i<allUsers.length; i++){ if(!allUsers[i].isApproved) pendingUsers.push(allUsers[i]); }
-        %>
-        <% if(pendingUsers.length > 0){ %>
-        <div class="card">
-            <div class="card-hdr">
-                <h3><i class="fas fa-user-clock" style="color:var(--war);"></i> Pending Approvals</h3>
-                <span class="pill pill-p"><%= pendingUsers.length %> waiting</span>
-            </div>
-            <div class="tbl-wrap">
-                <table>
-                    <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Action</th></tr></thead>
-                    <tbody>
-                        <% for(var pu=0; pu<pendingUsers.length; pu++){
-                               var u=pendingUsers[pu];
-                               var uSec=(u.sections&&u.sections.length?u.sections.join(','):(u.section||''));var uNm=(u.name||'').replace(/'/g,"\\'"); %>
-                        <tr>
-                            <td><strong><%= u.name||'—' %></strong></td>
-                            <td style="color:var(--muted);font-size:12px;"><%= u.email %></td>
-                            <td><span class="rb rb-<%= u.role %>"><%= u.role %></span></td>
-                            <td>
-                                <button type="button" class="btn btn-acc btn-assign"
-                                    data-id="<%= u._id %>" data-name="<%= uNm %>"
-                                    data-email="<%= u.email %>" data-roles="<%= (u.roles&&u.roles.length?u.roles:[u.role]).join(',') %>" data-sec="<%= uSec %>">
-                                    <i class="fas fa-user-cog"></i> Assign & Approve
-                                </button>
-                            </td>
-                        </tr>
-                        <% } %>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <% } %>
-
-        <div class="card">
-            <div class="card-hdr">
-                <h3><i class="fas fa-users" style="color:var(--acc);"></i> All Users (<%= allUsers.length %>)</h3>
-                <button type="button" class="btn btn-ghost" onclick="navTo('assign')"><i class="fas fa-user-cog"></i> Manage All</button>
-            </div>
-            <div class="tbl-wrap">
-                <table>
-                    <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Division</th><th>Status</th><th>Action</th></tr></thead>
-                    <tbody>
-                        <% for(var ai=0; ai<Math.min(allUsers.length,10); ai++){
-                               var au=allUsers[ai];
-                               var auNm=(au.name||'').replace(/'/g,"\\'");
-                               var auSec=(au.sections&&au.sections.length?au.sections.join(','):(au.section||''));
-                        %>
-                        <tr>
-                            <td>
-                                <strong><%= au.name||'—' %></strong>
-                                <% if(au.rollNo){ %><div style="font-size:11px;color:var(--muted);font-family:monospace;"><%= au.rollNo %></div><% } %>
-                                <% if(au.isClassTeacher){ %><span class="ct-tag"><i class="fas fa-star"></i> CT</span><% } %>
-                            </td>
-                            <td style="font-size:12px;color:var(--muted);"><%= au.email %></td>
-                            <td><span class="rb rb-<%= au.role %>"><%= au.role||'—' %></span></td>
-                            <td><%= au.section ? '<span class="sec-pill">'+au.section+'</span>' : '<span style="color:var(--border);font-size:12px;">—</span>' %></td>
-                            <td><span class="pill <%= au.isApproved?'pill-a':'pill-p' %>"><%= au.isApproved?'✓ Active':'⏳ Pending' %></span></td>
-                            <td>
-                                <button type="button" class="btn btn-ghost btn-assign"
-                                    data-id="<%= au._id %>" data-name="<%= auNm %>"
-                                    data-email="<%= au.email %>" data-roles="<%= (au.roles&&au.roles.length?au.roles:[au.role]).join(',') %>" data-sec="<%= auSec %>">
-                                    <i class="fas fa-edit"></i> Edit
-                                </button>
-                            </td>
-                        </tr>
-                        <% } %>
-                        <% if(allUsers.length > 10){ %>
-                        <tr>
-                            <td colspan="6" style="text-align:center;padding:14px;color:var(--muted);font-size:12.5px;">
-                                +<%= allUsers.length-10 %> more —
-                                <a href="#" onclick="navTo('assign');return false;" style="color:var(--acc);font-weight:700;">View all</a>
-                            </td>
-                        </tr>
-                        <% } %>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- ═══ DIVISIONS ═══ -->
-    <div id="pg-divisions" class="page">
-        <div class="pg-hdr"><div><h1>Division Management</h1><p>Create class groups — each has its own students, subjects and leaders.</p></div></div>
-
-        <div class="card">
-            <div class="card-hdr"><h3><i class="fas fa-plus-circle" style="color:var(--suc);"></i> Create New Division</h3></div>
-            <div class="card-body">
-                <form action="/create-division" method="POST" class="form-row">
-                    <div class="fg" style="flex:.8;"><label>Division Name *</label><input type="text" name="divisionName" class="fc" placeholder="e.g. CS-A, IT-B" required></div>
-                    <div class="fg" style="flex:1.5;"><label>Description (optional)</label><input type="text" name="description" class="fc" placeholder="e.g. Computer Science Sem 5"></div>
-                    <div style="align-self:flex-end;"><button type="submit" class="btn btn-suc btn-lg"><i class="fas fa-plus"></i> Create</button></div>
-                </form>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-hdr"><h3><i class="fas fa-layer-group" style="color:var(--acc);"></i> All Divisions (<%= allDivisions.length %>)</h3></div>
-            <div class="card-body">
-                <% if(allDivisions.length > 0){ %>
-                <div class="div-grid">
-                    <% for(var di=0; di<allDivisions.length; di++){
-                           var div=allDivisions[di];
-                           var dStu=0,dMas=0,dLec=0,dSub=0;
-                           for(var dui=0; dui<allUsers.length; dui++){
-                               var duu=allUsers[dui];
-                               if(duu.section===div.name){
-                                   if(duu.role==='Student') dStu++;
-                                   else if(duu.role==='Master') dMas++;
-                                   else if(duu.role==='Lecturer') dLec++;
-                               }
-                           }
-                           for(var dsi=0; dsi<allSubjects.length; dsi++){
-                               if(allSubjects[dsi].section===div.name) dSub++;
-                           }
-                           var divNmEsc=div.name.replace(/'/g,"\\'");
-                    %>
-                    <div class="div-card">
-                        <div class="div-del">
-                            <form action="/delete-division/<%= div._id %>" method="POST"
-                                  onsubmit="return confirm('Delete division <%= divNmEsc %>? Users will become Unassigned.')">
-                                <button type="submit" class="btn btn-dan" style="padding:4px 8px;font-size:11px;"><i class="fas fa-times"></i></button>
-                            </form>
-                        </div>
-                        <div class="div-card-name"><i class="fas fa-layer-group" style="color:var(--acc);margin-right:5px;"></i><%= div.name %></div>
-                        <% if(div.description){ %><div class="div-card-desc"><%= div.description %></div><% } %>
-                        <div class="div-stats">
-                            <span><i class="fas fa-user-graduate" style="color:var(--acc);width:14px;"></i> <%= dStu %> Students</span><br>
-                            <span><i class="fas fa-shield-alt" style="color:#1565c0;width:14px;"></i> <%= dMas %> Master(s)</span><br>
-                            <span><i class="fas fa-chalkboard-teacher" style="color:var(--suc);width:14px;"></i> <%= dLec %> Lecturer(s)</span><br>
-                            <span><i class="fas fa-book" style="color:var(--pur);width:14px;"></i> <%= dSub %> Subjects</span>
-                        </div>
-                        <button type="button" class="btn btn-ghost btn-lg"
-                                style="width:100%;justify-content:center;margin-top:12px;"
-                                onclick="navTo('assign');filterDiv('<%= div.name %>')">
-                            <i class="fas fa-user-cog"></i> Manage Users
-                        </button>
-                    </div>
-                    <% } %>
-                </div>
-                <% } else { %>
-                <div class="empty"><i class="fas fa-layer-group"></i><p>No divisions yet. Create one above.</p></div>
-                <% } %>
-            </div>
-        </div>
-    </div>
-
-    <!-- ═══ ASSIGN ROLES ═══ -->
-    <div id="pg-assign" class="page">
-        <div class="pg-hdr">
-            <div><h1>Assign Roles &amp; Divisions</h1><p>Approve users and assign roles. Masters &amp; Lecturers can be in any division.</p></div>
-            <div class="sw"><i class="fas fa-search"></i><input type="text" id="aSearch" class="fc" placeholder="Search name, email, roll…" oninput="applyFilters()" style="width:230px;"></div>
-        </div>
-
-        <div class="tabs" id="aTabs">
-            <button type="button" class="tab active" onclick="filterDiv('all',this)">All (<%= allUsers.length %>)</button>
-            <% if(pendCount > 0){ %>
-            <button type="button" class="tab warn" onclick="filterDiv('pending',this)">⏳ Pending (<%= pendCount %>)</button>
-            <% } %>
-            <% for(var ati=0; ati<allDivisions.length; ati++){ %>
-            <button type="button" class="tab" onclick="filterDiv('<%= allDivisions[ati].name %>',this)"><%= allDivisions[ati].name %></button>
-            <% } %>
-            <button type="button" class="tab" onclick="filterDiv('Unassigned',this)">Unassigned</button>
-        </div>
-
-        <div class="card" style="padding:0;">
-            <div class="tbl-wrap">
-                <table>
-                    <thead><tr><th>User</th><th>Role</th><th>Division</th><th>Status</th><th>Actions</th></tr></thead>
-                    <tbody>
-                        <% for(var ui=0; ui<allUsers.length; ui++){
-                               var u=allUsers[ui];
-                               var uNm=(u.name||'').replace(/'/g,"\\'");
-                               var uSec=(u.sections&&u.sections.length?u.sections.join(','):(u.section||''));
-                        %>
-                        <tr class="ar"
-                            data-dv="<%= u.section||'Unassigned' %>"
-                            data-pend="<%= u.isApproved ? 'n' : 'y' %>"
-                            data-s="<%= (u.name+' '+u.email+' '+(u.rollNo||'')).toLowerCase() %>">
-                            <td>
-                                <strong><%= u.name||'—' %></strong>
-                                <div style="font-size:11px;color:var(--muted);"><%= u.email %></div>
-                                <% if(u.rollNo){ %><div style="font-size:11px;color:var(--muted);font-family:monospace;">Roll: <%= u.rollNo %></div><% } %>
-                                <% if(u.isClassTeacher){ %><span class="ct-tag"><i class="fas fa-star"></i> CT · <%= u.classTeacherSection %></span><% } %>
-                            </td>
-                            <td><span class="rb rb-<%= u.role %>"><%= u.role||'—' %></span></td>
-                            <td><%= u.section?'<span class="sec-pill">'+u.section+'</span>':'<span style="color:var(--muted);font-size:12px;">—</span>' %></td>
-                            <td><span class="pill <%= u.isApproved?'pill-a':'pill-p' %>"><%= u.isApproved?'✓ Active':'⏳ Pending' %></span></td>
-                            <td>
-                                <div style="display:flex;gap:5px;flex-wrap:wrap;">
-                                    <button type="button" class="btn btn-ghost btn-assign"
-                                        data-id="<%= u._id %>" data-name="<%= uNm %>"
-                                        data-email="<%= u.email %>" data-roles="<%= (u.roles&&u.roles.length?u.roles:[u.role]).join(',') %>" data-sec="<%= uSec %>">
-                                        <i class="fas fa-user-cog"></i> Assign
-                                    </button>
-                                    <% if(u.role==='Lecturer' && !u.isClassTeacher){ %>
-                                    <button type="button" class="btn btn-pur btn-setct" data-id="<%= u._id %>" data-name="<%= uNm %>">
-                                        <i class="fas fa-star"></i> CT
-                                    </button>
-                                    <% } %>
-                                    <% if(u.role==='Lecturer' && u.isClassTeacher){ %>
-                                    <form action="/set-class-teacher/<%= u._id %>" method="POST" style="display:inline;"
-                                          onsubmit="return confirm('Remove Class Teacher status?')">
-                                        <input type="hidden" name="removeClassTeacher" value="true">
-                                        <button type="submit" class="btn" style="background:rgba(245,158,11,.1);color:var(--war);border:1px solid rgba(245,158,11,.25);">
-                                            <i class="fas fa-star-half-alt"></i> Remove CT
-                                        </button>
-                                    </form>
-                                    <% } %>
-                                    <form action="/delete-user/<%= u._id %>" method="POST" style="display:inline;"
-                                          onsubmit="return confirm('Delete user <%= uNm %>?')">
-                                        <button type="submit" class="btn btn-dan"><i class="fas fa-trash-alt"></i></button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                        <% } %>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- ═══ ALL USERS ═══ -->
-    <div id="pg-users" class="page">
-        <div class="pg-hdr">
-            <div><h1>All Users by Division</h1><p>Complete breakdown of every user grouped by division</p></div>
-            <div class="sw"><i class="fas fa-search"></i><input type="text" id="uSearch" class="fc" placeholder="Search…" oninput="filterUsers()" style="width:210px;"></div>
-        </div>
-
-        <div class="tabs" id="userTabs">
-            <button type="button" class="tab active" onclick="showDivBlock('all',this)">All</button>
-            <% for(var si=0; si<sections.length; si++){ %>
-            <button type="button" class="tab" onclick="showDivBlock('<%= sections[si] %>',this)"><%= sections[si] %></button>
-            <% } %>
-        </div>
-
-        <% if(sections.length===0 && (!usersBySection['Unassigned']||usersBySection['Unassigned'].length===0)){ %>
-            <div class="empty"><i class="fas fa-users"></i><p>No users yet.</p></div>
-        <% } %>
-
-        <% for(var seci=0; seci<sections.length; seci++){
-               var sec=sections[seci];
-               if(sec==='Unassigned') continue;
-               var secP=0;
-               for(var spi=0;spi<usersBySection[sec].length;spi++){ if(!usersBySection[sec][spi].isApproved) secP++; }
-        %>
-        <div class="div-block" data-dv="<%= sec %>">
-            <div class="div-heading">
-                <span class="div-badge"><%= sec %></span>
-                <span style="font-size:12px;color:var(--muted);"><%= usersBySection[sec].length %> user(s) · <%= secP %> pending</span>
-            </div>
-            <div class="div-tbl-wrap">
-                <div class="tbl-wrap">
-                    <table>
-                        <thead><tr><th>User</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
-                        <tbody>
-                            <% for(var usi=0; usi<usersBySection[sec].length; usi++){
-                                   var u=usersBySection[sec][usi];
-                                   var uNm=(u.name||'').replace(/'/g,"\\'");
-                                   var uSec=(u.sections&&u.sections.length?u.sections.join(','):(u.section||''));
-                            %>
-                            <tr class="ur" data-s="<%= (u.name+' '+u.email).toLowerCase() %>">
-                                <td>
-                                    <strong><%= u.name||'—' %></strong>
-                                    <div style="font-size:11px;color:var(--muted);"><%= u.email %></div>
-                                    <% if(u.rollNo){ %><div style="font-size:11px;font-family:monospace;color:var(--muted);"><%= u.rollNo %></div><% } %>
-                                    <% if(u.isClassTeacher){ %><span class="ct-tag"><i class="fas fa-star"></i> CT · <%= u.classTeacherSection %></span><% } %>
-                                </td>
-                                <td><span class="rb rb-<%= u.role %>"><%= u.role||'—' %></span></td>
-                                <td><span class="pill <%= u.isApproved?'pill-a':'pill-p' %>"><%= u.isApproved?'✓ Active':'⏳ Pending' %></span></td>
-                                <td>
-                                    <div style="display:flex;gap:5px;flex-wrap:wrap;">
-                                        <button type="button" class="btn btn-ghost btn-assign"
-                                            data-id="<%= u._id %>" data-name="<%= uNm %>"
-                                            data-email="<%= u.email %>" data-roles="<%= (u.roles&&u.roles.length?u.roles:[u.role]).join(',') %>" data-sec="<%= uSec %>">
-                                            <i class="fas fa-user-cog"></i> Edit
-                                        </button>
-                                        <form action="/delete-user/<%= u._id %>" method="POST" style="display:inline;"
-                                              onsubmit="return confirm('Delete user?')">
-                                            <button type="submit" class="btn btn-dan"><i class="fas fa-trash-alt"></i></button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                            <% } %>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-        <% } %>
-
-        <% if(usersBySection['Unassigned'] && usersBySection['Unassigned'].length > 0){ %>
-        <div class="div-block" data-dv="Unassigned">
-            <div class="div-heading" style="border-left-color:var(--war);">
-                <span class="div-badge" style="background:var(--war);">Unassigned</span>
-                <span style="font-size:12px;color:var(--muted);"><%= usersBySection['Unassigned'].length %> user(s) with no division</span>
-            </div>
-            <div class="div-tbl-wrap">
-                <div class="tbl-wrap">
-                    <table>
-                        <thead><tr><th>User</th><th>Role</th><th>Status</th><th>Action</th></tr></thead>
-                        <tbody>
-                            <% for(var unai=0; unai<usersBySection['Unassigned'].length; unai++){
-                                   var u=usersBySection['Unassigned'][unai];
-                                   var uNm=(u.name||'').replace(/'/g,"\\'");
-                            %>
-                            <tr class="ur" data-s="<%= (u.name+' '+u.email).toLowerCase() %>">
-                                <td><strong><%= u.name||'—' %></strong><div style="font-size:11px;color:var(--muted);"><%= u.email %></div></td>
-                                <td><span class="rb rb-<%= u.role %>"><%= u.role %></span></td>
-                                <td><span class="pill <%= u.isApproved?'pill-a':'pill-p' %>"><%= u.isApproved?'✓ Active':'⏳ Pending' %></span></td>
-                                <td>
-                                    <button type="button" class="btn btn-acc btn-assign"
-                                        data-id="<%= u._id %>" data-name="<%= uNm %>"
-                                        data-email="<%= u.email %>" data-roles="<%= (u.roles&&u.roles.length?u.roles:[u.role]).join(',') %>" data-sec="">
-                                        <i class="fas fa-user-cog"></i> Assign Division
-                                    </button>
-                                </td>
-                            </tr>
-                            <% } %>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-        <% } %>
-    </div>
-
-    <!-- ═══ SUBJECTS ═══ -->
-    <div id="pg-subjects" class="page">
-        <div class="pg-hdr"><div><h1>Subject Catalog</h1><p>Subjects appear in the Leader's attendance form per division</p></div></div>
-
-        <div class="card">
-            <div class="card-hdr"><h3><i class="fas fa-plus-circle" style="color:var(--suc);"></i> Add Subject</h3></div>
-            <div class="card-body">
-                <form action="/add-subject" method="POST" class="form-row">
-                    <div class="fg" style="flex:2;"><label>Subject Name *</label><input type="text" name="subjectName" class="fc" placeholder="e.g. Data Structures" required></div>
-                    <div class="fg" style="flex:1;"><label>Code</label><input type="text" name="subjectCode" class="fc" placeholder="CS302"></div>
-                    <div class="fg" style="flex:1;">
-                        <label>Division *</label>
-                        <select name="section" class="fc" required>
-                            <option value="">-- Select --</option>
-                            <% for(var sdiv=0; sdiv<allDivisions.length; sdiv++){ %>
-                            <option value="<%= allDivisions[sdiv].name %>"><%= allDivisions[sdiv].name %></option>
-                            <% } %>
-                        </select>
-                    </div>
-                    <div style="align-self:flex-end;"><button type="submit" class="btn btn-suc btn-lg"><i class="fas fa-plus"></i> Add</button></div>
-                </form>
-                <% if(allDivisions.length === 0){ %>
-                <p style="color:var(--war);font-size:13px;margin-top:12px;"><i class="fas fa-exclamation-triangle"></i> Create divisions first before adding subjects.</p>
-                <% } %>
-            </div>
-        </div>
-
-        <%
-            var subsByDiv={};
-            for(var sbi=0; sbi<allSubjects.length; sbi++){
-                var sbSec=allSubjects[sbi].section||'Unassigned';
-                if(!subsByDiv[sbSec]) subsByDiv[sbSec]=[];
-                subsByDiv[sbSec].push(allSubjects[sbi]);
-            }
-            var subDivKeys=Object.keys(subsByDiv).sort();
-        %>
-        <% if(allSubjects.length > 0){ %>
-            <% for(var sbki=0; sbki<subDivKeys.length; sbki++){
-                   var sbKey=subDivKeys[sbki];
-            %>
-            <div class="card" style="padding:0;">
-                <div class="card-hdr">
-                    <h3 style="font-size:.82rem;text-transform:uppercase;letter-spacing:.5px;">
-                        <i class="fas fa-layer-group" style="color:var(--acc);"></i> <%= sbKey %>
-                        <span style="font-weight:500;color:var(--muted);margin-left:6px;"><%= subsByDiv[sbKey].length %> subject(s)</span>
-                    </h3>
-                </div>
-                <div class="tbl-wrap">
-                    <table>
-                        <thead><tr><th>Code</th><th>Name</th><th>Action</th></tr></thead>
-                        <tbody>
-                            <% for(var sbii=0; sbii<subsByDiv[sbKey].length; sbii++){
-                                   var sub=subsByDiv[sbKey][sbii];
-                            %>
-                            <tr>
-                                <td style="font-family:monospace;font-weight:700;color:var(--acc);"><%= sub.code||'—' %></td>
-                                <td><%= sub.name %></td>
-                                <td>
-                                    <form action="/delete-subject/<%= sub._id %>" method="POST"
-                                          onsubmit="return confirm('Delete subject: <%= sub.name %>?')">
-                                        <button type="submit" class="btn btn-dan"><i class="fas fa-times"></i> Remove</button>
-                                    </form>
-                                </td>
-                            </tr>
-                            <% } %>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <% } %>
         <% } else { %>
-            <div class="empty"><i class="fas fa-book"></i><p>No subjects added yet.</p></div>
+        <div class="empty"><i class="fas fa-layer-group"></i><p>No divisions yet. Create one above.</p></div>
         <% } %>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ ASSIGN ROLES ═══ -->
+  <div id="pg-assign" class="page">
+    <div class="pg-hdr">
+      <div><h1><i class="fas fa-user-gear" style="opacity:.8;margin-right:8px;"></i> Assign Roles &amp; Divisions</h1><p>Approve users and assign roles. Masters &amp; Lecturers can be in any division.</p></div>
+      <div class="sw"><i class="fas fa-search"></i><input type="text" id="aSearch" class="fc" placeholder="Search name, email, roll…" oninput="applyFilters()" style="width:230px;"></div>
     </div>
 
-</div><!-- /main -->
+    <div class="tabs" id="aTabs">
+      <button type="button" class="tab active" onclick="filterDiv('all',this)">All (<%= allUsers.length %>)</button>
+      <% if (pendCount > 0) { %>
+      <button type="button" class="tab warn" onclick="filterDiv('pending',this)">⏳ Pending (<%= pendCount %>)</button>
+      <% } %>
+      <% for (var ati = 0; ati < allDivisions.length; ati++) { %>
+      <button type="button" class="tab" onclick="filterDiv('<%= allDivisions[ati].name %>',this)"><%= allDivisions[ati].name %></button>
+      <% } %>
+      <button type="button" class="tab" onclick="filterDiv('Unassigned',this)">Unassigned</button>
+    </div>
+
+    <div class="card" style="padding:0;">
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>User</th><th>Role</th><th>Division</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody>
+            <% for (var ui = 0; ui < allUsers.length; ui++) {
+               var u = allUsers[ui];
+               var uNm = (u.name || '').replace(/'/g, "\\'");
+               var uSec = (u.sections && u.sections.length ? u.sections.join(',') : (u.section || '')); %>
+            <tr class="ar" data-dv="<%= u.section || 'Unassigned' %>" data-pend="<%= u.isApproved ? 'n' : 'y' %>" data-s="<%= (u.name+' '+u.email+' '+(u.rollNo||'')).toLowerCase() %>">
+              <td>
+                <strong><%= u.name || '—' %></strong>
+                <div style="font-size:11px;color:var(--muted);"><%= u.email %></div>
+                <% if (u.rollNo) { %><div style="font-size:11px;color:var(--muted);font-family:monospace;">Roll: <%= u.rollNo %></div><% } %>
+                <% if (u.isClassTeacher) { %><span class="ct-tag"><i class="fas fa-star"></i> CT · <%= u.classTeacherSection %></span><% } %>
+              </td>
+              <td><span class="rb rb-<%= u.role %>"><%= u.role || '—' %></span></td>
+              <td><%= u.section ? '<span class="sec-pill">'+u.section+'</span>' : '<span style="color:var(--muted);font-size:12px;">—</span>' %></td>
+              <td><span class="pill <%= u.isApproved ? 'pill-a' : 'pill-p' %>"><%= u.isApproved ? '✓ Active' : '⏳ Pending' %></span></td>
+              <td>
+                <div style="display:flex;gap:5px;flex-wrap:wrap;">
+                  <button type="button" class="btn btn-ghost btn-assign"
+                    data-id="<%= u._id %>" data-name="<%= uNm %>"
+                    data-email="<%= u.email %>" data-roles="<%= (u.roles&&u.roles.length?u.roles:[u.role]).join(',') %>" data-sec="<%= uSec %>">
+                    <i class="fas fa-user-gear"></i> Assign
+                  </button>
+                  <% if (u.role === 'Lecturer' && !u.isClassTeacher) { %>
+                  <button type="button" class="btn btn-pur btn-setct" data-id="<%= u._id %>" data-name="<%= uNm %>">
+                    <i class="fas fa-star"></i> CT
+                  </button>
+                  <% } %>
+                  <% if (u.role === 'Lecturer' && u.isClassTeacher) { %>
+                  <form action="/set-class-teacher/<%= u._id %>" method="POST" style="display:inline;" onsubmit="return confirm('Remove Class Teacher status?')">
+                    <input type="hidden" name="removeClassTeacher" value="true">
+                    <button type="submit" class="btn" style="background:rgba(245,158,11,.1);color:var(--war);border:1px solid rgba(245,158,11,.2);">
+                      <i class="fas fa-star-half-stroke"></i> Remove CT
+                    </button>
+                  </form>
+                  <% } %>
+                  <form action="/delete-user/<%= u._id %>" method="POST" style="display:inline;" onsubmit="return confirm('Delete user <%= uNm %>?')">
+                    <button type="submit" class="btn btn-dan"><i class="fas fa-trash-alt"></i></button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ ALL USERS ═══ -->
+  <div id="pg-users" class="page">
+    <div class="pg-hdr">
+      <div><h1><i class="fas fa-users" style="opacity:.8;margin-right:8px;"></i> All Users by Division</h1><p>Complete breakdown of every user grouped by division</p></div>
+      <div class="sw"><i class="fas fa-search"></i><input type="text" id="uSearch" class="fc" placeholder="Search…" oninput="filterUsers()" style="width:210px;"></div>
+    </div>
+
+    <div class="tabs" id="userTabs">
+      <button type="button" class="tab active" onclick="showDivBlock('all',this)">All</button>
+      <% for (var si = 0; si < sections.length; si++) { %>
+      <button type="button" class="tab" onclick="showDivBlock('<%= sections[si] %>',this)"><%= sections[si] %></button>
+      <% } %>
+    </div>
+
+    <% for (var seci = 0; seci < sections.length; seci++) {
+       var sec = sections[seci]; if (sec === 'Unassigned') continue;
+       var secP = 0;
+       for (var spi = 0; spi < usersBySection[sec].length; spi++) { if (!usersBySection[sec][spi].isApproved) secP++; } %>
+    <div class="div-block" data-dv="<%= sec %>">
+      <div class="div-heading">
+        <span class="div-badge"><%= sec %></span>
+        <span style="font-size:12px;color:var(--muted);"><%= usersBySection[sec].length %> user(s) · <%= secP %> pending</span>
+      </div>
+      <div style="background:var(--card);border-radius:var(--radius-sm);overflow:hidden;box-shadow:var(--shadow);">
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>User</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>
+              <% for (var usi = 0; usi < usersBySection[sec].length; usi++) {
+                 var u = usersBySection[sec][usi];
+                 var uNm = (u.name || '').replace(/'/g, "\\'");
+                 var uSec = (u.sections && u.sections.length ? u.sections.join(',') : (u.section || '')); %>
+              <tr class="ur" data-s="<%= (u.name+' '+u.email).toLowerCase() %>">
+                <td>
+                  <strong><%= u.name || '—' %></strong>
+                  <div style="font-size:11px;color:var(--muted);"><%= u.email %></div>
+                  <% if (u.rollNo) { %><div style="font-size:11px;font-family:monospace;color:var(--muted);"><%= u.rollNo %></div><% } %>
+                  <% if (u.isClassTeacher) { %><span class="ct-tag"><i class="fas fa-star"></i> CT · <%= u.classTeacherSection %></span><% } %>
+                </td>
+                <td><span class="rb rb-<%= u.role %>"><%= u.role || '—' %></span></td>
+                <td><span class="pill <%= u.isApproved ? 'pill-a' : 'pill-p' %>"><%= u.isApproved ? '✓ Active' : '⏳ Pending' %></span></td>
+                <td>
+                  <div style="display:flex;gap:5px;flex-wrap:wrap;">
+                    <button type="button" class="btn btn-ghost btn-assign"
+                      data-id="<%= u._id %>" data-name="<%= uNm %>"
+                      data-email="<%= u.email %>" data-roles="<%= (u.roles&&u.roles.length?u.roles:[u.role]).join(',') %>" data-sec="<%= uSec %>">
+                      <i class="fas fa-user-gear"></i> Edit
+                    </button>
+                    <form action="/delete-user/<%= u._id %>" method="POST" style="display:inline;" onsubmit="return confirm('Delete user?')">
+                      <button type="submit" class="btn btn-dan"><i class="fas fa-trash-alt"></i></button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <% } %>
+
+    <% if (usersBySection['Unassigned'] && usersBySection['Unassigned'].length > 0) { %>
+    <div class="div-block" data-dv="Unassigned">
+      <div class="div-heading" style="border-left-color:var(--war);">
+        <span class="div-badge" style="background:var(--war);">Unassigned</span>
+        <span style="font-size:12px;color:var(--muted);"><%= usersBySection['Unassigned'].length %> user(s) with no division</span>
+      </div>
+      <div style="background:var(--card);border-radius:var(--radius-sm);overflow:hidden;box-shadow:var(--shadow);">
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>User</th><th>Role</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody>
+              <% for (var unai = 0; unai < usersBySection['Unassigned'].length; unai++) {
+                 var u = usersBySection['Unassigned'][unai];
+                 var uNm = (u.name || '').replace(/'/g, "\\'"); %>
+              <tr class="ur" data-s="<%= (u.name+' '+u.email).toLowerCase() %>">
+                <td><strong><%= u.name || '—' %></strong><div style="font-size:11px;color:var(--muted);"><%= u.email %></div></td>
+                <td><span class="rb rb-<%= u.role %>"><%= u.role %></span></td>
+                <td><span class="pill <%= u.isApproved ? 'pill-a' : 'pill-p' %>"><%= u.isApproved ? '✓ Active' : '⏳ Pending' %></span></td>
+                <td>
+                  <button type="button" class="btn btn-acc btn-assign"
+                    data-id="<%= u._id %>" data-name="<%= uNm %>"
+                    data-email="<%= u.email %>" data-roles="<%= (u.roles&&u.roles.length?u.roles:[u.role]).join(',') %>" data-sec="">
+                    <i class="fas fa-user-gear"></i> Assign Division
+                  </button>
+                </td>
+              </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <% } %>
+  </div>
+
+  <!-- ═══ SUBJECTS ═══ -->
+  <div id="pg-subjects" class="page">
+    <div class="pg-hdr"><div><h1><i class="fas fa-book" style="opacity:.8;margin-right:8px;"></i> Subject Catalog</h1><p>Subjects appear in the Leader's attendance form per division</p></div></div>
+
+    <div class="card">
+      <div class="card-hdr"><h3><i class="fas fa-plus-circle" style="color:var(--suc);"></i> Add Subject</h3></div>
+      <div class="card-body">
+        <form action="/add-subject" method="POST" class="form-row">
+          <div class="fg" style="flex:2;"><label>Subject Name *</label><input type="text" name="subjectName" class="fc" placeholder="e.g. Data Structures" required></div>
+          <div class="fg" style="flex:1;"><label>Code</label><input type="text" name="subjectCode" class="fc" placeholder="CS302"></div>
+          <div class="fg" style="flex:1;">
+            <label>Division *</label>
+            <select name="section" class="fc" required>
+              <option value="">-- Select --</option>
+              <% for (var sdiv = 0; sdiv < allDivisions.length; sdiv++) { %>
+              <option value="<%= allDivisions[sdiv].name %>"><%= allDivisions[sdiv].name %></option>
+              <% } %>
+            </select>
+          </div>
+          <div style="align-self:flex-end;"><button type="submit" class="btn btn-suc btn-lg"><i class="fas fa-plus"></i> Add</button></div>
+        </form>
+        <% if (allDivisions.length === 0) { %>
+        <p style="color:var(--war);font-size:13px;margin-top:12px;"><i class="fas fa-triangle-exclamation"></i> Create divisions first before adding subjects.</p>
+        <% } %>
+      </div>
+    </div>
+
+    <%
+      var subsByDiv = {};
+      for (var sbi = 0; sbi < allSubjects.length; sbi++) {
+        var sbSec = allSubjects[sbi].section || 'Unassigned';
+        if (!subsByDiv[sbSec]) subsByDiv[sbSec] = [];
+        subsByDiv[sbSec].push(allSubjects[sbi]);
+      }
+      var subDivKeys = Object.keys(subsByDiv).sort();
+    %>
+    <% if (allSubjects.length > 0) { %>
+      <% for (var sbki = 0; sbki < subDivKeys.length; sbki++) {
+         var sbKey = subDivKeys[sbki]; %>
+      <div class="card">
+        <div class="card-hdr">
+          <h3><i class="fas fa-layer-group" style="color:var(--acc);"></i> <%= sbKey %>
+            <span style="font-weight:500;color:var(--muted);font-size:.82em;margin-left:6px;"><%= subsByDiv[sbKey].length %> subject(s)</span>
+          </h3>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Code</th><th>Name</th><th>Action</th></tr></thead>
+            <tbody>
+              <% for (var sbii = 0; sbii < subsByDiv[sbKey].length; sbii++) {
+                 var sub = subsByDiv[sbKey][sbii]; %>
+              <tr>
+                <td style="font-family:monospace;font-weight:700;color:var(--acc);"><%= sub.code || '—' %></td>
+                <td><strong><%= sub.name %></strong></td>
+                <td>
+                  <form action="/delete-subject/<%= sub._id %>" method="POST" onsubmit="return confirm('Delete subject: <%= sub.name %>?')">
+                    <button type="submit" class="btn btn-dan"><i class="fas fa-times"></i> Remove</button>
+                  </form>
+                </td>
+              </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <% } %>
+    <% } else { %>
+      <div class="empty"><i class="fas fa-book"></i><p>No subjects added yet.</p></div>
+    <% } %>
+  </div>
+
+</main>
 
 <!-- Mobile Bottom Nav -->
 <div class="mob-nav" id="mobNav">
+  <div class="mob-nav-wrap">
     <button type="button" class="active" data-page="overview"><i class="fas fa-chart-pie"></i>Overview</button>
     <button type="button" data-page="divisions"><i class="fas fa-layer-group"></i>Divisions</button>
-    <button type="button" data-page="assign"><i class="fas fa-user-cog"></i>Assign</button>
+    <button type="button" data-page="assign"><i class="fas fa-user-gear"></i>Assign</button>
     <button type="button" data-page="users"><i class="fas fa-users"></i>Users</button>
     <button type="button" data-page="subjects"><i class="fas fa-book"></i>Subjects</button>
+  </div>
 </div>
 
 <!-- Assign Modal -->
 <div class="overlay-modal" id="aModal">
-    <div class="modal">
-        <div class="modal-title"><i class="fas fa-user-cog" style="color:var(--acc);"></i> Assign Role &amp; Division</div>
-        <div class="modal-sub" id="aModalDesc"></div>
-        <form id="aForm" method="POST">
-            <div class="fg">
-                <label>Assign Roles <span style="font-weight:400;text-transform:none;font-size:11px">(select one or more)</span></label>
-                <div class="role-checks" id="roleCheckGrp">
-                    <label class="rci" id="rci-SuperAdmin"><input type="checkbox" name="roles" value="SuperAdmin" id="rcb-SuperAdmin" onchange="updatePrimSel()"><i class="fas fa-shield-alt" style="color:var(--pur);font-size:13px;width:14px"></i><span class="rci-lbl">SuperAdmin</span></label>
-                    <label class="rci" id="rci-Master"><input type="checkbox" name="roles" value="Master" id="rcb-Master" onchange="updatePrimSel()"><i class="fas fa-user-tie" style="color:var(--dan);font-size:13px;width:14px"></i><span class="rci-lbl">Master</span></label>
-                    <label class="rci" id="rci-Lecturer"><input type="checkbox" name="roles" value="Lecturer" id="rcb-Lecturer" onchange="updatePrimSel()"><i class="fas fa-chalkboard-teacher" style="color:var(--suc);font-size:13px;width:14px"></i><span class="rci-lbl">Lecturer</span></label>
-                    <label class="rci" id="rci-Leader"><input type="checkbox" name="roles" value="Leader" id="rcb-Leader" onchange="updatePrimSel()"><i class="fas fa-clipboard-check" style="color:var(--war);font-size:13px;width:14px"></i><span class="rci-lbl">Leader</span></label>
-                    <label class="rci" id="rci-Student"><input type="checkbox" name="roles" value="Student" id="rcb-Student" onchange="updatePrimSel()"><i class="fas fa-graduation-cap" style="color:var(--acc);font-size:13px;width:14px"></i><span class="rci-lbl">Student</span></label>
-                </div>
-                <small style="color:var(--muted);font-size:11px;margin-top:6px;display:block"><i class="fas fa-info-circle"></i> Multi-role users choose which role to use at each login.</small>
-            </div>
-            <div class="primary-sel" id="primSelGrp">
-                <label>Primary / Default Role</label>
-                <select name="primaryRole" id="primRoleSel" class="fc">
-                    <option value="">— Select primary role —</option>
-                </select>
-            </div>
-            <div class="fg" id="sectionGrp"><label>Division(s) <span id="secHint" style="font-size:11px;color:var(--muted);font-weight:400">(select all that apply for Master)</span></label>
-                <div id="aSections" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;max-height:160px;overflow-y:auto;padding:4px 0;">
-                    <% for(var mdi=0; mdi<allDivisions.length; mdi++){ %>
-                    <label style="display:flex;align-items:center;gap:7px;padding:7px 10px;border:1.5px solid var(--input-bd);border-radius:8px;cursor:pointer;font-size:13px;transition:.15s;" class="sec-cb-lbl" id="scl-<%= allDivisions[mdi].name %>">
-                        <input type="checkbox" name="sections" value="<%= allDivisions[mdi].name %>" style="accent-color:var(--acc);width:15px;height:15px;cursor:pointer;">
-                        <%= allDivisions[mdi].name %>
-                    </label>
-                    <% } %>
-                    <% if(allDivisions.length === 0){ %>
-                    <p style="color:var(--muted);font-size:13px;grid-column:span 2;">No divisions created yet.</p>
-                    <% } %>
-                </div>
-                <label style="display:flex;align-items:center;gap:7px;margin-top:6px;font-size:12.5px;color:var(--muted);cursor:pointer;">
-                    <input type="checkbox" id="noSectionCb" style="accent-color:var(--muted);width:14px;height:14px;"> Leave unassigned
-                </label>
-            </div>
-            <div class="fg" id="rollGrp" style="display:none;"><label>Roll Number</label>
-                <input type="text" name="rollNo" id="aRoll" class="fc" placeholder="e.g. 22CS001">
-            </div>
-            <div class="modal-footer">
-                <button type="button" id="cancelAssign" class="btn btn-ghost" style="padding:10px 18px;">Cancel</button>
-                <button type="submit" class="btn btn-acc" style="padding:10px 22px;"><i class="fas fa-check"></i> Confirm &amp; Approve</button>
-            </div>
-        </form>
-    </div>
+  <div class="modal">
+    <div class="modal-title"><i class="fas fa-user-gear" style="color:var(--acc);"></i> Assign Role &amp; Division</div>
+    <div class="modal-sub" id="aModalDesc"></div>
+    <form id="aForm" method="POST">
+      <div class="fg">
+        <label>Assign Roles <span style="font-weight:400;text-transform:none;font-size:11px;">(select one or more)</span></label>
+        <div class="role-checks" id="roleCheckGrp">
+          <label class="rci" id="rci-SuperAdmin"><input type="checkbox" name="roles" value="SuperAdmin" id="rcb-SuperAdmin" onchange="updatePrimSel()"><i class="fas fa-shield-halved" style="color:var(--pur);font-size:13px;width:14px;"></i><span class="rci-lbl">SuperAdmin</span></label>
+          <label class="rci" id="rci-Master"><input type="checkbox" name="roles" value="Master" id="rcb-Master" onchange="updatePrimSel()"><i class="fas fa-user-tie" style="color:var(--dan);font-size:13px;width:14px;"></i><span class="rci-lbl">Master</span></label>
+          <label class="rci" id="rci-Lecturer"><input type="checkbox" name="roles" value="Lecturer" id="rcb-Lecturer" onchange="updatePrimSel()"><i class="fas fa-chalkboard-teacher" style="color:var(--suc);font-size:13px;width:14px;"></i><span class="rci-lbl">Lecturer</span></label>
+          <label class="rci" id="rci-Leader"><input type="checkbox" name="roles" value="Leader" id="rcb-Leader" onchange="updatePrimSel()"><i class="fas fa-clipboard-check" style="color:var(--war);font-size:13px;width:14px;"></i><span class="rci-lbl">Leader</span></label>
+          <label class="rci" id="rci-Student"><input type="checkbox" name="roles" value="Student" id="rcb-Student" onchange="updatePrimSel()"><i class="fas fa-graduation-cap" style="color:var(--acc);font-size:13px;width:14px;"></i><span class="rci-lbl">Student</span></label>
+        </div>
+        <small style="color:var(--muted);font-size:11px;margin-top:6px;display:block;"><i class="fas fa-circle-info"></i> Multi-role users can switch roles from their dashboard sidebar.</small>
+      </div>
+      <div class="primary-sel" id="primSelGrp">
+        <label>Primary / Default Role</label>
+        <select name="primaryRole" id="primRoleSel" class="fc"><option value="">— Select primary role —</option></select>
+      </div>
+      <div class="fg" id="sectionGrp" style="margin-top:12px;">
+        <label>Division(s) <span id="secHint" style="font-size:11px;color:var(--muted);font-weight:400;">(select all that apply for Master)</span></label>
+        <div id="aSections" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;max-height:160px;overflow-y:auto;padding:4px 0;">
+          <% for (var mdi = 0; mdi < allDivisions.length; mdi++) { %>
+          <label style="display:flex;align-items:center;gap:7px;padding:7px 10px;border:1.5px solid var(--input-bd);border-radius:8px;cursor:pointer;font-size:13px;transition:.15px;" class="sec-cb-lbl" id="scl-<%= allDivisions[mdi].name %>">
+            <input type="checkbox" name="sections" value="<%= allDivisions[mdi].name %>" style="accent-color:var(--acc);width:15px;height:15px;cursor:pointer;">
+            <%= allDivisions[mdi].name %>
+          </label>
+          <% } %>
+          <% if (allDivisions.length === 0) { %>
+          <p style="color:var(--muted);font-size:13px;grid-column:span 2;">No divisions created yet.</p>
+          <% } %>
+        </div>
+        <label style="display:flex;align-items:center;gap:7px;margin-top:6px;font-size:12.5px;color:var(--muted);cursor:pointer;">
+          <input type="checkbox" id="noSectionCb" style="accent-color:var(--muted);width:14px;height:14px;"> Leave unassigned
+        </label>
+      </div>
+      <div class="fg" id="rollGrp" style="display:none;margin-top:12px;">
+        <label>Roll Number</label>
+        <input type="text" name="rollNo" id="aRoll" class="fc" placeholder="e.g. 22CS001">
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="cancelAssign" class="btn btn-ghost" style="padding:10px 18px;">Cancel</button>
+        <button type="submit" class="btn btn-acc" style="padding:10px 22px;"><i class="fas fa-check"></i> Confirm &amp; Approve</button>
+      </div>
+    </form>
+  </div>
 </div>
 
 <!-- Class Teacher Modal -->
 <div class="overlay-modal" id="ctModal">
-    <div class="modal">
-        <div class="modal-title"><i class="fas fa-star" style="color:var(--pur);"></i> Set Class Teacher</div>
-        <div class="modal-sub" id="ctDesc"></div>
-        <form id="ctForm" method="POST">
-            <div class="fg"><label>Class Teacher Division</label>
-                <select name="classTeacherSection" class="fc" required>
-                    <option value="">-- Select Division --</option>
-                    <% for(var ctdi=0; ctdi<allDivisions.length; ctdi++){ %>
-                    <option value="<%= allDivisions[ctdi].name %>"><%= allDivisions[ctdi].name %></option>
-                    <% } %>
-                </select>
-            </div>
-            <div class="modal-footer">
-                <button type="button" id="cancelCT" class="btn btn-ghost" style="padding:10px 18px;">Cancel</button>
-                <button type="submit" class="btn btn-pur" style="padding:10px 22px;"><i class="fas fa-star"></i> Confirm</button>
-            </div>
-        </form>
-    </div>
+  <div class="modal">
+    <div class="modal-title"><i class="fas fa-star" style="color:var(--pur);"></i> Set Class Teacher</div>
+    <div class="modal-sub" id="ctDesc"></div>
+    <form id="ctForm" method="POST">
+      <div class="fg"><label>Class Teacher Division</label>
+        <select name="classTeacherSection" class="fc" required>
+          <option value="">-- Select Division --</option>
+          <% for (var ctdi = 0; ctdi < allDivisions.length; ctdi++) { %>
+          <option value="<%= allDivisions[ctdi].name %>"><%= allDivisions[ctdi].name %></option>
+          <% } %>
+        </select>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="cancelCT" class="btn btn-ghost" style="padding:10px 18px;">Cancel</button>
+        <button type="submit" class="btn btn-pur" style="padding:10px 22px;"><i class="fas fa-star"></i> Confirm</button>
+      </div>
+    </form>
+  </div>
 </div>
 
 <script>
 (function(){
-/* ══ PAGE LABELS ══ */
 var PAGE_LABELS={overview:'Overview',divisions:'Divisions',assign:'Assign Roles',users:'All Users',subjects:'Subjects'};
 
-/* ══ THEME ══ */
 function setTheme(t){
-    document.documentElement.setAttribute('data-theme',t);
-    localStorage.setItem('rku-theme',t);
-    syncThemeIcons(t);
+  document.documentElement.setAttribute('data-theme',t);
+  localStorage.setItem('rku-theme',t);
+  syncThemeIcons(t);
 }
 function syncThemeIcons(t){
-    var isDark=(t||'light')==='dark';
-    var cls=isDark?'fas fa-sun':'fas fa-moon';
-    ['themeIcon','themeIconMob'].forEach(function(id){
-        var el=document.getElementById(id);
-        if(el) el.className=cls;
-    });
-    var btn=document.getElementById('themeToggle');
-    if(btn){
-        var txt=btn.childNodes[1];
-        if(txt) txt.textContent=' '+(isDark?'Light Mode':'Dark Mode');
-    }
+  var isDark=(t||'light')==='dark';
+  var cls=isDark?'fas fa-sun':'fas fa-moon';
+  ['themeIcon','themeIconMob','themeIconTop'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.className=cls;
+  });
+  var btn=document.getElementById('themeToggle');
+  if(btn){var txt=btn.childNodes[1];if(txt) txt.textContent=' '+(isDark?'Light Mode':'Dark Mode');}
 }
 
-/* ══ NAV ══ */
 function navTo(page){
-    document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
-    var target=document.getElementById('pg-'+page);
-    if(target) target.classList.add('active');
-
-    document.querySelectorAll('#sideNav .nav-btn[data-page]').forEach(function(b){
-        b.classList.toggle('active', b.dataset.page===page);
-    });
-    document.querySelectorAll('#mobNav [data-page]').forEach(function(b){
-        b.classList.toggle('active', b.dataset.page===page);
-    });
-    var mobTitle=document.getElementById('mobTitle');
-    if(mobTitle) mobTitle.innerHTML='<i class="fas fa-shield-alt" style="color:var(--acc);"></i> '+(PAGE_LABELS[page]||'SuperAdmin');
-    closeSidebar();
-    window.scrollTo(0,0);
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
+  var tgt=document.getElementById('pg-'+page); if(tgt) tgt.classList.add('active');
+  document.querySelectorAll('#sideNav .nav-btn[data-page]').forEach(function(b){b.classList.toggle('active',b.dataset.page===page);});
+  document.querySelectorAll('#mobNav [data-page]').forEach(function(b){b.classList.toggle('active',b.dataset.page===page);});
+  var mt=document.getElementById('mobTitle');
+  if(mt) mt.innerHTML='<i class="fas fa-shield-halved" style="color:var(--acc);margin-right:6px;"></i>'+(PAGE_LABELS[page]||'SuperAdmin');
+  closeSidebar(); window.scrollTo(0,0);
 }
-window.navTo=navTo; // expose for inline divison card onclick
+window.navTo=navTo;
 
-/* ══ SIDEBAR ══ */
-function openSidebar(){ document.getElementById('sidebar').classList.add('open'); document.getElementById('sbOverlay').classList.add('open'); }
-function closeSidebar(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('sbOverlay').classList.remove('open'); }
+function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('sbOverlay').classList.add('open');}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sbOverlay').classList.remove('open');}
 
-/* ══ FILTERS ══ */
 var curDiv='all';
 function filterDiv(dv,btn){
-    curDiv=dv;
-    document.querySelectorAll('#aTabs .tab').forEach(function(t){ t.classList.remove('active'); });
-    if(btn) btn.classList.add('active');
-    applyFilters();
+  curDiv=dv;
+  document.querySelectorAll('#aTabs .tab').forEach(function(t){t.classList.remove('active');});
+  if(btn) btn.classList.add('active');
+  applyFilters();
 }
 window.filterDiv=filterDiv;
-
 function applyFilters(){
-    var q=(document.getElementById('aSearch')?document.getElementById('aSearch').value:'').toLowerCase();
-    document.querySelectorAll('.ar').forEach(function(row){
-        var dvMatch=curDiv==='all'||(curDiv==='pending'&&row.dataset.pend==='y')||row.dataset.dv===curDiv;
-        var qMatch=!q||row.dataset.s.indexOf(q)!==-1;
-        row.style.display=(dvMatch&&qMatch)?'':'none';
-    });
+  var q=(document.getElementById('aSearch')?document.getElementById('aSearch').value:'').toLowerCase();
+  document.querySelectorAll('.ar').forEach(function(row){
+    var dm=curDiv==='all'||(curDiv==='pending'&&row.dataset.pend==='y')||row.dataset.dv===curDiv;
+    var qm=!q||row.dataset.s.indexOf(q)!==-1;
+    row.style.display=(dm&&qm)?'':'none';
+  });
 }
 window.applyFilters=applyFilters;
-
 function showDivBlock(dv,btn){
-    document.querySelectorAll('#userTabs .tab').forEach(function(t){ t.classList.remove('active'); });
-    if(btn) btn.classList.add('active');
-    document.querySelectorAll('.div-block').forEach(function(b){
-        b.classList.toggle('hidden', dv!=='all'&&b.dataset.dv!==dv);
-    });
+  document.querySelectorAll('#userTabs .tab').forEach(function(t){t.classList.remove('active');});
+  if(btn) btn.classList.add('active');
+  document.querySelectorAll('.div-block').forEach(function(b){b.classList.toggle('hidden',dv!=='all'&&b.dataset.dv!==dv);});
 }
 window.showDivBlock=showDivBlock;
-
 function filterUsers(){
-    var q=(document.getElementById('uSearch')?document.getElementById('uSearch').value:'').toLowerCase();
-    document.querySelectorAll('.ur').forEach(function(r){
-        r.style.display=(!q||r.dataset.s.indexOf(q)!==-1)?'':'none';
-    });
+  var q=(document.getElementById('uSearch')?document.getElementById('uSearch').value:'').toLowerCase();
+  document.querySelectorAll('.ur').forEach(function(r){r.style.display=(!q||r.dataset.s.indexOf(q)!==-1)?'':'none';});
 }
 window.filterUsers=filterUsers;
 
-/* ══ MODAL ══ */
 function openAssign(id,name,email,roles,sections){
-    var rolesArr = (roles||'Student').split(',').map(function(r){return r.trim();});
-    var secsArr  = sections ? sections.split(',').map(function(s){return s.trim();}).filter(Boolean) : [];
-    document.getElementById('aForm').action='/assign-user/'+id;
-    document.getElementById('aModalDesc').innerHTML='<strong>'+name+'</strong><br><span style="font-size:12px;color:var(--muted)">'+email+'</span>';
-    // Reset role checkboxes
-    document.querySelectorAll('#roleCheckGrp input[type="checkbox"]').forEach(function(cb){
-        cb.checked=rolesArr.includes(cb.value);
-        var lbl=document.getElementById('rci-'+cb.value);
-        if(lbl) lbl.classList.toggle('checked',cb.checked);
-    });
-    // Reset section checkboxes
-    document.querySelectorAll('#aSections input[type="checkbox"]').forEach(function(cb){
-        var checked = secsArr.includes(cb.value);
-        cb.checked = checked;
-        var lbl = cb.closest('.sec-cb-lbl');
-        if(lbl){ lbl.style.borderColor = checked ? 'var(--acc)' : 'var(--input-bd)'; lbl.style.background = checked ? 'rgba(59,127,244,.06)' : ''; }
-    });
-    var noSec = document.getElementById('noSectionCb');
-    if(noSec) noSec.checked = secsArr.length === 0;
-    updatePrimSel(rolesArr[0]);
-    document.getElementById('aModal').classList.add('open');
+  var rolesArr=(roles||'Student').split(',').map(function(r){return r.trim();});
+  var secsArr=sections?sections.split(',').map(function(s){return s.trim();}).filter(Boolean):[];
+  document.getElementById('aForm').action='/assign-user/'+id;
+  document.getElementById('aModalDesc').innerHTML='<strong>'+name+'</strong><br><span style="font-size:12px;color:var(--muted)">'+email+'</span>';
+  document.querySelectorAll('#roleCheckGrp input[type="checkbox"]').forEach(function(cb){
+    cb.checked=rolesArr.indexOf(cb.value)!==-1;
+    var lbl=document.getElementById('rci-'+cb.value);
+    if(lbl) lbl.classList.toggle('checked',cb.checked);
+  });
+  document.querySelectorAll('#aSections input[type="checkbox"]').forEach(function(cb){
+    var chk=secsArr.indexOf(cb.value)!==-1;
+    cb.checked=chk;
+    var lbl=cb.closest('.sec-cb-lbl');
+    if(lbl){lbl.style.borderColor=chk?'var(--acc)':'';lbl.style.background=chk?'rgba(79,126,247,.06)':'';}
+  });
+  var noSec=document.getElementById('noSectionCb'); if(noSec) noSec.checked=secsArr.length===0;
+  updatePrimSel(rolesArr[0]);
+  document.getElementById('aModal').classList.add('open');
 }
-function closeAssign(){ document.getElementById('aModal').classList.remove('open'); }
+function closeAssign(){document.getElementById('aModal').classList.remove('open');}
 function updatePrimSel(def){
-    var sel=document.getElementById('primRoleSel');
-    var submitBtn=document.querySelector('#aModal [type="submit"]');
-    var checked=[];
-    document.querySelectorAll('#roleCheckGrp input:checked').forEach(function(cb){checked.push(cb.value);});
-    sel.innerHTML='<option value="">— Select primary role —</option>';
-    checked.forEach(function(r){var o=document.createElement('option');o.value=r;o.textContent=r;sel.appendChild(o);});
-    if(def&&checked.includes(def)) sel.value=def;
-    else if(checked.length===1) sel.value=checked[0];
-    var showRoll=checked.includes('Student')||checked.includes('Leader');
-    document.getElementById('rollGrp').style.display=showRoll?'flex':'none';
-    if(submitBtn) submitBtn.disabled=checked.length===0;
+  var sel=document.getElementById('primRoleSel');
+  var submitBtn=document.querySelector('#aModal [type="submit"]');
+  var checked=[];
+  document.querySelectorAll('#roleCheckGrp input:checked').forEach(function(cb){checked.push(cb.value);});
+  sel.innerHTML='<option value="">— Select primary role —</option>';
+  checked.forEach(function(r){var o=document.createElement('option');o.value=r;o.textContent=r;sel.appendChild(o);});
+  if(def&&checked.indexOf(def)!==-1) sel.value=def;
+  else if(checked.length===1) sel.value=checked[0];
+  var showRoll=checked.indexOf('Student')!==-1||checked.indexOf('Leader')!==-1;
+  document.getElementById('rollGrp').style.display=showRoll?'flex':'none';
+  if(submitBtn) submitBtn.disabled=checked.length===0;
 }
-function toggleRoll(){ updatePrimSel(); }
+window.updatePrimSel=updatePrimSel;
 function openCT(id,name){
-    document.getElementById('ctForm').action='/set-class-teacher/'+id;
-    document.getElementById('ctDesc').textContent='Lecturer: '+name;
-    document.getElementById('ctModal').classList.add('open');
+  document.getElementById('ctForm').action='/set-class-teacher/'+id;
+  document.getElementById('ctDesc').textContent='Lecturer: '+name;
+  document.getElementById('ctModal').classList.add('open');
 }
-function closeCT(){ document.getElementById('ctModal').classList.remove('open'); }
+function closeCT(){document.getElementById('ctModal').classList.remove('open');}
 
-/* ══ CLOCK ══ */
-function updateClock(){
-    var now=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-    var el=document.getElementById('sbClock');
-    if(el) el.textContent=now;
-}
-
-/* ══ INIT ══ */
 document.addEventListener('DOMContentLoaded',function(){
-    syncThemeIcons(document.documentElement.getAttribute('data-theme'));
-
-    /* Theme toggles */
-    ['themeToggle','themeToggleMob'].forEach(function(id){
-        var el=document.getElementById(id);
-        if(el) el.addEventListener('click',function(){
-            var cur=document.documentElement.getAttribute('data-theme')||'light';
-            setTheme(cur==='dark'?'light':'dark');
-        });
+  syncThemeIcons(document.documentElement.getAttribute('data-theme'));
+  ['themeToggle','themeToggleMob','themeToggleTop'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el) el.addEventListener('click',function(){
+      var cur=document.documentElement.getAttribute('data-theme')||'light';
+      setTheme(cur==='dark'?'light':'dark');
     });
-
-    /* Sidebar */
-    document.getElementById('hamBtn').addEventListener('click',openSidebar);
-    document.getElementById('sbOverlay').addEventListener('click',closeSidebar);
-
-    /* Sidebar nav buttons */
-    document.querySelectorAll('#sideNav .nav-btn[data-page]').forEach(function(btn){
-        btn.addEventListener('click',function(){ navTo(btn.dataset.page); });
+  });
+  document.getElementById('hamBtn').addEventListener('click',openSidebar);
+  document.getElementById('sbOverlay').addEventListener('click',closeSidebar);
+  document.querySelectorAll('#sideNav .nav-btn[data-page]').forEach(function(btn){btn.addEventListener('click',function(){navTo(btn.dataset.page);});});
+  document.querySelectorAll('#mobNav [data-page]').forEach(function(btn){btn.addEventListener('click',function(){navTo(btn.dataset.page);});});
+  document.querySelectorAll('#aSections input[type="checkbox"]').forEach(function(cb){
+    cb.addEventListener('change',function(){
+      var lbl=this.closest('.sec-cb-lbl');
+      if(lbl){lbl.style.borderColor=this.checked?'var(--acc)':'';lbl.style.background=this.checked?'rgba(79,126,247,.06)':'';}
     });
-    /* Mobile bottom nav */
-    document.querySelectorAll('#mobNav [data-page]').forEach(function(btn){
-        btn.addEventListener('click',function(){ navTo(btn.dataset.page); });
-    });
-
-    /* Section checkboxes — highlight on select */
-    document.querySelectorAll('#aSections input[type="checkbox"]').forEach(function(cb){
-        cb.addEventListener('change', function(){
-            var lbl = this.closest('.sec-cb-lbl');
-            if(lbl){ lbl.style.borderColor = this.checked ? 'var(--acc)' : 'var(--input-bd)'; lbl.style.background = this.checked ? 'rgba(59,127,244,.06)' : ''; }
-        });
-    });
-    var noSecCb = document.getElementById('noSectionCb');
-    if(noSecCb){ noSecCb.addEventListener('change', function(){ if(this.checked){ document.querySelectorAll('#aSections input[type="checkbox"]').forEach(function(cb){ cb.checked=false; var lbl=cb.closest('.sec-cb-lbl'); if(lbl){lbl.style.borderColor='';lbl.style.background='';} }); } }); }
-
-    /* Role change → show/hide roll field */
-    var aRole=document.getElementById('aRole');
-    if(aRole) aRole.addEventListener('change',toggleRoll);
-
-    /* Modal close buttons */
-    document.getElementById('cancelAssign').addEventListener('click',closeAssign);
-    document.getElementById('aModal').addEventListener('click',function(e){ if(e.target===this) closeAssign(); });
-    document.getElementById('cancelCT').addEventListener('click',closeCT);
-    document.getElementById('ctModal').addEventListener('click',function(e){ if(e.target===this) closeCT(); });
-
-    /* Event delegation for assign/setct buttons */
-    document.body.addEventListener('click',function(e){
-        var ab=e.target.closest('.btn-assign');
-        if(ab){ openAssign(ab.dataset.id,ab.dataset.name,ab.dataset.email,ab.dataset.roles||ab.dataset.role,ab.dataset.sec); return; }
-        var cb=e.target.closest('.btn-setct');
-        if(cb){ openCT(cb.dataset.id,cb.dataset.name); }
-    });
-
-    /* Clock */
-    updateClock();
-    setInterval(updateClock,1000);
-
-    /* Auto-dismiss alerts */
-    document.querySelectorAll('.alert').forEach(function(a){
-        setTimeout(function(){
-            a.style.transition='opacity .5s';
-            a.style.opacity='0';
-            setTimeout(function(){ if(a.parentNode) a.parentNode.removeChild(a); },500);
-        },5000);
-    });
+  });
+  var noSecCb=document.getElementById('noSectionCb');
+  if(noSecCb) noSecCb.addEventListener('change',function(){
+    if(this.checked){document.querySelectorAll('#aSections input[type="checkbox"]').forEach(function(cb){
+      cb.checked=false;var lbl=cb.closest('.sec-cb-lbl');if(lbl){lbl.style.borderColor='';lbl.style.background='';}
+    });}
+  });
+  document.getElementById('cancelAssign').addEventListener('click',closeAssign);
+  document.getElementById('aModal').addEventListener('click',function(e){if(e.target===this) closeAssign();});
+  document.getElementById('cancelCT').addEventListener('click',closeCT);
+  document.getElementById('ctModal').addEventListener('click',function(e){if(e.target===this) closeCT();});
+  document.body.addEventListener('click',function(e){
+    var ab=e.target.closest('.btn-assign');
+    if(ab){openAssign(ab.dataset.id,ab.dataset.name,ab.dataset.email,ab.dataset.roles||ab.dataset.role,ab.dataset.sec);return;}
+    var cb=e.target.closest('.btn-setct');
+    if(cb){openCT(cb.dataset.id,cb.dataset.name);}
+  });
+  setInterval(function(){var el=document.getElementById('sbClock');if(el)el.textContent=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});},1000);
+  document.querySelectorAll('.alert').forEach(function(a){
+    setTimeout(function(){a.style.transition='opacity .5s';a.style.opacity='0';setTimeout(function(){if(a.parentNode)a.parentNode.removeChild(a);},500);},5000);
+  });
 });
-
-
-function showDL(dv,btn){
-    document.querySelectorAll('#dlTabs .tab').forEach(function(t){t.classList.remove('active');});
-    if(btn) btn.classList.add('active');
-    document.querySelectorAll('.dl-block').forEach(function(b){b.classList.toggle('hidden',dv!=='all'&&b.dataset.dv!==dv);});
-}
-function filterDL(){
-    var q=(document.getElementById('dlSearch')?document.getElementById('dlSearch').value:'').toLowerCase();
-    document.querySelectorAll('.dl-row').forEach(function(r){r.style.display=(!q||r.dataset.s.includes(q))?'':'none';});
-}
-
 if(document.readyState!=='loading') syncThemeIcons(document.documentElement.getAttribute('data-theme'));
 })();
 </script>

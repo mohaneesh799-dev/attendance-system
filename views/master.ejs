@@ -4,129 +4,116 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title><%= user.section %> — Master Dashboard</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-<!-- THEME: Apply before first paint — no flash -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <script>(function(){var t=localStorage.getItem('rku-theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
 <style>
 :root{
-    --pri:#0f1f3d;--pri2:#1a3560;--acc:#3b7ff4;--acc2:#2563eb;
-    --suc:#10b981;--dan:#ef4444;--war:#f59e0b;
-    --bg:#f0f4fa;--card:#fff;--border:#e2e8f0;
-    --text:#0f172a;--muted:#64748b;--input-bg:#f8fafc;--input-bd:#cbd5e1;
-    --shadow:0 4px 20px rgba(0,0,0,.07);--shadow-lg:0 10px 40px rgba(0,0,0,.1);
-    --radius:14px;--radius-sm:9px;
-    --sidebar-w:256px;
+  --pri:#0d1b3e;--pri2:#162d5a;
+  --acc:#4f7ef7;--acc2:#2563eb;
+  --suc:#10b981;--dan:#ef4444;--war:#f59e0b;
+  --bg:#f0f4fb;--card:#fff;--border:#e4eaf4;
+  --text:#0e1526;--muted:#64748b;
+  --input-bg:#f6f9ff;--input-bd:#d4daea;
+  --shadow:0 2px 16px rgba(14,21,38,.07);
+  --shadow-lg:0 8px 36px rgba(14,21,38,.13);
+  --radius:16px;--radius-sm:10px;--sidebar-w:260px;
 }
 [data-theme="dark"]{
-    --bg:#080d18;--card:#0f1624;--border:#1a2740;
-    --text:#dde6f0;--muted:#6b7f97;--input-bg:#0b1220;--input-bd:#1e3050;
-    --shadow:0 4px 24px rgba(0,0,0,.3);--shadow-lg:0 12px 40px rgba(0,0,0,.45);
-    --pri:#061128;--pri2:#0d1b36;--acc:#60a5fa;--acc2:#3b82f6;
-    --suc:#34d399;--dan:#f87171;--war:#fbbf24;
+  --bg:#080e1d;--card:#0e1828;--border:#172035;
+  --text:#cdd9ee;--muted:#5e7898;
+  --input-bg:#0a1120;--input-bd:#1b2d4a;
+  --shadow:0 2px 20px rgba(0,0,0,.35);
+  --shadow-lg:0 8px 40px rgba(0,0,0,.55);
+  --pri:#060e20;--pri2:#0d1b36;
+  --acc:#6b93fa;--acc2:#4f7ef7;
+  --suc:#34d399;--dan:#f87171;--war:#fbbf24;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-html,body{transition:background .22s,color .22s;}
+html,body{transition:background .25s,color .25s;}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;}
 
 /* ══ SIDEBAR ══ */
 .sidebar{
-    width:var(--sidebar-w);background:var(--pri);
-    height:100vh;position:fixed;top:0;left:0;
-    display:flex;flex-direction:column;
-    z-index:400;overflow-y:auto;
-    transition:transform .28s ease;
-    box-shadow:4px 0 24px rgba(0,0,0,.15);
+  width:var(--sidebar-w);background:linear-gradient(180deg,var(--pri) 0%,var(--pri2) 100%);
+  height:100vh;position:fixed;top:0;left:0;display:flex;flex-direction:column;
+  z-index:400;overflow-y:auto;transition:transform .28s cubic-bezier(.4,0,.2,1);
+  box-shadow:4px 0 28px rgba(0,0,0,.25);
 }
-.sidebar-top{padding:22px 18px 0;}
-.brand{display:flex;align-items:center;gap:10px;margin-bottom:18px;}
-.brand-icon{width:38px;height:38px;background:var(--acc);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;color:#fff;flex-shrink:0;}
-.brand-name{font-size:.95rem;font-weight:800;color:#fff;letter-spacing:-.2px;}
-.brand-sub{font-size:11px;color:rgba(255,255,255,.45);margin-top:1px;}
-.user-chip{
-    background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
-    border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:18px;
-}
-.user-chip small{font-size:10.5px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px;}
-.user-chip strong{color:#fff;font-size:13.5px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.section-pill{display:inline-flex;align-items:center;background:var(--acc);color:#fff;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;margin-top:6px;}
-.sidebar nav{padding:0 10px 16px;flex:1;}
-.nav-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:rgba(255,255,255,.3);padding:12px 8px 5px;}
-.nav-link{
-    display:flex;align-items:center;gap:10px;padding:11px 12px;
-    border-radius:var(--radius-sm);margin-bottom:2px;
-    color:rgba(255,255,255,.55);text-decoration:none;font-size:13.5px;font-weight:600;
-    transition:.18s;border:none;background:none;cursor:pointer;width:100%;text-align:left;
-}
+.sb-top{padding:22px 16px 0;}
+.brand{display:flex;align-items:center;gap:11px;margin-bottom:18px;}
+.brand-icon{width:42px;height:42px;flex-shrink:0;border-radius:12px;background:linear-gradient(135deg,var(--acc),#1d4ed8);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;box-shadow:0 4px 14px rgba(79,126,247,.4);}
+.brand-name{font-size:.9rem;font-weight:800;color:#fff;}
+.brand-sub{font-size:10.5px;color:rgba(255,255,255,.4);margin-top:2px;}
+.user-chip{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:var(--radius-sm);padding:12px 13px;margin-bottom:14px;}
+.user-chip small{font-size:10px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px;}
+.user-chip strong{color:#fff;font-size:13px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:7px;}
+.section-pill{display:inline-flex;align-items:center;gap:5px;background:var(--acc);color:#fff;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+
+.sw-block{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:10px;}
+.sw-block small{font-size:10px;color:rgba(255,255,255,.35);text-transform:uppercase;display:flex;align-items:center;gap:5px;margin-bottom:6px;}
+.sw-row{display:flex;gap:6px;}
+.sw-sel{flex:1;padding:6px 9px;border-radius:7px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:#fff;font-size:12px;font-family:inherit;outline:none;cursor:pointer;}
+.sw-sel option{background:#0d1b3e;color:#fff;}
+.sw-go{padding:6px 11px;border-radius:7px;background:var(--acc);color:#fff;border:none;font-size:12px;font-weight:700;cursor:pointer;transition:.18s;}
+.sw-go:hover{background:var(--acc2);}
+
+.sb-nav{padding:0 10px 14px;flex:1;}
+.nav-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:rgba(255,255,255,.28);padding:10px 8px 4px;}
+.nav-link{display:flex;align-items:center;gap:10px;padding:10px 11px;border-radius:var(--radius-sm);margin-bottom:2px;color:rgba(255,255,255,.52);text-decoration:none;font-size:13px;font-weight:600;transition:.18s;border:none;background:none;cursor:pointer;width:100%;text-align:left;}
 .nav-link:hover{background:rgba(255,255,255,.08);color:#fff;}
-.nav-link.active{background:rgba(59,127,244,.25);color:#fff;border-left:3px solid var(--acc);}
-.nav-link i{width:18px;text-align:center;flex-shrink:0;font-size:14px;}
-.nav-link.danger{color:rgba(248,113,113,.7);}
-.nav-link.danger:hover{background:rgba(239,68,68,.15);color:var(--dan);}
-.nav-link.export{color:rgba(52,211,153,.7);}
-.nav-link.export:hover{background:rgba(16,185,129,.15);color:var(--suc);}
-.sidebar-foot{padding:12px 16px;border-top:1px solid rgba(255,255,255,.07);}
-.clock-display{font-size:.8rem;color:rgba(255,255,255,.35);font-variant-numeric:tabular-nums;text-align:center;}
+.nav-link.active{background:rgba(79,126,247,.22);color:#fff;border-left:3px solid var(--acc);padding-left:8px;}
+.nav-link i{width:18px;text-align:center;flex-shrink:0;font-size:13.5px;}
+.nav-link.danger{color:rgba(248,113,113,.65);}
+.nav-link.danger:hover{background:rgba(239,68,68,.12);color:var(--dan);}
+.nav-link.export{color:rgba(52,211,153,.65);}
+.nav-link.export:hover{background:rgba(16,185,129,.12);color:var(--suc);}
+.sb-foot{padding:11px 14px;border-top:1px solid rgba(255,255,255,.07);}
+.clock-sb{font-size:.78rem;color:rgba(255,255,255,.3);text-align:center;font-variant-numeric:tabular-nums;}
 
-/* ══ OVERLAY + HAMBURGER ══ */
-.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:350;}
-.sidebar-overlay.open{display:block;}
-.ham{
-    display:none;position:fixed;top:14px;left:14px;z-index:500;
-    background:var(--pri);border:none;color:#fff;
-    padding:10px 13px;border-radius:var(--radius-sm);font-size:18px;cursor:pointer;
-    box-shadow:0 3px 12px rgba(0,0,0,.3);transition:.18s;
-}
-.ham:hover{opacity:.85;}
+/* ══ OVERLAY + HAM ══ */
+.sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:350;}
+.sb-overlay.open{display:block;}
+.ham{display:none;position:fixed;top:14px;left:14px;z-index:500;background:var(--pri);border:none;color:#fff;padding:10px 13px;border-radius:var(--radius-sm);font-size:18px;cursor:pointer;box-shadow:0 3px 14px rgba(0,0,0,.35);}
 
-/* ══ TOP BAR (mobile) ══ */
-.mob-topbar{
-    display:none;background:linear-gradient(135deg,var(--pri),var(--pri2));
-    color:#fff;padding:14px 16px 14px 58px;font-size:15px;font-weight:800;
-    position:fixed;top:0;left:0;right:0;z-index:300;box-shadow:0 2px 10px rgba(0,0,0,.25);
-    align-items:center;justify-content:space-between;
-}
+/* ══ MOBILE TOPBAR ══ */
+.mob-topbar{display:none;position:fixed;top:0;left:0;right:0;height:54px;z-index:300;background:var(--pri);padding:0 16px 0 60px;align-items:center;justify-content:space-between;box-shadow:0 2px 12px rgba(0,0,0,.2);}
+.mob-topbar span{color:#fff;font-size:13.5px;font-weight:700;}
+.btn-theme-sm{background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:7px 11px;border-radius:7px;cursor:pointer;font-size:14px;transition:.18s;}
 
 /* ══ MAIN ══ */
-.main{
-    margin-left:var(--sidebar-w);padding:28px 28px 60px;
-    flex:1;min-width:0;transition:margin .28s;
-}
+.main{margin-left:var(--sidebar-w);flex:1;padding:28px 28px 60px;min-width:0;}
 
 /* ══ PAGE HEADER ══ */
-.pg-hdr{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:24px;}
-.pg-hdr h1{font-size:1.4rem;font-weight:900;letter-spacing:-.3px;margin-bottom:3px;}
-.pg-hdr p{font-size:13px;color:var(--muted);}
-.hdr-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.pg-hdr{
+  background:linear-gradient(135deg,var(--pri) 0%,var(--pri2) 60%,#1e4fd8 100%);
+  border-radius:var(--radius);padding:22px 26px;margin-bottom:24px;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;
+  box-shadow:0 6px 28px rgba(13,27,62,.35);position:relative;overflow:hidden;
+}
+.pg-hdr::before{content:'';position:absolute;right:-50px;top:-50px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.04);pointer-events:none;}
+.pg-hdr h1{font-size:1.3rem;font-weight:900;color:#fff;letter-spacing:-.2px;}
+.pg-hdr p{font-size:13px;color:rgba(255,255,255,.65);margin-top:4px;}
+.hdr-right{display:flex;align-items:center;gap:10px;}
+.btn-theme{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);color:#fff;padding:7px 11px;border-radius:var(--radius-sm);cursor:pointer;font-size:14px;transition:.2s;}
+.btn-theme:hover{background:rgba(255,255,255,.2);}
 
 /* ══ STATS ══ */
-.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px;}
-.stat-card{
-    background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
-    padding:18px 20px;box-shadow:var(--shadow);
-    display:flex;align-items:center;gap:16px;transition:.18s;
-}
-.stat-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg);}
-.stat-icon{
-    width:50px;height:50px;border-radius:12px;
-    display:flex;align-items:center;justify-content:center;
-    font-size:1.3rem;flex-shrink:0;
-}
-.stat-body small{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:700;}
-.stat-body h2{font-size:1.9rem;font-weight:900;color:var(--text);margin-top:2px;line-height:1;}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);transition:.22s;display:flex;align-items:center;gap:14px;}
+.stat-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg);}
+.stat-icon{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;}
+.stat-body small{font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:700;display:block;margin-bottom:3px;}
+.stat-body h2{font-size:1.85rem;font-weight:900;line-height:1;}
 
 /* ══ CARD ══ */
 .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:20px;overflow:hidden;}
-.card-hdr{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
-.card-hdr h3{font-size:.95rem;font-weight:800;display:flex;align-items:center;gap:8px;}
-.card-body{padding:20px;}
+.card-hdr{padding:16px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;background:var(--input-bg);}
+.card-hdr h3{font-size:.95rem;font-weight:800;display:flex;align-items:center;gap:8px;margin:0;}
+.card-body{padding:22px;}
 
 /* ══ FORM FIELDS ══ */
-.fc{
-    padding:10px 13px;border:1.5px solid var(--input-bd);border-radius:var(--radius-sm);
-    font-size:13.5px;font-family:inherit;background:var(--input-bg);color:var(--text);
-    outline:none;transition:.18s;
-}
-.fc:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(59,127,244,.12);}
+.fc{padding:10px 13px;border:1.5px solid var(--input-bd);border-radius:var(--radius-sm);font-size:13.5px;font-family:inherit;background:var(--input-bg);color:var(--text);outline:none;transition:.18s;}
+.fc:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(79,126,247,.12);}
 select.fc option{background:var(--card);color:var(--text);}
 
 /* ══ SUBJECT FORM ══ */
@@ -134,28 +121,24 @@ select.fc option{background:var(--card);color:var(--text);}
 .subject-form input{flex:1;min-width:180px;}
 
 /* ══ TABLE ══ */
-.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.tbl-wrap{overflow-x:auto;}
 table{width:100%;border-collapse:collapse;min-width:460px;}
-thead th{
-    background:var(--input-bg);padding:11px 14px;text-align:left;
-    font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);
-    border-bottom:2px solid var(--border);white-space:nowrap;
-}
-tbody td{padding:13px 14px;border-bottom:1px solid var(--border);font-size:13.5px;vertical-align:middle;}
+thead th{background:var(--input-bg);padding:11px 15px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);border-bottom:2px solid var(--border);white-space:nowrap;}
+tbody td{padding:12px 15px;border-bottom:1px solid var(--border);font-size:13.5px;vertical-align:middle;}
 tbody tr:last-child td{border-bottom:none;}
-tbody tr:hover td{background:rgba(59,127,244,.03);}
-[data-theme="dark"] thead th{background:rgba(255,255,255,.03);}
+tbody tr:hover td{background:rgba(79,126,247,.025);}
 
 /* ══ BADGES ══ */
 .badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;}
-.b-student{background:rgba(59,127,244,.12);color:var(--acc);}
+.b-student{background:rgba(79,126,247,.12);color:var(--acc);}
 .b-lecturer{background:rgba(16,185,129,.12);color:var(--suc);}
 .b-leader{background:rgba(245,158,11,.12);color:var(--war);}
-.b-pending{background:rgba(245,158,11,.15);color:var(--war);border:1px solid rgba(245,158,11,.25);}
+.b-master{background:rgba(239,68,68,.1);color:var(--dan);}
+.b-pending{background:rgba(245,158,11,.1);color:#b45309;border:1px solid rgba(245,158,11,.2);}
 .b-active{color:var(--suc);font-size:12px;font-weight:700;display:inline-flex;align-items:center;gap:4px;}
 
 /* ══ BUTTONS ══ */
-.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:700;cursor:pointer;transition:.18s;text-decoration:none;white-space:nowrap;}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:700;cursor:pointer;transition:.18s;text-decoration:none;white-space:nowrap;}
 .btn:hover{opacity:.88;transform:translateY(-1px);}
 .btn:active{transform:scale(.98);}
 .btn-acc{background:var(--acc);color:#fff;}
@@ -164,17 +147,9 @@ tbody tr:hover td{background:rgba(59,127,244,.03);}
 .btn-dan:hover{background:var(--dan);color:#fff;}
 .btn-ghost{background:var(--input-bg);color:var(--text);border:1.5px solid var(--input-bd);}
 .btn-ghost:hover{border-color:var(--acc);color:var(--acc);}
-.btn-theme{background:var(--card);color:var(--muted);border:1.5px solid var(--border);padding:8px 12px;font-size:15px;border-radius:var(--radius-sm);cursor:pointer;transition:.18s;}
-.btn-theme:hover{border-color:var(--acc);color:var(--acc);}
 
-/* ══ BULK ACTION BAR ══ */
-.bulk-bar{
-    position:sticky;top:0;z-index:20;
-    background:var(--input-bg);border:1.5px solid var(--border);
-    border-radius:var(--radius-sm);padding:12px 16px;
-    display:flex;flex-wrap:wrap;gap:10px;align-items:center;
-    margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,.06);
-}
+/* ══ BULK BAR ══ */
+.bulk-bar{position:sticky;top:0;z-index:20;background:var(--input-bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,.06);}
 .bulk-bar select{flex:1;min-width:140px;}
 
 /* ══ SEARCH ══ */
@@ -182,50 +157,47 @@ tbody tr:hover td{background:rgba(59,127,244,.03);}
 .search-wrap i{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;pointer-events:none;}
 .search-wrap input{width:100%;padding-left:34px;}
 
-/* ══ USER MGMT HEADER ══ */
-.umgmt-hdr{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px;}
+/* ══ TAB PILLS ══ */
+.tab-btn{padding:6px 14px;border:1.5px solid var(--input-bd);border-radius:20px;cursor:pointer;font-size:12.5px;font-weight:700;background:var(--card);color:var(--muted);transition:.18s;font-family:inherit;}
+.tab-btn:hover,.tab-btn.active{background:var(--acc);color:#fff;border-color:var(--acc);}
+.tab-btn.warn{border-color:rgba(245,158,11,.35);color:var(--war);}
+.tab-btn.warn.active,.tab-btn.warn:hover{background:var(--war);color:#fff;border-color:var(--war);}
 
 /* ══ CSV IMPORT ══ */
-.import-card{border:2px dashed rgba(59,127,244,.3)!important;background:rgba(59,127,244,.02)!important;}
+.import-card{border:2px dashed rgba(79,126,247,.25)!important;background:rgba(79,126,247,.02)!important;}
 .import-form{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:14px;}
 .import-form input[type="file"]{flex:1;min-width:180px;padding:10px 12px;border:1.5px solid var(--input-bd);border-radius:var(--radius-sm);background:var(--card);color:var(--text);font-family:inherit;font-size:13px;}
 
 /* ══ ALERTS ══ */
-.alert{display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:var(--radius-sm);margin-bottom:18px;font-size:13.5px;animation:slideIn .3s ease;}
+.alert{display:flex;align-items:center;gap:10px;padding:13px 16px;border-radius:var(--radius-sm);margin-bottom:18px;font-size:13.5px;animation:slideIn .3s ease;}
 @keyframes slideIn{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:none;}}
-.alert-ok{background:rgba(16,185,129,.1);color:var(--suc);border:1px solid rgba(16,185,129,.25);}
-.alert-err{background:rgba(239,68,68,.08);color:var(--dan);border:1px solid rgba(239,68,68,.2);}
+.alert-ok{background:rgba(16,185,129,.08);color:#047857;border:1px solid rgba(16,185,129,.2);border-left:4px solid var(--suc);}
+.alert-err{background:rgba(239,68,68,.07);color:#b91c1c;border:1px solid rgba(239,68,68,.18);border-left:4px solid var(--dan);}
+[data-theme="dark"] .alert-ok{background:rgba(16,185,129,.1);color:var(--suc);}
+[data-theme="dark"] .alert-err{background:rgba(239,68,68,.1);color:var(--dan);}
 
 /* ══ RESPONSIVE ══ */
-@media(max-width:900px){
-    .stats-grid{grid-template-columns:1fr 1fr;}
-}
+@media(max-width:1060px){.stats-grid{grid-template-columns:repeat(2,1fr);}}
 @media(max-width:768px){
-    .sidebar{transform:translateX(-100%);}
-    .sidebar.open{transform:translateX(0);}
-    .main{margin-left:0;padding:70px 14px 40px;}
-    .ham{display:flex;}
-    .mob-topbar{display:flex;}
-    .stats-grid{grid-template-columns:1fr 1fr;gap:10px;}
-    .stat-card{padding:14px;}
-    .stat-icon{width:40px;height:40px;font-size:1.1rem;}
-    .stat-body h2{font-size:1.5rem;}
-    .card-body,.card-hdr{padding:14px;}
-    .bulk-bar{flex-direction:column;align-items:stretch;}
-    .bulk-bar select,.bulk-bar .btn{width:100%;justify-content:center;}
-    .search-wrap{width:100%;}
-    .pg-hdr h1{font-size:1.15rem;}
+  .sidebar{transform:translateX(-100%);}
+  .sidebar.open{transform:translateX(0);}
+  .main{margin-left:0;padding:68px 14px 40px;}
+  .ham{display:flex;}
+  .mob-topbar{display:flex;}
+  .stats-grid{grid-template-columns:1fr 1fr;gap:10px;}
+  .stat-card{padding:14px;}
+  .stat-icon{width:40px;height:40px;font-size:1rem;}
+  .stat-body h2{font-size:1.5rem;}
+  .card-body,.card-hdr{padding:14px 16px;}
+  .pg-hdr{padding:18px 16px;border-radius:14px;}
+  .bulk-bar{flex-direction:column;align-items:stretch;}
+  .bulk-bar select,.bulk-bar .btn{width:100%;justify-content:center;}
+  .search-wrap{width:100%;}
 }
 @media(max-width:420px){
-    .stats-grid{grid-template-columns:1fr;}
-    .subject-form{flex-direction:column;}
+  .stats-grid{grid-template-columns:1fr;}
+  .subject-form{flex-direction:column;}
 }
-
-/* ── Role filter tabs ── */
-.tab-btn{padding:6px 14px;border:2px solid var(--input-bd);border-radius:20px;cursor:pointer;font-size:12.5px;font-weight:700;background:var(--card);color:var(--muted);transition:.18s;font-family:inherit;}
-.tab-btn:hover,.tab-btn.active{background:var(--acc);color:#fff;border-color:var(--acc);}
-.tab-btn.warn{border-color:rgba(245,158,11,.4);color:var(--war);}
-.tab-btn.warn.active,.tab-btn.warn:hover{background:var(--war);color:#fff;border-color:var(--war);}
 </style>
 </head>
 <body>
@@ -235,434 +207,356 @@ tbody tr:hover td{background:rgba(59,127,244,.03);}
 
 <!-- Mobile Topbar -->
 <div class="mob-topbar" id="mobTopbar">
-    <span><i class="fas fa-shield-alt" style="color:var(--acc);"></i> Master — <%= user.section %></span>
-    <button id="themeToggleMob" class="btn-theme" style="padding:6px 10px;font-size:14px;" aria-label="Toggle theme">
-        <i class="fas fa-moon" id="themeIconMob"></i>
-    </button>
+  <span><i class="fas fa-shield-halved" style="color:var(--acc);margin-right:6px;"></i> Master — <%= user.section %></span>
+  <button id="themeToggleMob" class="btn-theme-sm" aria-label="Toggle theme"><i class="fas fa-moon" id="themeIconMob"></i></button>
 </div>
 
 <!-- Sidebar Overlay -->
-<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<div class="sb-overlay" id="sidebarOverlay"></div>
 
 <!-- Sidebar -->
-<div class="sidebar" id="sidebar">
-    <div class="sidebar-top">
-        <div class="brand">
-            <div class="brand-icon"><i class="fas fa-shield-alt"></i></div>
-            <div>
-                <div class="brand-name">MASTER</div>
-                <div class="brand-sub">Command Center</div>
-            </div>
-        </div>
-        <div class="user-chip">
-            <small>Authorized Faculty</small>
-            <strong><%= user.name %></strong>
-            <span class="section-pill"><i class="fas fa-layer-group" style="font-size:10px;margin-right:4px;"></i><%= user.section %></span>
-        </div>
-
-        <% var masterRoles = user.roles && user.roles.length > 1 ? user.roles : null; %>
-        <% if (masterRoles) { %>
-        <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:9px;padding:11px 14px;margin-bottom:10px;">
-            <small style="font-size:10px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:5px;margin-bottom:7px;"><i class="fas fa-exchange-alt"></i> Switch Role</small>
-            <form action="/switch-role" method="POST" style="display:flex;gap:6px;">
-                <select name="targetRole" style="flex:1;padding:7px 9px;border-radius:7px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:#fff;font-size:12.5px;font-family:inherit;outline:none;cursor:pointer;-webkit-appearance:none;">
-                    <% masterRoles.forEach(function(r){ %>
-                        <option value="<%= r %>" style="background:#0f1f3d;" <%= r === user.role ? 'selected' : '' %>><%= r %></option>
-                    <% }); %>
-                </select>
-                <button type="submit" style="padding:7px 12px;border-radius:7px;background:var(--acc);color:#fff;border:none;font-size:12px;font-weight:700;cursor:pointer;transition:.18s;">Go</button>
-            </form>
-        </div>
-        <% } %>
-
-        <%
-          var masterSections = (user.sections && user.sections.length > 1) ? user.sections : null;
-        %>
-        <% if (masterSections) { %>
-        <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:9px;padding:11px 14px;margin-bottom:10px;">
-            <small style="font-size:10px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:5px;margin-bottom:7px;"><i class="fas fa-layer-group"></i> Change Division</small>
-            <form action="/switch-section" method="POST" style="display:flex;gap:6px;">
-                <select name="targetSection" style="flex:1;padding:7px 9px;border-radius:7px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:#fff;font-size:12.5px;font-family:inherit;outline:none;cursor:pointer;-webkit-appearance:none;">
-                    <% masterSections.forEach(function(s){ %>
-                        <option value="<%= s %>" style="background:#0f1f3d;" <%= s === user.section ? 'selected' : '' %>>
-                            <% if(s === user.section){ %>[Active] <% } %><%= s %>
-                        </option>
-                    <% }); %>
-                </select>
-                <button type="submit" style="padding:7px 12px;border-radius:7px;background:rgba(16,185,129,.8);color:#fff;border:none;font-size:12px;font-weight:700;cursor:pointer;transition:.18s;" title="Switch to this division">
-                    <i class="fas fa-arrow-right"></i>
-                </button>
-            </form>
-        </div>
-        <% } %>
+<aside class="sidebar" id="sidebar">
+  <div class="sb-top">
+    <div class="brand">
+      <div class="brand-icon"><i class="fas fa-shield-halved"></i></div>
+      <div>
+        <div class="brand-name">MASTER</div>
+        <div class="brand-sub">Command Center</div>
+      </div>
     </div>
-    <nav>
-        <div class="nav-lbl">Navigation</div>
-        <a href="/master" class="nav-link active"><i class="fas fa-th-large"></i> Dashboard</a>
-        <a href="/attendance-history" class="nav-link"><i class="fas fa-history"></i> Attendance History</a>
-        <a href="/settings" class="nav-link"><i class="fas fa-cog"></i> Settings</a>
-        <a href="/export-attendance" class="nav-link export"><i class="fas fa-file-excel"></i> Export CSV</a>
-        <div class="nav-lbl" style="margin-top:8px;">Account</div>
-        <a href="/logout" class="nav-link danger"><i class="fas fa-power-off"></i> Logout</a>
-    </nav>
-    <div class="sidebar-foot">
-        <div class="clock-display" id="sidebarClock"></div>
+    <div class="user-chip">
+      <small>Authorized Faculty</small>
+      <strong><%= user.name %></strong>
+      <span class="section-pill"><i class="fas fa-layer-group" style="font-size:10px;"></i> <%= user.section %></span>
     </div>
-</div>
+
+    <% var masterRoles = user.roles && user.roles.length > 1 ? user.roles : null; %>
+    <% if (masterRoles) { %>
+    <div class="sw-block">
+      <small><i class="fas fa-shuffle"></i> Switch Role</small>
+      <form action="/switch-role" method="POST" class="sw-row">
+        <select name="targetRole" class="sw-sel">
+          <% masterRoles.forEach(function(r){ %>
+            <option value="<%= r %>" style="background:#0d1b3e;" <%= r===user.role?'selected':'' %>><%= r %></option>
+          <% }); %>
+        </select>
+        <button type="submit" class="sw-go">Go</button>
+      </form>
+    </div>
+    <% } %>
+
+    <% var masterSections = (user.sections && user.sections.length > 1) ? user.sections : null; %>
+    <% if (masterSections) { %>
+    <div class="sw-block">
+      <small><i class="fas fa-layer-group"></i> Change Division</small>
+      <form action="/switch-section" method="POST" class="sw-row">
+        <select name="targetSection" class="sw-sel">
+          <% masterSections.forEach(function(s){ %>
+            <option value="<%= s %>" style="background:#0d1b3e;" <%= s===user.section?'selected':'' %>>
+              <% if (s === user.section) { %>[Active] <% } %><%= s %>
+            </option>
+          <% }); %>
+        </select>
+        <button type="submit" class="sw-go" title="Switch Division"><i class="fas fa-arrow-right"></i></button>
+      </form>
+    </div>
+    <% } %>
+  </div>
+
+  <nav class="sb-nav">
+    <div class="nav-lbl">Navigation</div>
+    <a href="/master" class="nav-link active"><i class="fas fa-house"></i> Dashboard</a>
+    <a href="/attendance-history" class="nav-link"><i class="fas fa-clock-rotate-left"></i> Attendance History</a>
+    <a href="/settings" class="nav-link"><i class="fas fa-gear"></i> Settings</a>
+    <a href="/export-attendance" class="nav-link export"><i class="fas fa-file-csv"></i> Export CSV</a>
+    <div class="nav-lbl" style="margin-top:8px;">Account</div>
+    <a href="/logout" class="nav-link danger"><i class="fas fa-power-off"></i> Logout</a>
+  </nav>
+
+  <div class="sb-foot">
+    <div class="clock-sb" id="sidebarClock">--:--:--</div>
+  </div>
+</aside>
 
 <!-- Main Content -->
-<div class="main" id="mainContent">
+<main class="main" id="mainContent">
 
-    <!-- Alerts -->
-    <% if (typeof success !== 'undefined' && success) { %>
-        <div class="alert alert-ok"><i class="fas fa-check-circle"></i> <%= success %></div>
-    <% } %>
-    <% if (typeof error !== 'undefined' && error) { %>
-        <div class="alert alert-err"><i class="fas fa-exclamation-circle"></i> <%= error %></div>
-    <% } %>
+  <!-- Alerts -->
+  <% if (typeof success !== 'undefined' && success) { %>
+    <div class="alert alert-ok"><i class="fas fa-circle-check"></i> <%= success %></div>
+  <% } %>
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div class="alert alert-err"><i class="fas fa-circle-exclamation"></i> <%= error %></div>
+  <% } %>
 
-    <!-- Page Header -->
-    <div class="pg-hdr">
-        <div>
-            <h1>Section Command Center</h1>
-            <p>Managing all records for <strong><%= user.section %></strong></p>
-        </div>
-        <div class="hdr-right">
-            <button id="themeToggle" class="btn-theme" aria-label="Toggle theme">
-                <i class="fas fa-moon" id="themeIcon"></i>
-            </button>
-            <div id="desktopClock" style="font-weight:800;font-size:1.05rem;color:var(--muted);font-variant-numeric:tabular-nums;min-width:90px;"></div>
-        </div>
+  <!-- Page Header -->
+  <div class="pg-hdr">
+    <div>
+      <h1><i class="fas fa-shield-halved" style="opacity:.8;margin-right:8px;"></i> Section Command Center</h1>
+      <p>Managing all records for <strong style="color:#fff;"><%= user.section %></strong></p>
     </div>
-
-    <!-- Stats -->
-    <div class="stats-grid">
-        <div class="stat-card">
-            <div class="stat-icon" style="background:rgba(59,127,244,.12);color:var(--acc);">
-                <i class="fas fa-users"></i>
-            </div>
-            <div class="stat-body">
-                <small>Total Users</small>
-                <h2><%= stats.total %></h2>
-            </div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon" style="background:rgba(239,68,68,.1);color:var(--dan);">
-                <i class="fas fa-user-clock"></i>
-            </div>
-            <div class="stat-body">
-                <small>Pending Approval</small>
-                <h2 style="color:var(--dan);"><%= stats.pending %></h2>
-            </div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon" style="background:rgba(16,185,129,.1);color:var(--suc);">
-                <i class="fas fa-book-open"></i>
-            </div>
-            <div class="stat-body">
-                <small>Subjects</small>
-                <h2 style="color:var(--suc);"><%= stats.subjects %></h2>
-            </div>
-        </div>
+    <div class="hdr-right">
+      <span id="desktopClock" style="font-size:13px;color:rgba(255,255,255,.6);font-variant-numeric:tabular-nums;"></span>
+      <button id="themeToggle" class="btn-theme" aria-label="Toggle theme"><i class="fas fa-moon" id="themeIcon"></i></button>
     </div>
+  </div>
 
-    <!-- Subject Management -->
-    <div class="card">
-        <div class="card-hdr">
-            <h3><i class="fas fa-book" style="color:var(--acc);"></i> Subject Management</h3>
-        </div>
-        <div class="card-body">
-            <form action="/add-subject" method="POST" class="subject-form">
-                <input type="hidden" name="section" value="<%= user.section %>">
-                <input type="text" name="subjectName" class="fc" placeholder="New Subject Name (e.g. Mathematics)" required style="flex:1;min-width:180px;">
-                <button type="submit" class="btn btn-acc"><i class="fas fa-plus"></i> Add Subject</button>
-            </form>
-
-            <% if (masterSubjects && masterSubjects.length > 0) { %>
-                <div class="tbl-wrap">
-                    <table>
-                        <thead><tr><th><i class="fas fa-book-open"></i> Subject Name</th><th style="text-align:right;">Actions</th></tr></thead>
-                        <tbody>
-                            <% masterSubjects.forEach(function(sub) { %>
-                            <tr>
-                                <td><strong><%= sub.name %></strong><% if(sub.code){ %><span style="font-size:11.5px;color:var(--muted);margin-left:8px;">(<%=sub.code%>)</span><% } %></td>
-                                <td style="text-align:right;">
-                                    <form action="/delete-subject/<%= sub._id %>" method="POST" style="display:inline;" onsubmit="return confirm('Delete subject: <%= sub.name %>?')">
-                                        <button type="submit" class="btn btn-dan" style="padding:7px 13px;font-size:12px;">
-                                            <i class="fas fa-trash-alt"></i> Remove
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                            <% }); %>
-                        </tbody>
-                    </table>
-                </div>
-            <% } else { %>
-                <div style="text-align:center;padding:30px;color:var(--muted);">
-                    <i class="fas fa-book" style="font-size:2rem;opacity:.2;display:block;margin-bottom:10px;"></i>
-                    <p>No subjects added yet. Use the form above to add one.</p>
-                </div>
-            <% } %>
-        </div>
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(79,126,247,.12);color:var(--acc);"><i class="fas fa-users"></i></div>
+      <div class="stat-body"><small>Total Users</small><h2><%= stats.total %></h2></div>
     </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(239,68,68,.1);color:var(--dan);"><i class="fas fa-user-clock"></i></div>
+      <div class="stat-body"><small>Pending Approval</small><h2 style="color:var(--dan);"><%= stats.pending %></h2></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(16,185,129,.1);color:var(--suc);"><i class="fas fa-book-open"></i></div>
+      <div class="stat-body"><small>Subjects</small><h2 style="color:var(--suc);"><%= stats.subjects %></h2></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(245,158,11,.1);color:var(--war);"><i class="fas fa-user-graduate"></i></div>
+      <div class="stat-body"><small>Students</small><h2 style="color:var(--war);"><%= stats.students %></h2></div>
+    </div>
+  </div>
 
-    <!-- User Management -->
-    <div class="card">
-        <div class="card-hdr">
-            <h3><i class="fas fa-users" style="color:var(--acc);"></i> User Management</h3>
-        </div>
-        <div class="card-body">
-            <div class="umgmt-hdr">
-                <span style="font-size:13px;color:var(--muted);">Manage, approve and assign roles to users in this section.</span>
-                <div class="search-wrap">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="userSearch" class="fc" placeholder="Search name or email…">
-                </div>
-            </div>
+  <!-- Subject Management -->
+  <div class="card">
+    <div class="card-hdr">
+      <h3><i class="fas fa-book" style="color:var(--acc);"></i> Subject Management</h3>
+    </div>
+    <div class="card-body">
+      <form action="/add-subject" method="POST" class="subject-form">
+        <input type="hidden" name="section" value="<%= user.section %>">
+        <input type="text" name="subjectName" class="fc" placeholder="New Subject Name (e.g. Mathematics)" required style="flex:1;min-width:180px;">
+        <button type="submit" class="btn btn-acc"><i class="fas fa-plus"></i> Add Subject</button>
+      </form>
 
-            <!-- Role tabs for division-wise view -->
-            <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px" id="roleTabs">
-                <button type="button" class="tab-btn active" onclick="filterRole('all',this)">
-                    All (<%= stats.total %>)
-                </button>
-                <button type="button" class="tab-btn" onclick="filterRole('Student',this)">
-                    <i class="fas fa-graduation-cap" style="color:var(--acc)"></i> Students (<%= stats.students %>)
-                </button>
-                <% var _pendUsers = allUsers.filter(function(u){ return !u.isApproved; }); %>
-                <% if (_pendUsers.length > 0) { %>
-                <button type="button" class="tab-btn warn" onclick="filterRole('pending',this)">
-                    ⏳ Pending (<%= _pendUsers.length %>)
-                </button>
-                <% } %>
-                <% ['Leader','Lecturer','Master'].forEach(function(r){
-                   var _rc = allUsers.filter(function(u){ return u.role===r; }).length;
-                   if(_rc > 0) { %>
-                <button type="button" class="tab-btn" onclick="filterRole('<%= r %>',this)"><%= r %>s (<%= _rc %>)</button>
-                <% }}); %>
-            </div>
-
-            <form action="/bulk-approve" method="POST">
-                <input type="hidden" name="section" value="<%= user.section %>">
-
-                <div class="bulk-bar">
-                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13.5px;font-weight:700;">
-                        <input type="checkbox" id="selectAll" style="width:16px;height:16px;accent-color:var(--acc);cursor:pointer;">
-                        Select All
-                    </label>
-                    <select name="targetRole" required class="fc" style="flex:1;min-width:140px;">
-                        <option value="" disabled selected>Assign Role…</option>
-                        <option value="Student">Student</option>
-                        <option value="Leader">Leader</option>
-                        <option value="Lecturer">Lecturer</option>
-                    </select>
-                    <button type="submit" class="btn btn-suc">
-                        <i class="fas fa-user-check"></i> Bulk Update & Approve
+      <% if (masterSubjects && masterSubjects.length > 0) { %>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th><i class="fas fa-book-open"></i> Subject Name</th><th style="text-align:right;">Actions</th></tr></thead>
+            <tbody>
+              <% masterSubjects.forEach(function(sub) { %>
+              <tr>
+                <td>
+                  <strong><%= sub.name %></strong>
+                  <% if (sub.code) { %><span style="font-size:11.5px;color:var(--muted);margin-left:8px;">(<%= sub.code %>)</span><% } %>
+                </td>
+                <td style="text-align:right;">
+                  <form action="/delete-subject/<%= sub._id %>" method="POST" style="display:inline;" onsubmit="return confirm('Delete subject: <%= sub.name %>?')">
+                    <button type="submit" class="btn btn-dan" style="padding:6px 12px;font-size:12px;">
+                      <i class="fas fa-trash-alt"></i> Remove
                     </button>
-                </div>
-
-                <div class="tbl-wrap">
-                    <table id="userTable">
-                        <thead>
-                            <tr>
-                                <th style="width:44px;"></th>
-                                <th>User Details</th>
-                                <th>Role & Status</th>
-                                <th style="text-align:center;">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <% if (allUsers && allUsers.length > 0) { %>
-                                <% allUsers.forEach(function(u) { %>
-                                <tr class="u-row" data-role="<%= u.role %>" data-pend="<%= !u.isApproved ? 'y' : 'n' %>">
-                                    <td>
-                                        <input type="checkbox" name="userIds[]" value="<%= u._id %>" class="user-cb"
-                                               style="width:16px;height:16px;accent-color:var(--acc);cursor:pointer;">
-                                    </td>
-                                    <td>
-                                        <strong><%= u.name %></strong>
-                                        <div style="font-size:12px;color:var(--muted);">
-                                            <i class="fas fa-envelope" style="opacity:.5;font-size:10px;"></i> <%= u.email %>
-                                        </div>
-                                        <% if(u.rollNo){ %>
-                                        <div style="font-size:11.5px;color:var(--acc);font-family:monospace;font-weight:700;">
-                                            Roll: <%= u.rollNo %>
-                                        </div>
-                                        <% } %>
-                                    </td>
-                                    <td>
-                                        <span class="badge b-<%= (u.role||'').toLowerCase() %>">
-                                            <%= u.role || 'Unassigned' %>
-                                        </span>
-                                        <% if(u.isApproved) { %>
-                                            <span class="b-active" style="margin-left:8px;">
-                                                <i class="fas fa-check-circle"></i> Active
-                                            </span>
-                                        <% } else { %>
-                                            <span class="badge b-pending" style="margin-left:6px;">⏳ Pending</span>
-                                        <% } %>
-                                    </td>
-                                    <td style="text-align:center;">
-                                        <form action="/delete-user/<%= u._id %>" method="POST" style="display:inline;"
-                                              onsubmit="return confirm('Permanently delete <%= u.name %>?')">
-                                            <button type="submit" class="btn btn-dan" style="padding:7px 12px;font-size:12px;" title="Delete User">
-                                                <i class="fas fa-trash-alt"></i>
-                                            </button>
-                                        </form>
-                                    </td>
-                                </tr>
-                                <% }); %>
-                            <% } else { %>
-                                <tr>
-                                    <td colspan="4" style="text-align:center;padding:50px 20px;color:var(--muted);">
-                                        <i class="fas fa-user-slash" style="font-size:2rem;opacity:.2;display:block;margin-bottom:12px;"></i>
-                                        No users found in this section.
-                                    </td>
-                                </tr>
-                            <% } %>
-                        </tbody>
-                    </table>
-                </div>
-            </form>
+                  </form>
+                </td>
+              </tr>
+              <% }); %>
+            </tbody>
+          </table>
         </div>
+      <% } else { %>
+        <div style="text-align:center;padding:30px;color:var(--muted);">
+          <i class="fas fa-book" style="font-size:2rem;opacity:.2;display:block;margin-bottom:10px;"></i>
+          <p>No subjects added yet. Use the form above to add one.</p>
+        </div>
+      <% } %>
     </div>
+  </div>
 
-    <!-- Bulk CSV Import -->
-    <div class="card import-card">
-        <div class="card-hdr">
-            <h3><i class="fas fa-file-import" style="color:var(--acc);"></i> Bulk Student Import (CSV)</h3>
-        </div>
-        <div class="card-body">
-            <p style="color:var(--muted);font-size:13.5px;">
-                Quickly add multiple students. The CSV must have headers:
-                <code style="background:var(--input-bg);padding:2px 7px;border-radius:5px;font-size:12.5px;border:1px solid var(--border);">name, email, studentId</code>
-            </p>
-            <form action="/upload-users" method="POST" enctype="multipart/form-data" class="import-form">
-                <input type="hidden" name="section" value="<%= user.section %>">
-                <input type="file" name="csvFile" accept=".csv" required>
-                <button type="submit" class="btn btn-acc"><i class="fas fa-upload"></i> Upload & Auto-Approve</button>
-            </form>
-        </div>
+  <!-- User Management -->
+  <div class="card">
+    <div class="card-hdr">
+      <h3><i class="fas fa-users" style="color:var(--acc);"></i> User Management</h3>
     </div>
+    <div class="card-body">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+        <span style="font-size:13px;color:var(--muted);">Manage, approve and assign roles to users in this section.</span>
+        <div class="search-wrap">
+          <i class="fas fa-search"></i>
+          <input type="text" id="userSearch" class="fc" placeholder="Search name or email…">
+        </div>
+      </div>
 
-</div><!-- /main -->
+      <!-- Role filter tabs -->
+      <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px;" id="roleTabs">
+        <button type="button" class="tab-btn active" onclick="filterRole('all',this)">All (<%= stats.total %>)</button>
+        <button type="button" class="tab-btn" onclick="filterRole('Student',this)">
+          <i class="fas fa-graduation-cap" style="color:var(--acc);"></i> Students (<%= stats.students %>)
+        </button>
+        <% var _pendUsers = allUsers.filter(function(u){ return !u.isApproved; }); %>
+        <% if (_pendUsers.length > 0) { %>
+        <button type="button" class="tab-btn warn" onclick="filterRole('pending',this)">
+          ⏳ Pending (<%= _pendUsers.length %>)
+        </button>
+        <% } %>
+        <% ['Leader','Lecturer','Master'].forEach(function(r){
+           var _rc = allUsers.filter(function(u){ return u.role===r; }).length;
+           if (_rc > 0) { %>
+        <button type="button" class="tab-btn" onclick="filterRole('<%= r %>',this)"><%= r %>s (<%= _rc %>)</button>
+        <% }}); %>
+      </div>
+
+      <form action="/bulk-approve" method="POST">
+        <input type="hidden" name="section" value="<%= user.section %>">
+        <div class="bulk-bar">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13.5px;font-weight:700;">
+            <input type="checkbox" id="selectAll" style="width:16px;height:16px;accent-color:var(--acc);cursor:pointer;">
+            Select All
+          </label>
+          <select name="targetRole" required class="fc" style="flex:1;min-width:140px;">
+            <option value="" disabled selected>Assign Role…</option>
+            <option value="Student">Student</option>
+            <option value="Leader">Leader</option>
+            <option value="Lecturer">Lecturer</option>
+          </select>
+          <button type="submit" class="btn btn-suc">
+            <i class="fas fa-user-check"></i> Bulk Update &amp; Approve
+          </button>
+        </div>
+
+        <div class="tbl-wrap">
+          <table id="userTable">
+            <thead>
+              <tr>
+                <th style="width:44px;"></th>
+                <th>User Details</th>
+                <th>Role &amp; Status</th>
+                <th style="text-align:center;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (allUsers && allUsers.length > 0) { %>
+                <% allUsers.forEach(function(u) { %>
+                <tr class="u-row" data-role="<%= u.role %>" data-pend="<%= !u.isApproved ? 'y' : 'n' %>">
+                  <td>
+                    <input type="checkbox" name="userIds[]" value="<%= u._id %>" class="user-cb" style="width:16px;height:16px;accent-color:var(--acc);cursor:pointer;">
+                  </td>
+                  <td>
+                    <strong><%= u.name %></strong>
+                    <div style="font-size:12px;color:var(--muted);"><i class="fas fa-envelope" style="opacity:.5;font-size:10px;"></i> <%= u.email %></div>
+                    <% if (u.rollNo) { %>
+                    <div style="font-size:11.5px;color:var(--acc);font-family:monospace;font-weight:700;">Roll: <%= u.rollNo %></div>
+                    <% } %>
+                  </td>
+                  <td>
+                    <span class="badge b-<%= (u.role||'').toLowerCase() %>"><%= u.role || 'Unassigned' %></span>
+                    <% if (u.isApproved) { %>
+                      <span class="b-active" style="margin-left:8px;"><i class="fas fa-circle-check"></i> Active</span>
+                    <% } else { %>
+                      <span class="badge b-pending" style="margin-left:6px;">⏳ Pending</span>
+                    <% } %>
+                  </td>
+                  <td style="text-align:center;">
+                    <form action="/delete-user/<%= u._id %>" method="POST" style="display:inline;" onsubmit="return confirm('Permanently delete <%= u.name %>?')">
+                      <button type="submit" class="btn btn-dan" style="padding:6px 11px;font-size:12px;" title="Delete User">
+                        <i class="fas fa-trash-alt"></i>
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+                <% }); %>
+              <% } else { %>
+                <tr>
+                  <td colspan="4" style="text-align:center;padding:50px 20px;color:var(--muted);">
+                    <i class="fas fa-user-slash" style="font-size:2rem;opacity:.2;display:block;margin-bottom:12px;"></i>
+                    No users found in this section.
+                  </td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Bulk CSV Import -->
+  <div class="card import-card">
+    <div class="card-hdr">
+      <h3><i class="fas fa-file-import" style="color:var(--acc);"></i> Bulk Student Import (CSV)</h3>
+    </div>
+    <div class="card-body">
+      <p style="color:var(--muted);font-size:13.5px;">
+        Quickly add multiple students. The CSV must have headers:
+        <code style="background:var(--input-bg);padding:2px 8px;border-radius:5px;font-size:12.5px;border:1px solid var(--border);">name, email, studentId</code>
+      </p>
+      <form action="/upload-users" method="POST" enctype="multipart/form-data" class="import-form">
+        <input type="hidden" name="section" value="<%= user.section %>">
+        <input type="file" name="csvFile" accept=".csv" required>
+        <button type="submit" class="btn btn-acc"><i class="fas fa-upload"></i> Upload &amp; Auto-Approve</button>
+      </form>
+    </div>
+  </div>
+
+</main>
 
 <script>
 (function(){
-    /* ══ THEME ══ */
-    function setTheme(t){
-        document.documentElement.setAttribute('data-theme',t);
-        localStorage.setItem('rku-theme',t);
-        syncIcons(t);
-    }
-    function syncIcons(t){
-        var isDark=(t||'light')==='dark';
-        var cls=isDark?'fas fa-sun':'fas fa-moon';
-        ['themeIcon','themeIconMob'].forEach(function(id){
-            var el=document.getElementById(id);
-            if(el) el.className=cls;
-        });
-    }
+  function setTheme(t){
+    document.documentElement.setAttribute('data-theme',t);
+    localStorage.setItem('rku-theme',t);
+    syncIcons(t);
+  }
+  function syncIcons(t){
+    var isDark=(t||'light')==='dark';
+    var cls=isDark?'fas fa-sun':'fas fa-moon';
+    ['themeIcon','themeIconMob'].forEach(function(id){var el=document.getElementById(id);if(el) el.className=cls;});
+  }
+  function updateClock(){
+    var now=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    ['desktopClock','sidebarClock'].forEach(function(id){var el=document.getElementById(id);if(el) el.textContent=now;});
+  }
+  function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('sidebarOverlay').classList.add('open');}
+  function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebarOverlay').classList.remove('open');}
 
-    /* ══ CLOCK ══ */
-    function updateClock(){
-        var now=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-        ['desktopClock','sidebarClock'].forEach(function(id){
-            var el=document.getElementById(id);
-            if(el) el.textContent=now;
-        });
-    }
-
-    /* ══ SIDEBAR ══ */
-    function openSidebar(){
-        document.getElementById('sidebar').classList.add('open');
-        document.getElementById('sidebarOverlay').classList.add('open');
-    }
-    function closeSidebar(){
-        document.getElementById('sidebar').classList.remove('open');
-        document.getElementById('sidebarOverlay').classList.remove('open');
-    }
-
-    document.addEventListener('DOMContentLoaded',function(){
-        /* Sync theme icons on load */
-        syncIcons(document.documentElement.getAttribute('data-theme'));
-
-        /* Theme toggle buttons */
-        ['themeToggle','themeToggleMob'].forEach(function(id){
-            var el=document.getElementById(id);
-            if(el) el.addEventListener('click',function(){
-                var cur=document.documentElement.getAttribute('data-theme')||'light';
-                setTheme(cur==='dark'?'light':'dark');
-            });
-        });
-
-        /* Sidebar */
-        var hamBtn=document.getElementById('hamBtn');
-        var overlay=document.getElementById('sidebarOverlay');
-        if(hamBtn) hamBtn.addEventListener('click',openSidebar);
-        if(overlay) overlay.addEventListener('click',closeSidebar);
-        document.querySelectorAll('.sidebar .nav-link').forEach(function(a){
-            a.addEventListener('click',function(){ if(window.innerWidth<=768) closeSidebar(); });
-        });
-
-        /* Clock */
-        updateClock();
-        setInterval(updateClock,1000);
-
-
-        /* Role tab filter */
-        var _curRole = 'all';
-        function filterRole(role, btn) {
-            _curRole = role;
-            document.querySelectorAll('#roleTabs .tab-btn').forEach(function(b){ b.classList.remove('active'); });
-            if (btn) btn.classList.add('active');
-            applyRoleFilter();
-        }
-        function applyRoleFilter() {
-            var q = (document.getElementById('userSearch') ? document.getElementById('userSearch').value : '').toLowerCase();
-            document.querySelectorAll('#userTable tbody tr.u-row, #userTable tbody tr[data-role]').forEach(function(r) {
-                var rm = _curRole === 'all'
-                    || (_curRole === 'pending' && r.dataset.pend === 'y')
-                    || r.dataset.role === _curRole;
-                var qm = !q || r.textContent.toLowerCase().includes(q);
-                r.style.display = (rm && qm) ? '' : 'none';
-            });
-        }
-
-        /* Search */
-        var searchEl=document.getElementById('userSearch');
-        if(searchEl){
-            searchEl.addEventListener('input', applyRoleFilter);
-        }
-
-        /* Select All */
-        var selAll=document.getElementById('selectAll');
-        if(selAll){
-            selAll.addEventListener('change',function(){
-                var checked=this.checked;
-                document.querySelectorAll('.user-cb').forEach(function(cb){
-                    if(cb.closest('tr').style.display!=='none') cb.checked=checked;
-                });
-            });
-        }
-        document.querySelectorAll('.user-cb').forEach(function(cb){
-            cb.addEventListener('change',function(){
-                if(!this.checked){ var sa=document.getElementById('selectAll'); if(sa) sa.checked=false; }
-            });
-        });
-
-        /* Auto-dismiss alerts */
-        document.querySelectorAll('.alert').forEach(function(a){
-            setTimeout(function(){
-                a.style.transition='opacity .5s';
-                a.style.opacity='0';
-                setTimeout(function(){ if(a.parentNode) a.parentNode.removeChild(a); },500);
-            },5000);
-        });
+  document.addEventListener('DOMContentLoaded',function(){
+    syncIcons(document.documentElement.getAttribute('data-theme'));
+    ['themeToggle','themeToggleMob'].forEach(function(id){
+      var el=document.getElementById(id);
+      if(el) el.addEventListener('click',function(){
+        var cur=document.documentElement.getAttribute('data-theme')||'light';
+        setTheme(cur==='dark'?'light':'dark');
+      });
     });
+    var hamBtn=document.getElementById('hamBtn');
+    var overlay=document.getElementById('sidebarOverlay');
+    if(hamBtn) hamBtn.addEventListener('click',openSidebar);
+    if(overlay) overlay.addEventListener('click',closeSidebar);
+    updateClock(); setInterval(updateClock,1000);
 
-    /* Run syncIcons immediately if DOM already ready */
-    if(document.readyState!=='loading') syncIcons(document.documentElement.getAttribute('data-theme'));
+    var _curRole='all';
+    function filterRole(role,btn){
+      _curRole=role;
+      document.querySelectorAll('#roleTabs .tab-btn').forEach(function(b){b.classList.remove('active');});
+      if(btn) btn.classList.add('active');
+      applyRoleFilter();
+    }
+    function applyRoleFilter(){
+      var q=(document.getElementById('userSearch')?document.getElementById('userSearch').value:'').toLowerCase();
+      document.querySelectorAll('#userTable tbody tr.u-row').forEach(function(r){
+        var rm=_curRole==='all'||(_curRole==='pending'&&r.dataset.pend==='y')||r.dataset.role===_curRole;
+        var qm=!q||r.textContent.toLowerCase().includes(q);
+        r.style.display=(rm&&qm)?'':'none';
+      });
+    }
+    window.filterRole=filterRole;
+    var searchEl=document.getElementById('userSearch');
+    if(searchEl) searchEl.addEventListener('input',applyRoleFilter);
+    var selAll=document.getElementById('selectAll');
+    if(selAll) selAll.addEventListener('change',function(){
+      var checked=this.checked;
+      document.querySelectorAll('.user-cb').forEach(function(cb){if(cb.closest('tr').style.display!=='none') cb.checked=checked;});
+    });
+    document.querySelectorAll('.user-cb').forEach(function(cb){
+      cb.addEventListener('change',function(){if(!this.checked){var sa=document.getElementById('selectAll');if(sa) sa.checked=false;}});
+    });
+    document.querySelectorAll('.alert').forEach(function(a){
+      setTimeout(function(){a.style.transition='opacity .5s';a.style.opacity='0';setTimeout(function(){if(a.parentNode)a.parentNode.removeChild(a);},500);},5000);
+    });
+  });
+  if(document.readyState!=='loading') syncIcons(document.documentElement.getAttribute('data-theme'));
 })();
 </script>
 </body>
