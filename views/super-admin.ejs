@@ -5,43 +5,41 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SuperAdmin — RKU Attendance</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script>(function(){var t=localStorage.getItem('rku-theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
 <style>
 :root{
-  --pri:#0d1b3e;--pri2:#162d5a;
-  --acc:#4f7ef7;--acc2:#2563eb;
-  --suc:#10b981;--dan:#ef4444;--war:#f59e0b;--pur:#8b5cf6;
-  --bg:#f0f4fb;--card:#fff;--border:#e4eaf4;
-  --text:#0e1526;--muted:#64748b;
-  --input-bg:#f6f9ff;--input-bd:#d4daea;
-  --shadow:0 2px 16px rgba(14,21,38,.07);
-  --shadow-lg:0 8px 36px rgba(14,21,38,.13);
+  --pri:#0f766e;--pri2:#134e4a;
+  --acc:#f59e0b;--acc2:#d97706;
+  --vio:#7c3aed;--pur:#7c3aed;
+  --suc:#10b981;--dan:#ef4444;--war:#f59e0b;
+  --bg:#f0fdf9;--card:#fff;--border:#ccfbf1;
+  --text:#0d1f1c;--muted:#5a7a76;
+  --input-bg:#f0fdf9;--input-bd:#99f6e4;
+  --shadow:0 2px 16px rgba(15,118,110,.07);
+  --shadow-lg:0 8px 36px rgba(15,118,110,.13);
   --radius:16px;--radius-sm:10px;--sidebar-w:256px;
 }
 [data-theme="dark"]{
-  --bg:#080e1d;--card:#0e1828;--border:#172035;
-  --text:#cdd9ee;--muted:#5e7898;
-  --input-bg:#0a1120;--input-bd:#1b2d4a;
-  --shadow:0 2px 20px rgba(0,0,0,.35);
-  --shadow-lg:0 8px 40px rgba(0,0,0,.55);
-  --pri:#060e20;--pri2:#0d1b36;
-  --acc:#6b93fa;--acc2:#4f7ef7;
-  --suc:#34d399;--dan:#f87171;--war:#fbbf24;--pur:#a78bfa;
+  --bg:#051714;--card:#071f1c;--border:#0d3330;
+  --text:#b2e8e2;--muted:#4a6e6a;
+  --input-bg:#051714;--input-bd:#0d3330;
+  --shadow:0 2px 20px rgba(0,0,0,.4);
+  --shadow-lg:0 8px 40px rgba(0,0,0,.6);
+  --pri:#0d9488;--pri2:#0f766e;
+  --acc:#fbbf24;--acc2:#f59e0b;
+  --vio:#a78bfa;--pur:#a78bfa;
+  --suc:#34d399;--dan:#f87171;--war:#fbbf24;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{transition:background .25s,color .25s;}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;}
 
 /* ══ SIDEBAR ══ */
-.sidebar{
-  width:var(--sidebar-w);background:linear-gradient(180deg,var(--pri) 0%,var(--pri2) 100%);
-  height:100vh;position:fixed;top:0;left:0;display:flex;flex-direction:column;
-  z-index:400;overflow-y:auto;transition:transform .28s cubic-bezier(.4,0,.2,1);
-  box-shadow:4px 0 28px rgba(0,0,0,.25);
-}
+.sidebar{width:var(--sidebar-w);background:linear-gradient(180deg,var(--pri2) 0%,var(--pri) 100%);height:100vh;position:fixed;top:0;left:0;display:flex;flex-direction:column;z-index:400;overflow-y:auto;transition:transform .28s cubic-bezier(.4,0,.2,1);box-shadow:4px 0 28px rgba(0,0,0,.2);}
 .sb-top{padding:22px 16px 0;}
 .brand{display:flex;align-items:center;gap:11px;margin-bottom:18px;}
-.brand-icon{width:42px;height:42px;flex-shrink:0;border-radius:12px;background:linear-gradient(135deg,var(--acc),var(--pur));display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;box-shadow:0 4px 14px rgba(79,126,247,.4);}
+.brand-icon{width:42px;height:42px;flex-shrink:0;border-radius:12px;background:linear-gradient(135deg,var(--acc),#f97316);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;box-shadow:0 4px 14px rgba(245,158,11,.4);}
 .brand-name{font-size:.9rem;font-weight:800;color:#fff;letter-spacing:-.2px;}
 .brand-sub{font-size:10.5px;color:rgba(255,255,255,.4);margin-top:2px;}
 .admin-chip{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:var(--radius-sm);padding:11px 13px;margin-bottom:14px;}
@@ -52,19 +50,15 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .role-sw small{font-size:10px;color:rgba(255,255,255,.35);text-transform:uppercase;display:flex;align-items:center;gap:5px;margin-bottom:6px;}
 .role-sw-row{display:flex;gap:6px;}
 .role-sel{flex:1;padding:6px 9px;border-radius:7px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:#fff;font-size:12px;font-family:inherit;outline:none;cursor:pointer;}
-.role-sel option{background:#0d1b3e;color:#fff;}
+.role-sel option{background:#0f766e;color:#fff;}
 .role-go{padding:6px 11px;border-radius:7px;background:var(--acc);color:#fff;border:none;font-size:12px;font-weight:700;cursor:pointer;transition:.18s;}
 .role-go:hover{background:var(--acc2);}
 
 .sb-nav{padding:0 10px 14px;flex:1;}
 .nav-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:rgba(255,255,255,.28);padding:10px 8px 4px;}
-.nav-btn{
-  display:flex;align-items:center;gap:10px;padding:10px 11px;border-radius:var(--radius-sm);margin-bottom:2px;
-  color:rgba(255,255,255,.52);text-decoration:none;font-size:13px;font-weight:600;
-  transition:.18s;border:none;background:none;cursor:pointer;width:100%;text-align:left;
-}
+.nav-btn{display:flex;align-items:center;gap:10px;padding:10px 11px;border-radius:var(--radius-sm);margin-bottom:2px;color:rgba(255,255,255,.52);text-decoration:none;font-size:13px;font-weight:600;transition:.18s;border:none;background:none;cursor:pointer;width:100%;text-align:left;}
 .nav-btn:hover{background:rgba(255,255,255,.08);color:#fff;}
-.nav-btn.active{background:rgba(79,126,247,.22);color:#fff;border-left:3px solid var(--acc);padding-left:8px;}
+.nav-btn.active{background:rgba(245,158,11,.22);color:#fde68a;border-left:3px solid var(--acc);padding-left:8px;}
 .nav-btn i{width:18px;text-align:center;flex-shrink:0;font-size:13.5px;}
 .nb{background:var(--dan);color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;margin-left:auto;min-width:20px;text-align:center;}
 .nav-btn.export{color:rgba(52,211,153,.65);}
@@ -77,11 +71,11 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 /* ══ OVERLAY + HAM ══ */
 .sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:350;}
 .sb-overlay.open{display:block;}
-.ham{display:none;position:fixed;top:14px;left:14px;z-index:500;background:var(--pri);border:none;color:#fff;padding:10px 13px;border-radius:var(--radius-sm);font-size:18px;cursor:pointer;box-shadow:0 3px 14px rgba(0,0,0,.35);}
+.ham{display:none;position:fixed;top:14px;left:14px;z-index:500;background:var(--pri2);border:none;color:#fff;padding:10px 13px;border-radius:var(--radius-sm);font-size:18px;cursor:pointer;box-shadow:0 3px 14px rgba(0,0,0,.35);}
 
 /* ══ MOBILE TOPBAR ══ */
-.mob-topbar{display:none;position:fixed;top:0;left:0;right:0;height:54px;z-index:300;background:var(--pri);padding:0 16px 0 60px;align-items:center;justify-content:space-between;box-shadow:0 2px 12px rgba(0,0,0,.2);}
-.mob-topbar span{color:#fff;font-size:13.5px;font-weight:700;}
+.mob-topbar{display:none;position:fixed;top:0;left:0;right:0;height:54px;z-index:300;background:var(--pri2);padding:0 10px 0 60px;align-items:center;justify-content:space-between;box-shadow:0 2px 12px rgba(0,0,0,.2);}
+.mob-topbar span{color:#fff;font-size:13px;font-weight:700;}
 .btn-theme-sm{background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:7px 11px;border-radius:7px;cursor:pointer;font-size:14px;transition:.18s;}
 .btn-theme-sm:hover{background:rgba(255,255,255,.18);color:#fff;}
 
@@ -98,12 +92,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .page.active{display:block;}
 
 /* ══ PAGE HEADER ══ */
-.pg-hdr{
-  background:linear-gradient(135deg,var(--pri) 0%,var(--pri2) 60%,#1e4fd8 100%);
-  border-radius:var(--radius);padding:22px 26px;margin-bottom:22px;
-  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;
-  box-shadow:0 6px 28px rgba(13,27,62,.35);position:relative;overflow:hidden;
-}
+.pg-hdr{background:linear-gradient(135deg,var(--pri2) 0%,var(--pri) 55%,#0d9488 100%);border-radius:var(--radius);padding:22px 26px;margin-bottom:22px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;box-shadow:0 6px 28px rgba(15,118,110,.3);position:relative;overflow:hidden;}
 .pg-hdr::before{content:'';position:absolute;right:-50px;top:-50px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.04);pointer-events:none;}
 .pg-hdr h1{font-size:1.25rem;font-weight:900;color:#fff;letter-spacing:-.2px;}
 .pg-hdr p{font-size:13px;color:rgba(255,255,255,.65);margin-top:4px;}
@@ -119,11 +108,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 
 /* ══ STATS ══ */
 .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
-.stat-card{
-  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
-  padding:18px 20px;box-shadow:var(--shadow);cursor:pointer;transition:.22s;
-  display:flex;align-items:center;gap:14px;
-}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow);cursor:pointer;transition:.22s;display:flex;align-items:center;gap:14px;}
 .stat-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg);}
 .stat-icon{width:48px;height:48px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;}
 .stat-body small{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:700;display:block;margin-bottom:3px;}
@@ -136,111 +121,116 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .card-body{padding:20px;}
 
 /* ══ SETUP GUIDE ══ */
-.setup-guide{
-  background:linear-gradient(135deg,rgba(79,126,247,.06),rgba(139,92,246,.04));
-  border:2px dashed rgba(79,126,247,.22);border-radius:var(--radius);padding:28px;text-align:center;margin-bottom:18px;
-}
-[data-theme="dark"] .setup-guide{background:linear-gradient(135deg,rgba(107,147,250,.06),rgba(167,139,250,.04));border-color:rgba(107,147,250,.2);}
+.setup-guide{background:linear-gradient(135deg,rgba(15,118,110,.06),rgba(13,148,136,.04));border:2px dashed rgba(15,118,110,.22);border-radius:var(--radius);padding:28px;text-align:center;margin-bottom:18px;}
+[data-theme="dark"] .setup-guide{background:linear-gradient(135deg,rgba(13,148,136,.06),rgba(15,118,110,.04));border-color:rgba(13,148,136,.2);}
 .setup-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:18px;text-align:left;}
 .step{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;box-shadow:var(--shadow);}
-.step-num{width:26px;height:26px;border-radius:50%;background:var(--acc);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;margin-bottom:8px;}
+.step-num{width:26px;height:26px;border-radius:50%;background:var(--pri);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;margin-bottom:8px;}
 .step-title{font-weight:800;font-size:12.5px;margin-bottom:4px;}
 .step-desc{font-size:12px;color:var(--muted);line-height:1.5;}
 
 /* ══ BUTTONS ══ */
-.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 15px;border-radius:var(--radius-sm);cursor:pointer;border:none;font-weight:700;font-size:12.5px;transition:.18s;text-decoration:none;white-space:nowrap;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 15px;border-radius:var(--radius-sm);cursor:pointer;border:none;font-weight:700;font-size:12.5px;transition:.18s;text-decoration:none;white-space:nowrap;font-family:inherit;}
 .btn:hover{opacity:.88;transform:translateY(-1px);}
 .btn:active{transform:scale(.97);}
+.btn-pri{background:var(--pri);color:#fff;}
 .btn-acc{background:var(--acc);color:#fff;}
 .btn-suc{background:var(--suc);color:#fff;}
 .btn-dan{background:rgba(239,68,68,.1);color:var(--dan);border:1px solid rgba(239,68,68,.2);}
 .btn-dan:hover{background:var(--dan);color:#fff;}
-.btn-pur{background:rgba(139,92,246,.12);color:var(--pur);border:1px solid rgba(139,92,246,.2);}
+.btn-pur{background:rgba(124,58,237,.12);color:var(--pur);border:1px solid rgba(124,58,237,.2);}
 .btn-pur:hover{background:var(--pur);color:#fff;}
 .btn-ghost{background:var(--input-bg);color:var(--muted);border:1.5px solid var(--input-bd);}
-.btn-ghost:hover{border-color:var(--acc);color:var(--acc);}
+.btn-ghost:hover{border-color:var(--pri);color:var(--pri);}
 .btn-lg{padding:10px 20px;font-size:13px;}
-.btn-theme{background:var(--card);color:var(--muted);border:1.5px solid var(--border);padding:8px 12px;font-size:15px;border-radius:var(--radius-sm);cursor:pointer;transition:.18s;display:inline-flex;align-items:center;}
-.btn-theme:hover{border-color:var(--acc);color:var(--acc);}
+.btn-theme{background:var(--card);color:var(--muted);border:1.5px solid var(--border);padding:8px 12px;font-size:15px;border-radius:var(--radius-sm);cursor:pointer;transition:.18s;display:inline-flex;align-items:center;gap:7px;}
+.btn-theme:hover{border-color:var(--pri);color:var(--pri);}
 
 /* ══ TABLE ══ */
 .tbl-wrap{overflow-x:auto;}
-table{width:100%;border-collapse:collapse;min-width:460px;}
-thead th{text-align:left;padding:11px 14px;background:var(--input-bg);font-size:11px;color:var(--muted);text-transform:uppercase;border-bottom:2px solid var(--border);white-space:nowrap;}
-tbody td{padding:12px 14px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle;}
+table{width:100%;border-collapse:collapse;min-width:400px;}
+thead th{background:var(--input-bg);padding:11px 15px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);border-bottom:2px solid var(--border);white-space:nowrap;}
+tbody td{padding:12px 15px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle;}
 tbody tr:last-child td{border-bottom:none;}
-tbody tr:hover td{background:rgba(79,126,247,.025);}
+tbody tr:hover td{background:rgba(15,118,110,.025);}
 
-/* ══ PILLS / BADGES ══ */
-.pill{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+/* ══ STATUS PILLS ══ */
+.pill{padding:3px 10px;border-radius:20px;font-size:11.5px;font-weight:700;display:inline-flex;align-items:center;gap:4px;}
 .pill-a{background:rgba(16,185,129,.1);color:#047857;border:1px solid rgba(16,185,129,.2);}
 .pill-p{background:rgba(245,158,11,.1);color:#b45309;border:1px solid rgba(245,158,11,.2);}
 [data-theme="dark"] .pill-a{color:var(--suc);}
 [data-theme="dark"] .pill-p{color:var(--war);}
+
+/* ══ ROLE BADGES ══ */
 .rb{padding:3px 9px;border-radius:6px;font-size:11px;font-weight:700;}
-.rb-Master{background:rgba(79,126,247,.12);color:var(--acc);}
+.rb-Master{background:rgba(15,118,110,.12);color:var(--pri);}
 .rb-Lecturer{background:rgba(16,185,129,.12);color:var(--suc);}
 .rb-Leader{background:rgba(245,158,11,.12);color:var(--war);}
 .rb-Student{background:rgba(239,68,68,.1);color:var(--dan);}
-.rb-SuperAdmin{background:rgba(139,92,246,.12);color:var(--pur);}
-.sec-pill{background:rgba(79,126,247,.1);color:var(--acc);padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;}
-.ct-tag{background:rgba(139,92,246,.12);color:var(--pur);padding:2px 7px;border-radius:12px;font-size:10px;font-weight:700;display:inline-block;margin-top:3px;border:1px solid rgba(139,92,246,.2);}
+.rb-SuperAdmin{background:rgba(124,58,237,.12);color:var(--pur);}
+.sec-pill{background:rgba(15,118,110,.1);color:var(--pri);padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;}
+.ct-tag{background:rgba(124,58,237,.12);color:var(--pur);padding:2px 7px;border-radius:12px;font-size:10px;font-weight:700;display:inline-block;margin-top:3px;border:1px solid rgba(124,58,237,.2);}
 
-/* ══ DIVISION CARDS ══ */
-.div-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;margin-top:14px;}
-.div-card{background:var(--input-bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:18px;position:relative;transition:.22s;}
-.div-card:hover{border-color:var(--acc);box-shadow:var(--shadow-lg);background:var(--card);}
-.div-card-name{font-size:.95rem;font-weight:800;margin-bottom:5px;padding-right:28px;display:flex;align-items:center;gap:7px;}
-.div-card-desc{font-size:12px;color:var(--muted);margin-bottom:10px;}
-.div-stats{font-size:12px;color:var(--muted);line-height:2;}
-.div-del{position:absolute;top:10px;right:10px;}
+/* ══ FORM ══ */
+.fg{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
+.fg label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+.fc{padding:10px 13px;border:1.5px solid var(--input-bd);border-radius:var(--radius-sm);font-size:13.5px;font-family:inherit;background:var(--input-bg);color:var(--text);outline:none;transition:.18s;width:100%;}
+.fc:focus{border-color:var(--pri);box-shadow:0 0 0 3px rgba(15,118,110,.12);}
+select.fc option{background:var(--card);color:var(--text);}
+.form-row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;}
+
+/* ══ SEARCH ══ */
+.sw{position:relative;}
+.sw i{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;pointer-events:none;}
+.sw input{padding-left:34px;}
 
 /* ══ TABS ══ */
 .tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px;}
-.tab{padding:6px 15px;border:1.5px solid var(--border);border-radius:20px;cursor:pointer;font-weight:700;font-size:12.5px;background:var(--card);color:var(--muted);transition:.15s;font-family:inherit;}
-.tab:hover{border-color:var(--acc);color:var(--acc);}
-.tab.active{background:var(--acc);color:#fff;border-color:var(--acc);box-shadow:0 3px 10px rgba(79,126,247,.25);}
-.tab.warn{border-color:rgba(245,158,11,.3);color:var(--war);}
+.tab{padding:6px 14px;border:1.5px solid var(--input-bd);border-radius:20px;cursor:pointer;font-size:12.5px;font-weight:700;background:var(--card);color:var(--muted);transition:.18s;font-family:inherit;}
+.tab:hover,.tab.active{background:var(--pri);color:#fff;border-color:var(--pri);}
+.tab.warn{border-color:rgba(245,158,11,.35);color:var(--war);}
 .tab.warn.active,.tab.warn:hover{background:var(--war);color:#fff;border-color:var(--war);}
 
-/* ══ SECTION BLOCKS ══ */
-.div-block{margin-bottom:20px;}
-.div-block.hidden{display:none;}
-.div-heading{display:flex;align-items:center;gap:10px;background:var(--input-bg);border:1px solid rgba(79,126,247,.15);padding:11px 16px;border-radius:var(--radius-sm);margin-bottom:10px;border-left:4px solid var(--acc);}
-.div-badge{background:var(--pri);color:#fff;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:800;text-transform:uppercase;}
+/* ══ DIVISIONS ══ */
+.div-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;margin-top:14px;}
+.div-card{background:var(--input-bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:18px;position:relative;transition:.22s;}
+.div-card:hover{border-color:var(--pri);box-shadow:var(--shadow-lg);background:var(--card);}
+.div-card-name{font-size:.95rem;font-weight:800;margin-bottom:5px;padding-right:28px;display:flex;align-items:center;gap:7px;}
+.div-card-desc{font-size:12px;color:var(--muted);margin-bottom:10px;}
+.div-del{position:absolute;top:10px;right:10px;}
+.div-stats{font-size:12px;color:var(--muted);line-height:1.9;}
 
-/* ══ FORM ══ */
-.form-row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;}
-.fg{display:flex;flex-direction:column;gap:5px;flex:1;min-width:120px;}
-.fg label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;}
-.fc{padding:10px 13px;border:1.5px solid var(--input-bd);border-radius:var(--radius-sm);font-size:13.5px;outline:none;width:100%;transition:.18s;background:var(--input-bg);color:var(--text);font-family:inherit;}
-.fc:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(79,126,247,.1);}
-select.fc option{background:var(--card);color:var(--text);}
-.sw{position:relative;}
-.sw i{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;pointer-events:none;}
-.sw .fc{padding-left:34px;}
-
-/* ══ MODAL ══ */
-.overlay-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;align-items:center;justify-content:center;padding:16px;}
-.overlay-modal.open{display:flex;}
-.modal{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:26px;max-width:480px;width:100%;box-shadow:var(--shadow-lg);max-height:90vh;overflow-y:auto;}
-.modal-title{font-size:1rem;font-weight:800;margin-bottom:6px;display:flex;align-items:center;gap:9px;}
-.modal-sub{font-size:13px;color:var(--muted);margin-bottom:18px;}
-.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border);}
+/* ══ USERS VIEW ══ */
+.div-block{margin-bottom:22px;}
+.div-heading{display:flex;align-items:center;gap:10px;background:var(--input-bg);border:1px solid rgba(15,118,110,.15);padding:11px 16px;border-radius:var(--radius-sm);margin-bottom:10px;border-left:4px solid var(--pri);}
+.div-badge{background:var(--pri);color:#fff;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:700;}
+.hidden{display:none!important;}
 
 /* ══ ROLE CHECKBOXES ══ */
-.role-checks{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px;}
-.rci{display:flex;align-items:center;gap:8px;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:.18s;background:var(--input-bg);}
-.rci:hover{border-color:var(--acc);}
-.rci.checked{border-color:var(--acc);background:rgba(79,126,247,.06);}
-.rci input{width:15px;height:15px;accent-color:var(--acc);cursor:pointer;flex-shrink:0;}
-.rci-lbl{font-size:12.5px;font-weight:700;}
-.primary-sel{margin-top:12px;padding-top:12px;border-top:1px solid var(--border);}
-.primary-sel label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:5px;}
+.role-chk-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px;}
+.rci{display:flex;align-items:center;gap:8px;padding:8px 11px;border:1.5px solid var(--input-bd);border-radius:8px;cursor:pointer;font-size:13px;transition:.15s;}
+.rci:hover{border-color:var(--pri);}
+.rci.checked{border-color:var(--pri);background:rgba(15,118,110,.06);}
+.rci input{accent-color:var(--pri);width:15px;height:15px;cursor:pointer;flex-shrink:0;}
+
+/* ══ MODAL ══ */
+.overlay-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:600;align-items:center;justify-content:center;padding:20px;}
+.overlay-modal.open{display:flex;}
+.modal{background:var(--card);border-radius:var(--radius);padding:28px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.35);border:1px solid var(--border);}
+.modal-title{font-size:1.05rem;font-weight:800;display:flex;align-items:center;gap:9px;margin-bottom:6px;}
+.modal-sub{font-size:13px;color:var(--muted);margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--border);}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;padding-top:14px;border-top:1px solid var(--border);}
 
 /* ══ EMPTY ══ */
-.empty{text-align:center;padding:50px 20px;color:var(--muted);}
-.empty i{font-size:2.5rem;opacity:.15;display:block;margin-bottom:12px;}
+.empty{text-align:center;padding:60px 20px;color:var(--muted);}
+.empty i{font-size:3rem;opacity:.15;display:block;margin-bottom:14px;}
+.empty p{font-size:14px;}
+
+/* ══ SUBJECTS PAGE ══ */
+.subj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;}
+.subj-card{background:var(--input-bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.subj-card:hover{border-color:var(--pri);}
+.subj-card span{font-weight:700;font-size:13.5px;}
 
 /* ══ RESPONSIVE ══ */
 @media(max-width:1060px){.stats-grid{grid-template-columns:repeat(2,1fr);}}
@@ -251,18 +241,20 @@ select.fc option{background:var(--card);color:var(--text);}
   .ham{display:flex;}
   .mob-topbar{display:flex;}
   .mob-nav{display:flex;}
-  .mob-nav-wrap{width:100%;}
   .stats-grid{grid-template-columns:1fr 1fr;gap:10px;}
   .stat-card{padding:14px;}
   .stat-icon{width:40px;height:40px;font-size:1rem;}
   .stat-body .val{font-size:1.5rem;}
+  .card-body,.card-hdr{padding:14px 16px;}
   .pg-hdr{padding:18px 16px;border-radius:14px;}
   .pg-hdr h1{font-size:1.1rem;}
-  .card-body,.card-hdr{padding:14px 16px;}
+  .form-row{flex-direction:column;}
+  .div-grid{grid-template-columns:1fr 1fr;}
 }
 @media(max-width:480px){
-  .stats-grid{grid-template-columns:1fr 1fr;}
-  .role-checks{grid-template-columns:1fr;}
+  .stats-grid{grid-template-columns:1fr;}
+  .div-grid{grid-template-columns:1fr;}
+  .role-chk-grid{grid-template-columns:1fr;}
 }
 </style>
 </head>
@@ -274,7 +266,7 @@ select.fc option{background:var(--card);color:var(--text);}
 <!-- Mobile Topbar -->
 <div class="mob-topbar" id="mobTopbar">
   <span id="mobTitle"><i class="fas fa-shield-halved" style="color:var(--acc);margin-right:6px;"></i> SuperAdmin</span>
-  <button id="themeToggleMob" class="btn-theme-sm" aria-label="Toggle theme"><i id="themeIconMob" class="fas fa-moon"></i></button>
+  <button id="themeToggleMob" class="btn-theme-sm" aria-label="Toggle theme"><i class="fas fa-moon" id="themeIconMob"></i></button>
 </div>
 
 <!-- Sidebar Overlay -->
@@ -286,83 +278,81 @@ select.fc option{background:var(--card);color:var(--text);}
     <div class="brand">
       <div class="brand-icon"><i class="fas fa-shield-halved"></i></div>
       <div>
-        <div class="brand-name">SuperAdmin</div>
-        <div class="brand-sub">Full System Control</div>
+        <div class="brand-name">SUPER ADMIN</div>
+        <div class="brand-sub">RKU System Control</div>
       </div>
     </div>
     <div class="admin-chip">
-      <small>Logged in as</small>
+      <small>Logged In As</small>
       <span><%= user.name %></span>
     </div>
 
-    <% var _sRoles = (user.roles && user.roles.length > 0) ? user.roles : [user.role]; %>
-    <% if (_sRoles.length > 1) { %>
+    <% var saRoles = user.roles && user.roles.length > 1 ? user.roles : null; %>
+    <% if (saRoles) { %>
     <div class="role-sw">
       <small><i class="fas fa-shuffle"></i> Switch Role</small>
-      <form action="/switch-role" method="POST" class="role-sw-row">
-        <select name="targetRole" class="role-sel">
-          <% _sRoles.forEach(function(r){ %>
-            <option value="<%= r %>" <%= r===user.role?'selected':'' %>><%= r %></option>
-          <% }); %>
-        </select>
-        <button type="submit" class="role-go"><i class="fas fa-arrow-right"></i></button>
-      </form>
+      <div class="role-sw-row">
+        <form action="/switch-role" method="POST" style="display:flex;gap:6px;width:100%;">
+          <select name="targetRole" class="role-sel">
+            <% saRoles.forEach(function(r){ %><option value="<%= r %>" <%= r===user.role?'selected':'' %>><%= r %></option><% }); %>
+          </select>
+          <button type="submit" class="role-go">Go</button>
+        </form>
+      </div>
     </div>
     <% } %>
   </div>
 
-  <div class="nav-lbl">Menu</div>
-  <nav id="sideNav" class="sb-nav" style="padding:0 10px 12px;">
-    <%
-      var pendCount = 0;
-      for (var pi = 0; pi < allUsers.length; pi++) { if (!allUsers[pi].isApproved) pendCount++; }
-    %>
-    <button class="nav-btn active" data-page="overview"><i class="fas fa-chart-pie"></i> Overview</button>
+  <nav class="sb-nav" id="sideNav">
+    <div class="nav-lbl">Sections</div>
+    <button class="nav-btn active" data-page="overview"><i class="fas fa-house"></i> Overview</button>
     <button class="nav-btn" data-page="divisions"><i class="fas fa-layer-group"></i> Divisions</button>
     <button class="nav-btn" data-page="assign">
       <i class="fas fa-user-gear"></i> Assign Roles
-      <% if (pendCount > 0) { %><span class="nb"><%= pendCount %></span><% } %>
+      <% if (stats.pendingApprovals > 0) { %><span class="nb"><%= stats.pendingApprovals %></span><% } %>
     </button>
     <button class="nav-btn" data-page="users"><i class="fas fa-users"></i> All Users</button>
     <button class="nav-btn" data-page="subjects"><i class="fas fa-book"></i> Subjects</button>
-    <div class="nav-lbl">Actions</div>
-    <button class="nav-btn" id="themeToggle"><i class="fas fa-moon" id="themeIcon"></i> Toggle Theme</button>
+    <div class="nav-lbl" style="margin-top:8px;">Quick Links</div>
+    <a href="/attendance-history" class="nav-btn"><i class="fas fa-clock-rotate-left"></i> History</a>
+    <a href="/settings" class="nav-btn"><i class="fas fa-gear"></i> Settings</a>
     <a href="/export-attendance" class="nav-btn export"><i class="fas fa-file-csv"></i> Export CSV</a>
-    <a href="/settings" class="nav-btn" style="color:rgba(255,255,255,.5);"><i class="fas fa-gear"></i> Settings</a>
+    <div class="nav-lbl" style="margin-top:8px;">Account</div>
     <a href="/logout" class="nav-btn danger"><i class="fas fa-power-off"></i> Logout</a>
   </nav>
-
-  <div class="sb-foot">
-    <div class="clock-sb" id="sbClock">--:--:--</div>
-  </div>
+  <div class="sb-foot"><div class="clock-sb" id="sbClock">--:--:--</div></div>
 </aside>
 
-<!-- Main Content -->
-<main class="main">
+<!-- Mobile Bottom Nav -->
+<div class="mob-nav">
+  <div class="mob-nav-wrap" style="width:100%;">
+    <button data-page="overview" class="active"><i class="fas fa-house"></i>Home</button>
+    <button data-page="divisions"><i class="fas fa-layer-group"></i>Divisions</button>
+    <button data-page="assign"><i class="fas fa-user-gear"></i>Roles</button>
+    <button data-page="users"><i class="fas fa-users"></i>Users</button>
+    <button data-page="subjects"><i class="fas fa-book"></i>Subjects</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<main class="main" id="mainContent">
 
   <!-- Alerts -->
-  <% if (typeof success !== 'undefined' && success) { %>
-    <div class="alert alert-ok"><i class="fas fa-circle-check"></i> <%= success %></div>
-  <% } %>
-  <% if (typeof error !== 'undefined' && error) { %>
-    <div class="alert alert-err"><i class="fas fa-circle-exclamation"></i> <%= error %></div>
-  <% } %>
+  <% if (typeof success !== 'undefined' && success) { %><div class="alert alert-ok"><i class="fas fa-circle-check"></i> <%= success %></div><% } %>
+  <% if (typeof error !== 'undefined' && error) { %><div class="alert alert-err"><i class="fas fa-circle-exclamation"></i> <%= error %></div><% } %>
 
   <!-- ═══ OVERVIEW ═══ -->
   <div id="pg-overview" class="page active">
     <div class="pg-hdr">
-      <div>
-        <h1><i class="fas fa-chart-pie" style="opacity:.8;margin-right:8px;"></i> System Overview</h1>
-        <p>Full visibility across all divisions and users</p>
-      </div>
+      <div><h1><i class="fas fa-shield-halved" style="opacity:.8;margin-right:8px;"></i> System Overview</h1><p>Manage RKU Attendance System — <%= user.email %></p></div>
       <div class="pg-hdr-right">
-        <button id="themeToggleTop" class="btn-theme" aria-label="Toggle theme"><i class="fas fa-moon" id="themeIconTop"></i></button>
+        <button id="themeToggleTop" class="btn-theme"><i class="fas fa-moon" id="themeIconTop"></i> <span>Theme</span></button>
       </div>
     </div>
 
     <div class="stats-grid">
       <div class="stat-card" onclick="navTo('users')">
-        <div class="stat-icon" style="background:rgba(79,126,247,.1);color:var(--acc);"><i class="fas fa-users"></i></div>
+        <div class="stat-icon" style="background:rgba(15,118,110,.12);color:var(--pri);"><i class="fas fa-users"></i></div>
         <div class="stat-body"><small>Total Users</small><div class="val"><%= stats.totalUsers %></div></div>
       </div>
       <div class="stat-card" onclick="navTo('assign')">
@@ -370,50 +360,43 @@ select.fc option{background:var(--card);color:var(--text);}
         <div class="stat-body"><small>Pending Approvals</small><div class="val" style="color:var(--dan);"><%= stats.pendingApprovals %></div></div>
       </div>
       <div class="stat-card" onclick="navTo('subjects')">
-        <div class="stat-icon" style="background:rgba(16,185,129,.1);color:var(--suc);"><i class="fas fa-book-open"></i></div>
-        <div class="stat-body"><small>Active Subjects</small><div class="val" style="color:var(--suc);"><%= stats.totalSubjects %></div></div>
+        <div class="stat-icon" style="background:rgba(124,58,237,.1);color:var(--pur);"><i class="fas fa-book"></i></div>
+        <div class="stat-body"><small>Total Subjects</small><div class="val" style="color:var(--pur);"><%= stats.totalSubjects %></div></div>
       </div>
       <div class="stat-card" onclick="navTo('divisions')">
-        <div class="stat-icon" style="background:rgba(139,92,246,.1);color:var(--pur);"><i class="fas fa-layer-group"></i></div>
-        <div class="stat-body"><small>Divisions</small><div class="val" style="color:var(--pur);"><%= allDivisions.length %></div></div>
+        <div class="stat-icon" style="background:rgba(245,158,11,.1);color:var(--war);"><i class="fas fa-layer-group"></i></div>
+        <div class="stat-body"><small>Divisions</small><div class="val" style="color:var(--war);"><%= allDivisions.length %></div></div>
       </div>
     </div>
 
-    <% if (allDivisions.length === 0) { %>
+    <% if (allDivisions.length === 0 || stats.totalUsers === 0) { %>
     <div class="setup-guide">
-      <i class="fas fa-rocket" style="font-size:2.5rem;color:var(--acc);margin-bottom:10px;display:block;"></i>
-      <h2 style="font-size:1.15rem;margin-bottom:6px;">Welcome! Set up your system</h2>
-      <p style="color:var(--muted);font-size:13.5px;">Follow these 4 steps to get the attendance system running.</p>
+      <i class="fas fa-rocket" style="font-size:2rem;color:var(--pri);margin-bottom:10px;display:block;"></i>
+      <h3 style="font-size:1rem;font-weight:800;margin-bottom:8px;">Quick Setup Guide</h3>
+      <p style="font-size:13px;color:var(--muted);">Follow these steps to configure the RKU Attendance System:</p>
       <div class="setup-steps">
-        <div class="step"><div class="step-num">1</div><div class="step-title">Create Divisions</div><div class="step-desc">Go to <strong>Divisions</strong> and create class groups (e.g. CS-A, IT-B)</div></div>
-        <div class="step"><div class="step-num">2</div><div class="step-title">Assign Users</div><div class="step-desc">In <strong>Assign Roles</strong>, set each user's role and division</div></div>
-        <div class="step"><div class="step-num">3</div><div class="step-title">Add Subjects</div><div class="step-desc">In <strong>Subjects</strong>, add subjects per division</div></div>
-        <div class="step"><div class="step-num">4</div><div class="step-title">All Done!</div><div class="step-desc">Leaders take attendance, Lecturers review, Masters manage</div></div>
+        <div class="step"><div class="step-num">1</div><div class="step-title">Create Divisions</div><div class="step-desc">Set up class groups (e.g., CS-A, IT-B)</div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-title">Assign Roles</div><div class="step-desc">Approve users and assign Master, Lecturer, Leader roles</div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-title">Add Subjects</div><div class="step-desc">Add subjects per division for attendance tracking</div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-title">Go Live</div><div class="step-desc">Leaders can now mark attendance daily</div></div>
       </div>
-      <button type="button" class="btn btn-acc btn-lg" style="margin-top:20px;" onclick="navTo('divisions')">
-        <i class="fas fa-plus"></i> Create First Division
-      </button>
     </div>
     <% } %>
 
-    <%
-      var pendingUsers = [];
-      for (var i = 0; i < allUsers.length; i++) { if (!allUsers[i].isApproved) pendingUsers.push(allUsers[i]); }
-    %>
-    <% if (pendingUsers.length > 0) { %>
+    <% var pendUsers = allUsers.filter(function(u){ return !u.isApproved; }); %>
+    <% if (pendUsers.length > 0) { %>
     <div class="card">
       <div class="card-hdr">
-        <h3><i class="fas fa-user-clock" style="color:var(--war);"></i> Pending Approvals</h3>
-        <span class="pill pill-p"><%= pendingUsers.length %> waiting</span>
+        <h3><i class="fas fa-user-clock" style="color:var(--dan);"></i> Pending Approvals (<%= pendUsers.length %>)</h3>
+        <button type="button" class="btn btn-pri" onclick="navTo('assign')"><i class="fas fa-user-gear"></i> Manage All</button>
       </div>
       <div class="tbl-wrap">
         <table>
           <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Action</th></tr></thead>
           <tbody>
-            <% for (var pu = 0; pu < pendingUsers.length; pu++) {
-               var u = pendingUsers[pu];
-               var uSec = (u.sections && u.sections.length ? u.sections.join(',') : (u.section || ''));
-               var uNm = (u.name || '').replace(/'/g, "\\'"); %>
+            <% pendUsers.slice(0,5).forEach(function(u){
+               var uNm = (u.name || '').replace(/'/g, "\\'");
+               var uSec = (u.sections && u.sections.length ? u.sections.join(',') : (u.section || '')); %>
             <tr>
               <td><strong><%= u.name || '—' %></strong></td>
               <td style="color:var(--muted);font-size:12px;"><%= u.email %></td>
@@ -426,7 +409,7 @@ select.fc option{background:var(--card);color:var(--text);}
                 </button>
               </td>
             </tr>
-            <% } %>
+            <% }); %>
           </tbody>
         </table>
       </div>
@@ -435,7 +418,7 @@ select.fc option{background:var(--card);color:var(--text);}
 
     <div class="card">
       <div class="card-hdr">
-        <h3><i class="fas fa-users" style="color:var(--acc);"></i> All Users (<%= allUsers.length %>)</h3>
+        <h3><i class="fas fa-users" style="color:var(--pri);"></i> All Users (<%= allUsers.length %>)</h3>
         <button type="button" class="btn btn-ghost" onclick="navTo('assign')"><i class="fas fa-user-gear"></i> Manage All</button>
       </div>
       <div class="tbl-wrap">
@@ -469,7 +452,7 @@ select.fc option{background:var(--card);color:var(--text);}
             <tr>
               <td colspan="6" style="text-align:center;padding:14px;color:var(--muted);font-size:12.5px;">
                 +<%= allUsers.length - 10 %> more —
-                <a href="#" onclick="navTo('assign');return false;" style="color:var(--acc);font-weight:700;">View all</a>
+                <a href="#" onclick="navTo('assign');return false;" style="color:var(--pri);font-weight:700;">View all</a>
               </td>
             </tr>
             <% } %>
@@ -497,7 +480,7 @@ select.fc option{background:var(--card);color:var(--text);}
     </div>
 
     <div class="card">
-      <div class="card-hdr"><h3><i class="fas fa-layer-group" style="color:var(--acc);"></i> All Divisions (<%= allDivisions.length %>)</h3></div>
+      <div class="card-hdr"><h3><i class="fas fa-layer-group" style="color:var(--pri);"></i> All Divisions (<%= allDivisions.length %>)</h3></div>
       <div class="card-body">
         <% if (allDivisions.length > 0) { %>
         <div class="div-grid">
@@ -519,11 +502,11 @@ select.fc option{background:var(--card);color:var(--text);}
                 <button type="submit" class="btn btn-dan" style="padding:4px 8px;font-size:11px;"><i class="fas fa-times"></i></button>
               </form>
             </div>
-            <div class="div-card-name"><i class="fas fa-layer-group" style="color:var(--acc);"></i> <%= div.name %></div>
+            <div class="div-card-name"><i class="fas fa-layer-group" style="color:var(--pri);"></i> <%= div.name %></div>
             <% if (div.description) { %><div class="div-card-desc"><%= div.description %></div><% } %>
             <div class="div-stats">
               <span><i class="fas fa-user-graduate" style="color:var(--acc);width:14px;"></i> <%= dStu %> Students</span><br>
-              <span><i class="fas fa-shield-halved" style="color:#1565c0;width:14px;"></i> <%= dMas %> Master(s)</span><br>
+              <span><i class="fas fa-shield-halved" style="color:var(--pri);width:14px;"></i> <%= dMas %> Master(s)</span><br>
               <span><i class="fas fa-chalkboard-teacher" style="color:var(--suc);width:14px;"></i> <%= dLec %> Lecturer(s)</span><br>
               <span><i class="fas fa-book" style="color:var(--pur);width:14px;"></i> <%= dSub %> Subjects</span>
             </div>
@@ -549,6 +532,7 @@ select.fc option{background:var(--card);color:var(--text);}
 
     <div class="tabs" id="aTabs">
       <button type="button" class="tab active" onclick="filterDiv('all',this)">All (<%= allUsers.length %>)</button>
+      <% var pendCount = allUsers.filter(function(u){ return !u.isApproved; }).length; %>
       <% if (pendCount > 0) { %>
       <button type="button" class="tab warn" onclick="filterDiv('pending',this)">⏳ Pending (<%= pendCount %>)</button>
       <% } %>
@@ -712,112 +696,78 @@ select.fc option{background:var(--card);color:var(--text);}
     <div class="pg-hdr"><div><h1><i class="fas fa-book" style="opacity:.8;margin-right:8px;"></i> Subject Catalog</h1><p>Subjects appear in the Leader's attendance form per division</p></div></div>
 
     <div class="card">
-      <div class="card-hdr"><h3><i class="fas fa-plus-circle" style="color:var(--suc);"></i> Add Subject</h3></div>
+      <div class="card-hdr"><h3><i class="fas fa-plus-circle" style="color:var(--suc);"></i> Add New Subject</h3></div>
       <div class="card-body">
         <form action="/add-subject" method="POST" class="form-row">
-          <div class="fg" style="flex:2;"><label>Subject Name *</label><input type="text" name="subjectName" class="fc" placeholder="e.g. Data Structures" required></div>
-          <div class="fg" style="flex:1;"><label>Code</label><input type="text" name="subjectCode" class="fc" placeholder="CS302"></div>
-          <div class="fg" style="flex:1;">
+          <div class="fg" style="flex:1;"><label>Subject Name *</label><input type="text" name="subjectName" class="fc" placeholder="e.g. Mathematics" required></div>
+          <div class="fg" style="flex:.5;"><label>Code</label><input type="text" name="subjectCode" class="fc" placeholder="e.g. MATH101"></div>
+          <div class="fg" style="flex:.6;">
             <label>Division *</label>
             <select name="section" class="fc" required>
-              <option value="">-- Select --</option>
-              <% for (var sdiv = 0; sdiv < allDivisions.length; sdiv++) { %>
-              <option value="<%= allDivisions[sdiv].name %>"><%= allDivisions[sdiv].name %></option>
-              <% } %>
+              <option value="">— Select Division —</option>
+              <% allDivisions.forEach(function(d){ %><option value="<%= d.name %>"><%= d.name %></option><% }); %>
             </select>
           </div>
           <div style="align-self:flex-end;"><button type="submit" class="btn btn-suc btn-lg"><i class="fas fa-plus"></i> Add</button></div>
         </form>
-        <% if (allDivisions.length === 0) { %>
-        <p style="color:var(--war);font-size:13px;margin-top:12px;"><i class="fas fa-triangle-exclamation"></i> Create divisions first before adding subjects.</p>
-        <% } %>
       </div>
     </div>
 
-    <%
-      var subsByDiv = {};
-      for (var sbi = 0; sbi < allSubjects.length; sbi++) {
-        var sbSec = allSubjects[sbi].section || 'Unassigned';
-        if (!subsByDiv[sbSec]) subsByDiv[sbSec] = [];
-        subsByDiv[sbSec].push(allSubjects[sbi]);
-      }
-      var subDivKeys = Object.keys(subsByDiv).sort();
-    %>
     <% if (allSubjects.length > 0) { %>
-      <% for (var sbki = 0; sbki < subDivKeys.length; sbki++) {
-         var sbKey = subDivKeys[sbki]; %>
-      <div class="card">
-        <div class="card-hdr">
-          <h3><i class="fas fa-layer-group" style="color:var(--acc);"></i> <%= sbKey %>
-            <span style="font-weight:500;color:var(--muted);font-size:.82em;margin-left:6px;"><%= subsByDiv[sbKey].length %> subject(s)</span>
-          </h3>
-        </div>
-        <div class="tbl-wrap">
-          <table>
-            <thead><tr><th>Code</th><th>Name</th><th>Action</th></tr></thead>
-            <tbody>
-              <% for (var sbii = 0; sbii < subsByDiv[sbKey].length; sbii++) {
-                 var sub = subsByDiv[sbKey][sbii]; %>
-              <tr>
-                <td style="font-family:monospace;font-weight:700;color:var(--acc);"><%= sub.code || '—' %></td>
-                <td><strong><%= sub.name %></strong></td>
-                <td>
-                  <form action="/delete-subject/<%= sub._id %>" method="POST" onsubmit="return confirm('Delete subject: <%= sub.name %>?')">
-                    <button type="submit" class="btn btn-dan"><i class="fas fa-times"></i> Remove</button>
-                  </form>
-                </td>
-              </tr>
-              <% } %>
-            </tbody>
-          </table>
+    <div class="card">
+      <div class="card-hdr"><h3><i class="fas fa-list" style="color:var(--pri);"></i> All Subjects (<%= allSubjects.length %>)</h3></div>
+      <div class="card-body">
+        <div class="subj-grid">
+          <% allSubjects.forEach(function(sub){ %>
+          <div class="subj-card">
+            <div>
+              <span><%= sub.name %></span>
+              <% if (sub.code) { %><div style="font-size:11px;color:var(--muted);">Code: <%= sub.code %></div><% } %>
+              <div><span class="sec-pill" style="margin-top:4px;display:inline-block;"><%= sub.section %></span></div>
+            </div>
+            <form action="/delete-subject/<%= sub._id %>" method="POST" onsubmit="return confirm('Delete subject?')">
+              <button type="submit" class="btn btn-dan" style="padding:5px 9px;font-size:11px;"><i class="fas fa-trash-alt"></i></button>
+            </form>
+          </div>
+          <% }); %>
         </div>
       </div>
-      <% } %>
+    </div>
     <% } else { %>
-      <div class="empty"><i class="fas fa-book"></i><p>No subjects added yet.</p></div>
+    <div class="card"><div class="card-body"><div class="empty"><i class="fas fa-book"></i><p>No subjects yet. Add one above.</p></div></div></div>
     <% } %>
   </div>
 
 </main>
 
-<!-- Mobile Bottom Nav -->
-<div class="mob-nav" id="mobNav">
-  <div class="mob-nav-wrap">
-    <button type="button" class="active" data-page="overview"><i class="fas fa-chart-pie"></i>Overview</button>
-    <button type="button" data-page="divisions"><i class="fas fa-layer-group"></i>Divisions</button>
-    <button type="button" data-page="assign"><i class="fas fa-user-gear"></i>Assign</button>
-    <button type="button" data-page="users"><i class="fas fa-users"></i>Users</button>
-    <button type="button" data-page="subjects"><i class="fas fa-book"></i>Subjects</button>
-  </div>
-</div>
-
 <!-- Assign Modal -->
 <div class="overlay-modal" id="aModal">
   <div class="modal">
-    <div class="modal-title"><i class="fas fa-user-gear" style="color:var(--acc);"></i> Assign Role &amp; Division</div>
+    <div class="modal-title"><i class="fas fa-user-gear" style="color:var(--pri);"></i> Assign Role &amp; Division</div>
     <div class="modal-sub" id="aModalDesc"></div>
     <form id="aForm" method="POST">
       <div class="fg">
-        <label>Assign Roles <span style="font-weight:400;text-transform:none;font-size:11px;">(select one or more)</span></label>
-        <div class="role-checks" id="roleCheckGrp">
-          <label class="rci" id="rci-SuperAdmin"><input type="checkbox" name="roles" value="SuperAdmin" id="rcb-SuperAdmin" onchange="updatePrimSel()"><i class="fas fa-shield-halved" style="color:var(--pur);font-size:13px;width:14px;"></i><span class="rci-lbl">SuperAdmin</span></label>
-          <label class="rci" id="rci-Master"><input type="checkbox" name="roles" value="Master" id="rcb-Master" onchange="updatePrimSel()"><i class="fas fa-user-tie" style="color:var(--dan);font-size:13px;width:14px;"></i><span class="rci-lbl">Master</span></label>
-          <label class="rci" id="rci-Lecturer"><input type="checkbox" name="roles" value="Lecturer" id="rcb-Lecturer" onchange="updatePrimSel()"><i class="fas fa-chalkboard-teacher" style="color:var(--suc);font-size:13px;width:14px;"></i><span class="rci-lbl">Lecturer</span></label>
-          <label class="rci" id="rci-Leader"><input type="checkbox" name="roles" value="Leader" id="rcb-Leader" onchange="updatePrimSel()"><i class="fas fa-clipboard-check" style="color:var(--war);font-size:13px;width:14px;"></i><span class="rci-lbl">Leader</span></label>
-          <label class="rci" id="rci-Student"><input type="checkbox" name="roles" value="Student" id="rcb-Student" onchange="updatePrimSel()"><i class="fas fa-graduation-cap" style="color:var(--acc);font-size:13px;width:14px;"></i><span class="rci-lbl">Student</span></label>
+        <label>Roles (select all that apply)</label>
+        <div class="role-chk-grid" id="roleCheckGrp">
+          <% ['Student','Leader','Lecturer','Master','SuperAdmin'].forEach(function(r){ %>
+          <label class="rci" id="rci-<%= r %>">
+            <input type="checkbox" name="roles" value="<%= r %>" onchange="updatePrimSel('<%= r %>')"> <%= r %>
+          </label>
+          <% }); %>
         </div>
-        <small style="color:var(--muted);font-size:11px;margin-top:6px;display:block;"><i class="fas fa-circle-info"></i> Multi-role users can switch roles from their dashboard sidebar.</small>
       </div>
-      <div class="primary-sel" id="primSelGrp">
-        <label>Primary / Default Role</label>
-        <select name="primaryRole" id="primRoleSel" class="fc"><option value="">— Select primary role —</option></select>
+      <div class="fg">
+        <label>Primary / Active Role</label>
+        <select name="primaryRole" id="primRoleSel" class="fc" required>
+          <option value="">— Select primary role —</option>
+        </select>
       </div>
       <div class="fg" id="sectionGrp" style="margin-top:12px;">
         <label>Division(s) <span id="secHint" style="font-size:11px;color:var(--muted);font-weight:400;">(select all that apply for Master)</span></label>
         <div id="aSections" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;max-height:160px;overflow-y:auto;padding:4px 0;">
           <% for (var mdi = 0; mdi < allDivisions.length; mdi++) { %>
-          <label style="display:flex;align-items:center;gap:7px;padding:7px 10px;border:1.5px solid var(--input-bd);border-radius:8px;cursor:pointer;font-size:13px;transition:.15px;" class="sec-cb-lbl" id="scl-<%= allDivisions[mdi].name %>">
-            <input type="checkbox" name="sections" value="<%= allDivisions[mdi].name %>" style="accent-color:var(--acc);width:15px;height:15px;cursor:pointer;">
+          <label style="display:flex;align-items:center;gap:7px;padding:7px 10px;border:1.5px solid var(--input-bd);border-radius:8px;cursor:pointer;font-size:13px;transition:.15s;" class="sec-cb-lbl" id="scl-<%= allDivisions[mdi].name %>">
+            <input type="checkbox" name="sections" value="<%= allDivisions[mdi].name %>" style="accent-color:var(--pri);width:15px;height:15px;cursor:pointer;">
             <%= allDivisions[mdi].name %>
           </label>
           <% } %>
@@ -835,7 +785,7 @@ select.fc option{background:var(--card);color:var(--text);}
       </div>
       <div class="modal-footer">
         <button type="button" id="cancelAssign" class="btn btn-ghost" style="padding:10px 18px;">Cancel</button>
-        <button type="submit" class="btn btn-acc" style="padding:10px 22px;"><i class="fas fa-check"></i> Confirm &amp; Approve</button>
+        <button type="submit" class="btn btn-pri" style="padding:10px 22px;"><i class="fas fa-check"></i> Confirm &amp; Approve</button>
       </div>
     </form>
   </div>
@@ -878,8 +828,8 @@ function syncThemeIcons(t){
   ['themeIcon','themeIconMob','themeIconTop'].forEach(function(id){
     var el=document.getElementById(id); if(el) el.className=cls;
   });
-  var btn=document.getElementById('themeToggle');
-  if(btn){var txt=btn.childNodes[1];if(txt) txt.textContent=' '+(isDark?'Light Mode':'Dark Mode');}
+  var btn=document.getElementById('themeToggleTop');
+  if(btn){var txt=btn.querySelector('span');if(txt) txt.textContent=' '+(isDark?'Light Mode':'Dark Mode');}
 }
 
 function navTo(page){
@@ -939,7 +889,7 @@ function openAssign(id,name,email,roles,sections){
     var chk=secsArr.indexOf(cb.value)!==-1;
     cb.checked=chk;
     var lbl=cb.closest('.sec-cb-lbl');
-    if(lbl){lbl.style.borderColor=chk?'var(--acc)':'';lbl.style.background=chk?'rgba(79,126,247,.06)':'';}
+    if(lbl){lbl.style.borderColor=chk?'var(--pri)':'';lbl.style.background=chk?'rgba(15,118,110,.06)':'';}
   });
   var noSec=document.getElementById('noSectionCb'); if(noSec) noSec.checked=secsArr.length===0;
   updatePrimSel(rolesArr[0]);
@@ -983,7 +933,7 @@ document.addEventListener('DOMContentLoaded',function(){
   document.querySelectorAll('#aSections input[type="checkbox"]').forEach(function(cb){
     cb.addEventListener('change',function(){
       var lbl=this.closest('.sec-cb-lbl');
-      if(lbl){lbl.style.borderColor=this.checked?'var(--acc)':'';lbl.style.background=this.checked?'rgba(79,126,247,.06)':'';}
+      if(lbl){lbl.style.borderColor=this.checked?'var(--pri)':'';lbl.style.background=this.checked?'rgba(15,118,110,.06)':'';}
     });
   });
   var noSecCb=document.getElementById('noSectionCb');

@@ -5,47 +5,48 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Leader Portal — <%= user.section %></title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script>(function(){var t=localStorage.getItem('rku-theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
 <style>
 :root{
-  --pri:#0d1b3e;--pri2:#162d5a;
-  --acc:#4f7ef7;--acc2:#2563eb;
+  --pri:#0f766e;--pri2:#134e4a;
+  --acc:#f59e0b;--acc2:#d97706;
   --suc:#10b981;--dan:#ef4444;--war:#f59e0b;--wa:#25d366;
-  --bg:#f0f4fb;--card:#fff;--border:#e4eaf4;
-  --text:#0e1526;--muted:#64748b;
-  --input-bg:#f6f9ff;--input-bd:#d4daea;
-  --shadow:0 2px 16px rgba(14,21,38,.07);
-  --shadow-lg:0 8px 36px rgba(14,21,38,.13);
+  --bg:#f0fdf9;--card:#fff;--border:#ccfbf1;
+  --text:#0d1f1c;--muted:#5a7a76;
+  --input-bg:#f0fdf9;--input-bd:#99f6e4;
+  --shadow:0 2px 16px rgba(15,118,110,.07);
+  --shadow-lg:0 8px 36px rgba(15,118,110,.13);
   --radius:16px;--radius-sm:10px;
 }
 [data-theme="dark"]{
-  --bg:#080e1d;--card:#0e1828;--border:#172035;
-  --text:#cdd9ee;--muted:#5e7898;
-  --input-bg:#0a1120;--input-bd:#1b2d4a;
-  --shadow:0 2px 20px rgba(0,0,0,.35);
-  --shadow-lg:0 8px 40px rgba(0,0,0,.55);
-  --pri:#060e20;--pri2:#0d1b36;
-  --acc:#6b93fa;--acc2:#4f7ef7;
+  --bg:#051714;--card:#071f1c;--border:#0d3330;
+  --text:#b2e8e2;--muted:#4a6e6a;
+  --input-bg:#051714;--input-bd:#0d3330;
+  --shadow:0 2px 20px rgba(0,0,0,.4);
+  --shadow-lg:0 8px 40px rgba(0,0,0,.6);
+  --pri:#0d9488;--pri2:#0f766e;
+  --acc:#fbbf24;--acc2:#f59e0b;
   --suc:#34d399;--dan:#f87171;--war:#fbbf24;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{transition:background .25s,color .25s;}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:18px 16px 50px;}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:18px 16px 50px;}
 .page{max-width:1040px;margin:0 auto;}
 
 /* ── HERO HEADER ── */
 .hero{
-  background:linear-gradient(135deg,var(--pri) 0%,var(--pri2) 60%,#1e4fd8 100%);
+  background:linear-gradient(135deg,var(--pri2) 0%,var(--pri) 55%,#0d9488 100%);
   border-radius:var(--radius);padding:22px 26px;margin-bottom:20px;
   display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;
-  box-shadow:0 8px 32px rgba(13,27,62,.35);position:relative;overflow:hidden;
+  box-shadow:0 8px 32px rgba(15,118,110,.32);position:relative;overflow:hidden;
 }
 .hero::before{content:'';position:absolute;right:-60px;top:-60px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.04);pointer-events:none;}
 .hero-left h1{font-size:1.3rem;font-weight:900;color:#fff;}
 .hero-left p{font-size:13px;color:rgba(255,255,255,.65);margin-top:5px;}
 .hero-right{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
 .chip{background:rgba(255,255,255,.12);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;border:1px solid rgba(255,255,255,.15);}
-.hero-btn{display:inline-flex;align-items:center;gap:7px;padding:8px 15px;border-radius:var(--radius-sm);font-size:12.5px;font-weight:700;text-decoration:none;border:1px solid rgba(255,255,255,.18);cursor:pointer;transition:.2s;background:rgba(255,255,255,.12);color:#fff;}
+.hero-btn{display:inline-flex;align-items:center;gap:7px;padding:8px 15px;border-radius:var(--radius-sm);font-size:12.5px;font-weight:700;text-decoration:none;border:1px solid rgba(255,255,255,.18);cursor:pointer;transition:.2s;background:rgba(255,255,255,.12);color:#fff;font-family:inherit;}
 .hero-btn:hover{background:rgba(255,255,255,.22);}
 .hero-btn.danger{background:rgba(239,68,68,.2);border-color:rgba(239,68,68,.3);color:#fca5a5;}
 .theme-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);color:#fff;padding:7px 11px;border-radius:var(--radius-sm);cursor:pointer;font-size:14px;transition:.2s;}
@@ -61,10 +62,10 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 
 /* ── QUICK MARK ── */
 .qm-box{
-  background:linear-gradient(135deg,rgba(79,126,247,.06),rgba(37,99,235,.04));
-  border:1.5px solid rgba(79,126,247,.2);border-radius:var(--radius);padding:18px 20px;margin-bottom:18px;
+  background:linear-gradient(135deg,rgba(15,118,110,.06),rgba(13,148,136,.04));
+  border:1.5px solid rgba(15,118,110,.2);border-radius:var(--radius);padding:18px 20px;margin-bottom:18px;
 }
-[data-theme="dark"] .qm-box{background:linear-gradient(135deg,rgba(79,126,247,.08),rgba(37,99,235,.06));border-color:rgba(107,147,250,.25);}
+[data-theme="dark"] .qm-box{background:linear-gradient(135deg,rgba(15,118,110,.08),rgba(13,148,136,.06));border-color:rgba(13,148,136,.25);}
 .qm-box h4{font-size:.9rem;font-weight:800;display:flex;align-items:center;gap:8px;margin-bottom:12px;}
 .qm-row{display:flex;gap:10px;flex-wrap:wrap;}
 .qm-row input{flex:1;min-width:180px;}
@@ -80,7 +81,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .card-hdr h3{font-size:.95rem;font-weight:800;display:flex;align-items:center;gap:8px;margin:0;}
 .card-body{padding:20px 22px;}
 .sec-heading{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:16px 22px 0;}
-.sec-heading h3{font-size:.95rem;font-weight:800;display:flex;align-items:center;gap:8px;margin:0;border-left:4px solid var(--acc);padding-left:10px;}
+.sec-heading h3{font-size:.95rem;font-weight:800;display:flex;align-items:center;gap:8px;margin:0;border-left:4px solid var(--pri);padding-left:10px;}
 
 /* ── FORM ── */
 .grid-inputs{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;padding:18px 22px;}
@@ -90,43 +91,42 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
   padding:11px 13px;border-radius:var(--radius-sm);border:1.5px solid var(--input-bd);
   font-size:13.5px;font-family:inherit;background:var(--input-bg);color:var(--text);outline:none;transition:.2s;width:100%;
 }
-.fc:focus{border-color:var(--acc);background:var(--card);box-shadow:0 0 0 3px rgba(79,126,247,.12);}
+.fc:focus{border-color:var(--pri);background:var(--card);box-shadow:0 0 0 3px rgba(15,118,110,.12);}
 select.fc option{background:var(--card);color:var(--text);}
 
 /* ── TABLE ── */
 .tbl-wrap{overflow-x:auto;}
 table{width:100%;border-collapse:collapse;min-width:380px;}
-thead th{background:var(--pri);color:#fff;padding:11px 14px;font-size:11.5px;text-transform:uppercase;letter-spacing:.4px;text-align:left;white-space:nowrap;}
+thead th{background:var(--pri2);color:#fff;padding:11px 14px;font-size:11.5px;text-transform:uppercase;letter-spacing:.4px;text-align:left;white-space:nowrap;}
 tbody td{padding:12px 14px;border-bottom:1px solid var(--border);font-size:13.5px;vertical-align:middle;}
 tbody tr:last-child td{border-bottom:none;}
-tbody tr:hover{background:rgba(79,126,247,.03);}
+tbody tr:hover{background:rgba(15,118,110,.03);}
 tbody tr.qm-hit{background:rgba(16,185,129,.05)!important;}
 [data-theme="dark"] tbody tr.qm-hit{background:rgba(52,211,153,.06)!important;}
 
 /* ── CHECKBOX ── */
 .cb-wrap{display:flex;align-items:center;gap:8px;cursor:pointer;}
-input[type="checkbox"]{width:17px;height:17px;accent-color:var(--acc);cursor:pointer;flex-shrink:0;}
+input[type="checkbox"]{width:17px;height:17px;accent-color:var(--pri);cursor:pointer;flex-shrink:0;}
 
 /* ── BUTTONS ── */
-.btn{display:inline-flex;align-items:center;gap:7px;padding:10px 18px;border:none;border-radius:var(--radius-sm);font-size:13.5px;font-weight:700;cursor:pointer;transition:.2s;text-decoration:none;white-space:nowrap;}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:10px 18px;border:none;border-radius:var(--radius-sm);font-size:13.5px;font-weight:700;cursor:pointer;transition:.2s;text-decoration:none;white-space:nowrap;font-family:inherit;}
 .btn:hover{opacity:.88;transform:translateY(-1px);}
 .btn:active{transform:scale(.98);}
+.btn-pri{background:var(--pri);color:#fff;}
 .btn-acc{background:var(--acc);color:#fff;}
 .btn-suc{background:var(--suc);color:#fff;}
 .btn-dan{background:var(--dan);color:#fff;}
 .btn-ghost{background:var(--input-bg);color:var(--text);border:1.5px solid var(--input-bd);}
-.btn-ghost:hover{border-color:var(--acc);color:var(--acc);}
+.btn-ghost:hover{border-color:var(--pri);color:var(--pri);}
 .btn-full{width:100%;justify-content:center;}
 .btn-wa{background:var(--wa);color:#fff;}
 
 /* ── BADGE ── */
-.badge-leader{background:rgba(139,92,246,.12);color:#7c3aed;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;}
+.badge-leader{background:rgba(124,58,237,.12);color:#6d28d9;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;}
 [data-theme="dark"] .badge-leader{background:rgba(167,139,250,.15);color:#a78bfa;}
 
-/* ── PRESENT COUNT ── */
-#presentCount{font-size:13px;font-weight:700;color:var(--acc);}
+#presentCount{font-size:13px;font-weight:700;color:var(--pri);}
 
-/* ── REPORT GRID ── */
 .report-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
 @media(max-width:500px){.report-grid{grid-template-columns:1fr;}}
 
@@ -134,8 +134,15 @@ input[type="checkbox"]{width:17px;height:17px;accent-color:var(--acc);cursor:poi
   body{padding:14px 10px 40px;}
   .hero{padding:18px 16px;border-radius:14px;}
   .hero-left h1{font-size:1.1rem;}
+  .hero-right{gap:6px;}
+  .hero-btn{padding:7px 10px;font-size:11.5px;}
   .card-body,.card-hdr,.sec-heading,.grid-inputs{padding:14px 16px;}
   .qm-box{padding:14px;}
+  .qm-row{flex-direction:column;}
+}
+@media(max-width:380px){
+  .chip{display:none;}
+  .hero-right .theme-btn{display:none;}
 }
 </style>
 </head>
@@ -167,16 +174,16 @@ input[type="checkbox"]{width:17px;height:17px;accent-color:var(--acc);cursor:poi
 
 <!-- Quick Mark -->
 <div class="qm-box">
-  <h4><i class="fas fa-bolt" style="color:var(--war);"></i> Quick Mark Present by Roll Numbers</h4>
+  <h4><i class="fas fa-bolt" style="color:var(--acc);"></i> Quick Mark Present by Roll Numbers</h4>
   <div class="qm-row">
     <input type="text" id="quickInput" class="fc" placeholder="e.g. 101, 102, 105 or paste a list…">
-    <button type="button" class="btn btn-acc" onclick="applyQuickMark()">
+    <button type="button" class="btn btn-pri" onclick="applyQuickMark()">
       <i class="fas fa-check-double"></i> Mark Present
     </button>
     <button type="button" class="btn btn-ghost" onclick="markAll(true)"><i class="fas fa-users"></i> All Present</button>
     <button type="button" class="btn btn-ghost" onclick="markAll(false)"><i class="fas fa-user-xmark"></i> Clear All</button>
   </div>
-  <p class="qm-tip"><i class="fas fa-circle-info" style="color:var(--acc);"></i> Enter comma-separated roll numbers. Supports leading zeros. Press <strong>Enter</strong> to apply.</p>
+  <p class="qm-tip"><i class="fas fa-circle-info" style="color:var(--pri);"></i> Enter comma-separated roll numbers. Supports leading zeros. Press <strong>Enter</strong> to apply.</p>
   <div class="qm-feedback" id="qmFeedback"></div>
 </div>
 
@@ -187,7 +194,7 @@ input[type="checkbox"]{width:17px;height:17px;accent-color:var(--acc);cursor:poi
   <!-- Session Details -->
   <div class="card">
     <div class="card-hdr">
-      <h3><i class="fas fa-circle-info" style="color:var(--acc);"></i> Session Details</h3>
+      <h3><i class="fas fa-circle-info" style="color:var(--pri);"></i> Session Details</h3>
     </div>
     <div class="grid-inputs">
       <div class="fg">
@@ -226,7 +233,7 @@ input[type="checkbox"]{width:17px;height:17px;accent-color:var(--acc);cursor:poi
   <!-- Student Table -->
   <div class="card">
     <div class="sec-heading">
-      <h3><i class="fas fa-users" style="color:var(--acc);"></i> Students — Section <%= user.section %></h3>
+      <h3><i class="fas fa-users" style="color:var(--pri);"></i> Students — Section <%= user.section %></h3>
       <span id="presentCount">0 marked present</span>
     </div>
     <div style="height:14px;"></div>
@@ -249,7 +256,7 @@ input[type="checkbox"]{width:17px;height:17px;accent-color:var(--acc);cursor:poi
                var ri = _idx; %>
           <tr id="row-<%= ri %>">
             <td style="color:var(--muted);font-size:12px;"><%= ri + 1 %></td>
-            <td class="roll-col" style="font-family:monospace;font-weight:700;color:var(--acc);">
+            <td class="roll-col" style="font-family:monospace;font-weight:700;color:var(--pri);">
               <%= u.rollNo || u.rollno || '—' %>
             </td>
             <td>
@@ -294,7 +301,7 @@ input[type="checkbox"]{width:17px;height:17px;accent-color:var(--acc);cursor:poi
 <!-- Reports -->
 <div class="card">
   <div class="card-hdr">
-    <h3><i class="fas fa-file-lines" style="color:var(--acc);"></i> Report Management</h3>
+    <h3><i class="fas fa-file-lines" style="color:var(--pri);"></i> Report Management</h3>
   </div>
   <div class="card-body">
     <div class="report-grid" style="margin-bottom:14px;">
@@ -308,7 +315,7 @@ input[type="checkbox"]{width:17px;height:17px;accent-color:var(--acc);cursor:poi
       </div>
       <div class="fg">
         <label style="opacity:0;">.</label>
-        <button type="button" class="btn btn-acc" onclick="downloadPDF()">
+        <button type="button" class="btn btn-pri" onclick="downloadPDF()">
           <i class="fas fa-file-pdf"></i> Download PDF
         </button>
       </div>
@@ -325,7 +332,6 @@ input[type="checkbox"]{width:17px;height:17px;accent-color:var(--acc);cursor:poi
 document.addEventListener('DOMContentLoaded', function(){
   updateCount();
 
-  // Theme
   var themeBtn = document.getElementById('themeToggle');
   if (themeBtn) themeBtn.addEventListener('click', function(){
     var c = document.documentElement.getAttribute('data-theme') || 'light';
@@ -339,11 +345,9 @@ document.addEventListener('DOMContentLoaded', function(){
   var _tc = document.documentElement.getAttribute('data-theme') || 'light';
   if (_ti) _ti.className = _tc === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
 
-  // Quick input enter key
   var qi = document.getElementById('quickInput');
   if (qi) qi.addEventListener('keydown', function(e){ if(e.key==='Enter'){e.preventDefault();applyQuickMark();} });
 
-  // Form submit
   document.getElementById('attendanceForm').addEventListener('submit', function(e){
     if (!confirm('Lock this attendance? This cannot be undone.')) { e.preventDefault(); return; }
     var form = this;
@@ -356,7 +360,6 @@ document.addEventListener('DOMContentLoaded', function(){
     });
   });
 
-  // Auto-dismiss alerts
   document.querySelectorAll('.alert').forEach(function(a){
     setTimeout(function(){
       a.style.transition = 'opacity .5s'; a.style.opacity = '0';
@@ -387,16 +390,10 @@ function applyQuickMark(){
   var input = (document.getElementById('quickInput').value||'').trim();
   var fb = document.getElementById('qmFeedback');
   fb.className = 'qm-feedback'; fb.textContent = '';
-  if (!input){
-    fb.className = 'qm-feedback show no';
-    fb.innerHTML = '<i class="fas fa-circle-exclamation"></i> Please enter at least one roll number.'; return;
-  }
+  if (!input){ fb.className='qm-feedback show no'; fb.innerHTML='<i class="fas fa-circle-exclamation"></i> Please enter at least one roll number.'; return; }
   var rolls = input.split(/[\s,;|\n\t]+/).map(normalizeRoll).filter(Boolean);
   rolls = rolls.filter(function(v,i,a){ return a.indexOf(v)===i; });
-  if (!rolls.length){
-    fb.className = 'qm-feedback show no';
-    fb.innerHTML = '<i class="fas fa-circle-exclamation"></i> No valid roll numbers found.'; return;
-  }
+  if (!rolls.length){ fb.className='qm-feedback show no'; fb.innerHTML='<i class="fas fa-circle-exclamation"></i> No valid roll numbers found.'; return; }
   var rows = document.querySelectorAll('#studentTable tbody tr');
   var matched = 0; var foundRolls = [];
   rows.forEach(function(row){

@@ -5,23 +5,24 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Approval Pending — RKU Attendance</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script>(function(){var t=localStorage.getItem('rku-theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
 <style>
 :root{
-  --bg:#f0f4fb;--card:#fff;--border:#e4eaf4;
-  --text:#0e1526;--muted:#64748b;
-  --acc:#4f7ef7;--war:#f59e0b;
-  --shadow:0 8px 40px rgba(14,21,38,.12);
+  --bg:#f0fdf9;--card:#fff;--border:#ccfbf1;
+  --text:#0d1f1c;--muted:#5a7a76;
+  --pri:#0f766e;--war:#f59e0b;
+  --shadow:0 8px 40px rgba(15,118,110,.12);
 }
 [data-theme="dark"]{
-  --bg:#080e1d;--card:#0e1828;--border:#172035;
-  --text:#cdd9ee;--muted:#5e7898;
-  --acc:#6b93fa;--war:#fbbf24;
+  --bg:#051714;--card:#071f1c;--border:#0d3330;
+  --text:#b2e8e2;--muted:#4a6e6a;
+  --pri:#0d9488;--war:#fbbf24;
   --shadow:0 8px 40px rgba(0,0,0,.5);
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{transition:background .25s,color .25s;}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
 
 .pending-card{
   background:var(--card);border:1px solid var(--border);border-radius:20px;
@@ -29,64 +30,30 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
   text-align:center;padding:48px 38px;
   border-top:5px solid var(--war);position:relative;overflow:hidden;
 }
-.pending-card::before{
-  content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;
-  border-radius:50%;background:rgba(245,158,11,.04);pointer-events:none;
-}
+.pending-card::before{content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;border-radius:50%;background:rgba(245,158,11,.04);pointer-events:none;}
 
-.pending-icon{
-  width:80px;height:80px;border-radius:50%;
-  background:rgba(245,158,11,.1);display:flex;align-items:center;justify-content:center;
-  font-size:2rem;color:var(--war);margin:0 auto 22px;
-  animation:spin-wait 3s ease-in-out infinite;
-}
-@keyframes spin-wait{
-  0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(245,158,11,.25);}
-  50%{transform:scale(1.06);box-shadow:0 0 0 14px rgba(245,158,11,0);}
-}
+.pending-icon{width:80px;height:80px;border-radius:50%;background:rgba(245,158,11,.1);display:flex;align-items:center;justify-content:center;font-size:2rem;color:var(--war);margin:0 auto 22px;animation:spin-wait 3s ease-in-out infinite;}
+@keyframes spin-wait{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(245,158,11,.25);}50%{transform:scale(1.06);box-shadow:0 0 0 14px rgba(245,158,11,0);}}
 
 h2{font-size:1.35rem;font-weight:900;margin-bottom:10px;}
 .sub{font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:20px;}
 
-.email-badge{
-  display:inline-flex;align-items:center;gap:8px;
-  background:rgba(79,126,247,.08);border:1px solid rgba(79,126,247,.18);
-  color:var(--acc);padding:8px 16px;border-radius:20px;
-  font-weight:700;font-size:13.5px;margin-bottom:20px;
-}
+.email-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(15,118,110,.08);border:1px solid rgba(15,118,110,.18);color:var(--pri);padding:8px 16px;border-radius:20px;font-weight:700;font-size:13.5px;margin-bottom:20px;}
 
-.info-box{
-  background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);
-  border-left:4px solid var(--war);border-radius:10px;padding:16px;
-  text-align:left;margin-bottom:22px;
-}
+.info-box{background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-left:4px solid var(--war);border-radius:10px;padding:16px;text-align:left;margin-bottom:22px;}
 .info-box strong{font-size:13px;color:var(--text);display:block;margin-bottom:8px;}
 .info-box ul{margin:0;padding-left:18px;color:var(--muted);font-size:13px;line-height:2;}
 
 .hint{font-size:12.5px;color:var(--muted);margin-bottom:24px;}
 
-.progress-bar{
-  height:5px;background:var(--border);border-radius:3px;overflow:hidden;
-  margin-bottom:24px;position:relative;
-}
-.progress-fill{
-  height:100%;border-radius:3px;width:40%;
-  background:linear-gradient(90deg,var(--war),rgba(245,158,11,.3));
-  animation:progress 2s ease-in-out infinite alternate;
-}
-@keyframes progress{
-  from{width:20%;}
-  to{width:75%;}
-}
+.progress-bar{height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:24px;position:relative;}
+.progress-fill{height:100%;border-radius:3px;width:40%;background:linear-gradient(90deg,var(--war),rgba(245,158,11,.3));animation:progress 2s ease-in-out infinite alternate;}
+@keyframes progress{from{width:20%;}to{width:75%;}}
 
-.btn{
-  display:inline-flex;align-items:center;gap:8px;padding:12px 26px;
-  border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;
-  text-decoration:none;border:none;transition:.2s;
-  background:linear-gradient(135deg,#0d1b3e,#162d5a);color:#fff;
-  box-shadow:0 4px 14px rgba(13,27,62,.25);
-}
-.btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(13,27,62,.35);}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 26px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;text-decoration:none;border:none;transition:.2s;background:linear-gradient(135deg,var(--pri),#134e4a);color:#fff;box-shadow:0 4px 14px rgba(15,118,110,.25);font-family:inherit;}
+.btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(15,118,110,.35);}
+
+@media(max-width:440px){.pending-card{padding:36px 24px;}}
 </style>
 </head>
 <body>
@@ -113,7 +80,7 @@ h2{font-size:1.35rem;font-weight:900;margin-bottom:10px;}
     </ul>
   </div>
 
-  <p class="hint"><i class="fas fa-headset" style="color:var(--acc);"></i> If this is urgent, contact the IT Helpdesk.</p>
+  <p class="hint"><i class="fas fa-headset" style="color:var(--pri);"></i> If this is urgent, contact the IT Helpdesk.</p>
 
   <a href="/logout" class="btn">
     <i class="fas fa-arrow-left"></i> Return to Login

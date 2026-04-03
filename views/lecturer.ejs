@@ -5,48 +5,50 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Lecturer Portal — <%= user.name %></title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script>(function(){var t=localStorage.getItem('rku-theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
 <style>
 :root{
-  --pri:#0d1b3e;--pri2:#162d5a;
-  --acc:#4f7ef7;--acc2:#2563eb;--acc-glow:rgba(79,126,247,.18);
-  --suc:#10b981;--dan:#ef4444;--war:#f59e0b;--pur:#8b5cf6;
-  --bg:#f0f4fb;--card:#fff;--border:#e4eaf4;
-  --text:#0e1526;--muted:#64748b;
-  --input-bg:#f6f9ff;--input-bd:#d4daea;
-  --shadow:0 2px 16px rgba(14,21,38,.07);
-  --shadow-lg:0 8px 36px rgba(14,21,38,.13);
+  --pri:#0f766e;--pri2:#134e4a;
+  --acc:#f59e0b;--acc2:#d97706;
+  --vio:#7c3aed;
+  --suc:#10b981;--dan:#ef4444;--war:#f59e0b;--pur:#7c3aed;
+  --bg:#f0fdf9;--card:#fff;--border:#ccfbf1;
+  --text:#0d1f1c;--muted:#5a7a76;
+  --input-bg:#f0fdf9;--input-bd:#99f6e4;
+  --shadow:0 2px 16px rgba(15,118,110,.07);
+  --shadow-lg:0 8px 36px rgba(15,118,110,.13);
   --radius:16px;--radius-sm:10px;--sidebar-w:260px;
 }
 [data-theme="dark"]{
-  --bg:#080e1d;--card:#0e1828;--border:#172035;
-  --text:#cdd9ee;--muted:#5e7898;
-  --input-bg:#0a1120;--input-bd:#1b2d4a;
-  --shadow:0 2px 20px rgba(0,0,0,.35);
-  --shadow-lg:0 8px 40px rgba(0,0,0,.55);
-  --pri:#060e20;--pri2:#0d1b36;
-  --acc:#6b93fa;--acc2:#4f7ef7;--acc-glow:rgba(107,147,250,.15);
+  --bg:#051714;--card:#071f1c;--border:#0d3330;
+  --text:#b2e8e2;--muted:#4a6e6a;
+  --input-bg:#051714;--input-bd:#0d3330;
+  --shadow:0 2px 20px rgba(0,0,0,.4);
+  --shadow-lg:0 8px 40px rgba(0,0,0,.6);
+  --pri:#0d9488;--pri2:#0f766e;
+  --acc:#fbbf24;--acc2:#f59e0b;
   --suc:#34d399;--dan:#f87171;--war:#fbbf24;--pur:#a78bfa;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{transition:background .25s,color .25s;}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;}
 
 /* ══ SIDEBAR ══ */
 .sidebar{
-  width:var(--sidebar-w);background:linear-gradient(180deg,var(--pri) 0%,var(--pri2) 100%);
+  width:var(--sidebar-w);background:linear-gradient(180deg,var(--pri2) 0%,var(--pri) 100%);
   height:100vh;position:fixed;top:0;left:0;
   display:flex;flex-direction:column;z-index:400;overflow-y:auto;
   transition:transform .28s cubic-bezier(.4,0,.2,1);
-  box-shadow:4px 0 30px rgba(0,0,0,.25);
+  box-shadow:4px 0 30px rgba(0,0,0,.2);
 }
 .sb-top{padding:22px 16px 0;}
 .brand{display:flex;align-items:center;gap:11px;margin-bottom:20px;}
 .brand-icon{
   width:42px;height:42px;flex-shrink:0;border-radius:12px;
-  background:linear-gradient(135deg,var(--acc),var(--pur));
+  background:linear-gradient(135deg,var(--acc),#f97316);
   display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;
-  box-shadow:0 4px 14px rgba(79,126,247,.4);
+  box-shadow:0 4px 14px rgba(245,158,11,.4);
 }
 .brand-name{font-size:.9rem;font-weight:800;color:#fff;letter-spacing:-.2px;}
 .brand-sub{font-size:10.5px;color:rgba(255,255,255,.4);margin-top:2px;}
@@ -57,13 +59,13 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 }
 .user-chip small{font-size:10px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px;}
 .user-chip strong{color:#fff;font-size:13px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:7px;}
-.role-badge{display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,rgba(79,126,247,.3),rgba(139,92,246,.2));border:1px solid rgba(79,126,247,.3);color:#93c5fd;padding:4px 10px;border-radius:20px;font-size:10.5px;font-weight:700;}
+.role-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(245,158,11,.25);border:1px solid rgba(245,158,11,.3);color:#fde68a;padding:4px 10px;border-radius:20px;font-size:10.5px;font-weight:700;}
 
 .role-sw{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:var(--radius-sm);padding:11px 13px;margin-bottom:16px;}
 .role-sw label{font-size:10px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:5px;margin-bottom:7px;}
 .role-sw-row{display:flex;gap:6px;}
 .role-sel{flex:1;padding:7px 10px;border-radius:7px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:#fff;font-size:12.5px;font-family:inherit;outline:none;cursor:pointer;}
-.role-sel option{background:#0d1b3e;color:#fff;}
+.role-sel option{background:#0f766e;color:#fff;}
 .role-go{padding:7px 12px;border-radius:7px;background:var(--acc);color:#fff;border:none;font-size:12px;font-weight:700;cursor:pointer;transition:.18s;}
 .role-go:hover{background:var(--acc2);}
 
@@ -76,7 +78,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
   transition:.18s;border:none;background:none;cursor:pointer;width:100%;text-align:left;
 }
 .nav-link:hover{background:rgba(255,255,255,.08);color:#fff;}
-.nav-link.active{background:rgba(79,126,247,.22);color:#fff;border-left:3px solid var(--acc);padding-left:8px;}
+.nav-link.active{background:rgba(245,158,11,.22);color:#fde68a;border-left:3px solid var(--acc);padding-left:8px;}
 .nav-link i{width:18px;text-align:center;flex-shrink:0;font-size:13.5px;}
 .nav-link.danger{color:rgba(248,113,113,.65);}
 .nav-link.danger:hover{background:rgba(239,68,68,.12);color:var(--dan);}
@@ -91,7 +93,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .sb-overlay.open{display:block;}
 .ham{
   display:none;position:fixed;top:14px;left:14px;z-index:500;
-  background:var(--pri);border:none;color:#fff;
+  background:var(--pri2);border:none;color:#fff;
   padding:10px 13px;border-radius:var(--radius-sm);font-size:18px;cursor:pointer;
   box-shadow:0 3px 14px rgba(0,0,0,.35);
 }
@@ -99,7 +101,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 /* ══ MOBILE TOPBAR ══ */
 .mob-topbar{
   display:none;position:fixed;top:0;left:0;right:0;height:54px;z-index:300;
-  background:var(--pri);padding:0 16px 0 60px;
+  background:var(--pri2);padding:0 16px 0 60px;
   align-items:center;justify-content:space-between;
   box-shadow:0 2px 12px rgba(0,0,0,.2);
 }
@@ -112,10 +114,10 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 
 /* ══ PAGE HEADER ══ */
 .pg-hdr{
-  background:linear-gradient(135deg,var(--pri) 0%,var(--pri2) 60%,#1e4fd8 100%);
+  background:linear-gradient(135deg,var(--pri2) 0%,var(--pri) 55%,#0d9488 100%);
   border-radius:var(--radius);padding:22px 26px;margin-bottom:24px;
   display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;
-  box-shadow:0 6px 28px rgba(13,27,62,.35);position:relative;overflow:hidden;
+  box-shadow:0 6px 28px rgba(15,118,110,.32);position:relative;overflow:hidden;
 }
 .pg-hdr::before{content:'';position:absolute;right:-50px;top:-50px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.04);pointer-events:none;}
 .pg-hdr h1{font-size:1.3rem;font-weight:900;color:#fff;letter-spacing:-.2px;}
@@ -147,7 +149,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 /* ══ DIVISION TABS ══ */
 .div-tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:18px;}
 .tab-btn{padding:7px 16px;border:1.5px solid var(--border);border-radius:20px;cursor:pointer;font-weight:700;font-size:12.5px;background:var(--card);color:var(--muted);transition:.18s;font-family:inherit;}
-.tab-btn:hover,.tab-btn.active{background:var(--acc);color:#fff;border-color:var(--acc);}
+.tab-btn:hover,.tab-btn.active{background:var(--pri);color:#fff;border-color:var(--pri);}
 .hidden{display:none!important;}
 
 /* ══ GROUP HEADER ══ */
@@ -166,7 +168,7 @@ table{width:100%;border-collapse:collapse;min-width:400px;}
 thead th{background:var(--input-bg);padding:11px 15px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);border-bottom:2px solid var(--border);white-space:nowrap;}
 tbody td{padding:12px 15px;border-bottom:1px solid var(--border);font-size:13.5px;vertical-align:middle;}
 tbody tr:last-child td{border-bottom:none;}
-tbody tr:hover td{background:rgba(79,126,247,.025);}
+tbody tr:hover td{background:rgba(15,118,110,.025);}
 
 /* ══ STATUS ══ */
 .sp{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:7px;font-size:11.5px;font-weight:700;}
@@ -176,8 +178,8 @@ tbody tr:hover td{background:rgba(79,126,247,.025);}
 [data-theme="dark"] .sp.Absent{background:rgba(248,113,113,.1);color:var(--dan);}
 
 /* ══ TOGGLE BTN ══ */
-.toggle-btn{padding:4px 10px;font-size:11px;font-weight:700;border-radius:6px;border:none;cursor:pointer;transition:.18s;background:rgba(79,126,247,.1);color:var(--acc);}
-.toggle-btn:hover{background:var(--acc);color:#fff;}
+.toggle-btn{padding:4px 10px;font-size:11px;font-weight:700;border-radius:6px;border:none;cursor:pointer;transition:.18s;background:rgba(15,118,110,.1);color:var(--pri);}
+.toggle-btn:hover{background:var(--pri);color:#fff;}
 
 /* ══ ALERTS ══ */
 .alert{display:flex;align-items:center;gap:10px;padding:13px 16px;border-radius:var(--radius-sm);margin-bottom:18px;font-size:13.5px;animation:slideIn .3s ease;}
@@ -193,7 +195,7 @@ tbody tr:hover td{background:rgba(79,126,247,.025);}
 .btn{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:700;cursor:pointer;transition:.18s;text-decoration:none;white-space:nowrap;}
 .btn:hover{opacity:.88;transform:translateY(-1px);}
 .btn:active{transform:scale(.98);}
-.btn-acc{background:var(--acc);color:#fff;}
+.btn-pri{background:var(--pri);color:#fff;}
 
 /* ══ RESPONSIVE ══ */
 @media(max-width:1060px){.stats-grid{grid-template-columns:repeat(2,1fr);}}
@@ -308,7 +310,7 @@ tbody tr:hover td{background:rgba(79,126,247,.025);}
   %>
   <div class="stats-grid">
     <div class="stat-card">
-      <div class="stat-icon" style="background:rgba(79,126,247,.1);color:var(--acc);"><i class="fas fa-clipboard-list"></i></div>
+      <div class="stat-icon" style="background:rgba(15,118,110,.1);color:var(--pri);"><i class="fas fa-clipboard-list"></i></div>
       <div class="stat-body"><small>Today's Classes</small><h2><%= todayRecords ? todayRecords.length : 0 %></h2></div>
     </div>
     <div class="stat-card">
@@ -320,7 +322,7 @@ tbody tr:hover td{background:rgba(79,126,247,.025);}
       <div class="stat-body"><small>Absent Today</small><h2 style="color:var(--dan);"><%= totalAbsent %></h2></div>
     </div>
     <div class="stat-card">
-      <div class="stat-icon" style="background:rgba(139,92,246,.1);color:var(--pur);"><i class="fas fa-layer-group"></i></div>
+      <div class="stat-icon" style="background:rgba(124,58,237,.1);color:var(--pur);"><i class="fas fa-layer-group"></i></div>
       <div class="stat-body"><small>Sections Today</small><h2 style="color:var(--pur);"><%= sectionsToday ? sectionsToday.length : 0 %></h2></div>
     </div>
   </div>
@@ -329,7 +331,7 @@ tbody tr:hover td{background:rgba(79,126,247,.025);}
   <div class="card">
     <div class="card-hdr">
       <h3>
-        <i class="fas fa-calendar-day" style="color:var(--acc);"></i>
+        <i class="fas fa-calendar-day" style="color:var(--pri);"></i>
         Today's Attendance
         <% if (todayRecords && todayRecords.length > 0) { %>
           <span class="live-tag"><span class="live-dot"></span> Live</span>
@@ -365,9 +367,9 @@ tbody tr:hover td{background:rgba(79,126,247,.025);}
         <% Object.keys(groupedByDiv).forEach(function(div){ %>
         <div class="div-group" data-division="<%= div %>">
           <div class="grp-hdr">
-            <h4><i class="fas fa-layer-group" style="color:var(--acc);"></i> Section: <%= div %></h4>
+            <h4><i class="fas fa-layer-group" style="color:var(--pri);"></i> Section: <%= div %></h4>
             <div class="grp-hdr-right">
-              <a href="/generate-day-pdf/<%= new Date().toISOString().split('T')[0] %>?section=<%= div %>" class="btn btn-acc" style="padding:6px 13px;font-size:12px;">
+              <a href="/generate-day-pdf/<%= new Date().toISOString().split('T')[0] %>?section=<%= div %>" class="btn btn-pri" style="padding:6px 13px;font-size:12px;">
                 <i class="fas fa-file-pdf"></i> Download PDF
               </a>
             </div>
@@ -377,7 +379,7 @@ tbody tr:hover td{background:rgba(79,126,247,.025);}
           <div class="card" style="margin-bottom:14px;">
             <div class="card-hdr" style="background:transparent;">
               <h3 style="font-size:.88rem;">
-                <i class="fas fa-book" style="color:var(--pur);"></i>
+                <i class="fas fa-book" style="color:var(--acc);"></i>
                 <%= record.subject || 'Unknown Subject' %>
                 &nbsp;<span style="color:var(--muted);font-weight:400;font-size:.85em;">· <%= record.manualTime || 'N/A' %></span>
               </h3>
@@ -386,7 +388,7 @@ tbody tr:hover td{background:rgba(79,126,247,.025);}
                 <span style="font-size:12px;color:var(--suc);font-weight:700;"><i class="fas fa-check"></i> <%= pCount %> Present</span>
                 <span style="font-size:12px;color:var(--dan);font-weight:700;"><i class="fas fa-times"></i> <%= record.students.length - pCount %> Absent</span>
                 <% if (record.isLockedByLeader) { %>
-                  <span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;background:rgba(79,126,247,.1);color:var(--acc);">
+                  <span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;background:rgba(15,118,110,.1);color:var(--pri);">
                     <i class="fas fa-lock"></i> Locked
                   </span>
                 <% } %>
@@ -405,7 +407,7 @@ tbody tr:hover td{background:rgba(79,126,247,.025);}
                   <% if (record.students && record.students.length > 0) { %>
                     <% record.students.forEach(function(student) { %>
                     <tr id="row-<%= record._id %>-<%= student.studentId %>">
-                      <td style="font-family:monospace;font-weight:700;color:var(--acc);"><%= student.studentId || 'N/A' %></td>
+                      <td style="font-family:monospace;font-weight:700;color:var(--pri);"><%= student.studentId || 'N/A' %></td>
                       <td><%= student.studentName || student.name || 'Unknown' %></td>
                       <td>
                         <div style="display:flex;align-items:center;gap:8px;">
@@ -440,7 +442,7 @@ tbody tr:hover td{background:rgba(79,126,247,.025);}
         <i class="fas fa-clipboard-list"></i>
         <h3>No Attendance Today</h3>
         <p>No records have been submitted for your classes today. They will appear here once section leaders submit attendance.</p>
-        <a href="/attendance-history" class="btn btn-acc"><i class="fas fa-clock-rotate-left"></i> View Previous Records</a>
+        <a href="/attendance-history" class="btn btn-pri"><i class="fas fa-clock-rotate-left"></i> View Previous Records</a>
       </div>
       <% } %>
 
@@ -462,7 +464,6 @@ tbody tr:hover td{background:rgba(79,126,247,.025);}
   setTheme(_t);
 
   document.addEventListener('DOMContentLoaded',function(){
-    // Theme
     ['themeToggle','themeToggleMob'].forEach(function(id){
       var btn=document.getElementById(id);
       if(btn) btn.addEventListener('click',function(){
@@ -471,7 +472,6 @@ tbody tr:hover td{background:rgba(79,126,247,.025);}
       });
     });
 
-    // Clock
     function tick(){
       var t=new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
       ['desktopClock','sbClock'].forEach(function(id){
@@ -480,7 +480,6 @@ tbody tr:hover td{background:rgba(79,126,247,.025);}
     }
     tick(); setInterval(tick,1000);
 
-    // Sidebar
     var ham=document.getElementById('hamBtn');
     var sb=document.getElementById('sidebar');
     var ov=document.getElementById('sidebarOverlay');
@@ -489,7 +488,6 @@ tbody tr:hover td{background:rgba(79,126,247,.025);}
     if(ham) ham.addEventListener('click',openSb);
     if(ov) ov.addEventListener('click',closeSb);
 
-    // Division tabs
     var tabs=document.getElementById('divTabs');
     if(tabs){
       tabs.addEventListener('click',function(e){
@@ -503,7 +501,6 @@ tbody tr:hover td{background:rgba(79,126,247,.025);}
       });
     }
 
-    // Toggle attendance (AJAX)
     document.body.addEventListener('click',function(e){
       var btn=e.target.closest('.toggle-status-btn'); if(!btn) return;
       var aid=btn.dataset.attendanceId;

@@ -5,118 +5,85 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Attendance History — RKU</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script>(function(){var t=localStorage.getItem('rku-theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
 <style>
 :root{
-  --pri:#0d1b3e;--pri2:#162d5a;
-  --acc:#4f7ef7;--acc2:#2563eb;
+  --pri:#0f766e;--pri2:#134e4a;
+  --acc:#f59e0b;
   --suc:#10b981;--dan:#ef4444;--war:#f59e0b;
-  --bg:#f0f4fb;--card:#fff;--border:#e4eaf4;
-  --text:#0e1526;--muted:#64748b;
-  --input-bg:#f6f9ff;--input-bd:#d4daea;
-  --shadow:0 2px 16px rgba(14,21,38,.07);
-  --shadow-lg:0 8px 36px rgba(14,21,38,.13);
+  --bg:#f0fdf9;--card:#fff;--border:#ccfbf1;
+  --text:#0d1f1c;--muted:#5a7a76;
+  --input-bg:#f0fdf9;--input-bd:#99f6e4;
+  --shadow:0 2px 16px rgba(15,118,110,.07);
+  --shadow-lg:0 8px 36px rgba(15,118,110,.13);
   --radius:16px;--radius-sm:10px;
 }
 [data-theme="dark"]{
-  --bg:#080e1d;--card:#0e1828;--border:#172035;
-  --text:#cdd9ee;--muted:#5e7898;
-  --input-bg:#0a1120;--input-bd:#1b2d4a;
-  --shadow:0 2px 20px rgba(0,0,0,.35);
-  --shadow-lg:0 8px 40px rgba(0,0,0,.55);
-  --pri:#060e20;--pri2:#0d1b36;
-  --acc:#6b93fa;--acc2:#4f7ef7;
+  --bg:#051714;--card:#071f1c;--border:#0d3330;
+  --text:#b2e8e2;--muted:#4a6e6a;
+  --input-bg:#051714;--input-bd:#0d3330;
+  --shadow:0 2px 20px rgba(0,0,0,.4);
+  --shadow-lg:0 8px 40px rgba(0,0,0,.6);
+  --pri:#0d9488;--pri2:#0f766e;
+  --acc:#fbbf24;
   --suc:#34d399;--dan:#f87171;--war:#fbbf24;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{transition:background .25s,color .25s;}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px 16px 40px;}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px 16px 40px;}
 .page{max-width:1080px;margin:0 auto;}
 
-/* ── TOPBAR ── */
-.topbar{
-  display:flex;align-items:center;justify-content:space-between;
-  flex-wrap:wrap;gap:12px;margin-bottom:22px;
-}
-.back-btn{
-  display:inline-flex;align-items:center;gap:8px;
-  background:var(--card);border:1.5px solid var(--border);
-  color:var(--text);text-decoration:none;padding:9px 16px;
-  border-radius:var(--radius-sm);font-size:13px;font-weight:700;
-  box-shadow:var(--shadow);transition:.18s;
-}
-.back-btn:hover{border-color:var(--acc);color:var(--acc);}
+.topbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:22px;}
+.back-btn{display:inline-flex;align-items:center;gap:8px;background:var(--card);border:1.5px solid var(--border);color:var(--text);text-decoration:none;padding:9px 16px;border-radius:var(--radius-sm);font-size:13px;font-weight:700;box-shadow:var(--shadow);transition:.18s;}
+.back-btn:hover{border-color:var(--pri);color:var(--pri);}
 .page-title{font-size:1.3rem;font-weight:900;letter-spacing:-.3px;}
-.page-title span{color:var(--acc);}
+.page-title span{color:var(--pri);}
 .topbar-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
-.theme-btn{
-  background:var(--card);border:1.5px solid var(--border);color:var(--muted);
-  padding:8px 12px;border-radius:var(--radius-sm);cursor:pointer;font-size:14px;transition:.18s;
-}
-.theme-btn:hover{border-color:var(--acc);color:var(--acc);}
+.theme-btn{background:var(--card);border:1.5px solid var(--border);color:var(--muted);padding:8px 12px;border-radius:var(--radius-sm);cursor:pointer;font-size:14px;transition:.18s;}
+.theme-btn:hover{border-color:var(--pri);color:var(--pri);}
 
-/* ── FILTER CARD ── */
-.filter-card{
-  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
-  padding:20px 22px;margin-bottom:20px;box-shadow:var(--shadow);
-}
+.filter-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px 22px;margin-bottom:20px;box-shadow:var(--shadow);}
 .filter-card h3{font-size:.9rem;font-weight:800;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
 .filter-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;}
 .fg{display:flex;flex-direction:column;gap:5px;flex:1;min-width:180px;}
 .fg label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
-.fc{
-  padding:10px 13px;border:1.5px solid var(--input-bd);border-radius:var(--radius-sm);
-  font-size:13.5px;font-family:inherit;background:var(--input-bg);color:var(--text);
-  outline:none;transition:.18s;
-}
-.fc:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(79,126,247,.12);}
+.fc{padding:10px 13px;border:1.5px solid var(--input-bd);border-radius:var(--radius-sm);font-size:13.5px;font-family:inherit;background:var(--input-bg);color:var(--text);outline:none;transition:.18s;}
+.fc:focus{border-color:var(--pri);box-shadow:0 0 0 3px rgba(15,118,110,.12);}
 
-/* ── BUTTONS ── */
-.btn{display:inline-flex;align-items:center;gap:7px;padding:10px 18px;border:none;border-radius:var(--radius-sm);font-size:13.5px;font-weight:700;cursor:pointer;transition:.2s;text-decoration:none;white-space:nowrap;}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:10px 18px;border:none;border-radius:var(--radius-sm);font-size:13.5px;font-weight:700;cursor:pointer;transition:.2s;text-decoration:none;white-space:nowrap;font-family:inherit;}
 .btn:hover{opacity:.88;transform:translateY(-1px);}
 .btn:active{transform:scale(.98);}
-.btn-acc{background:var(--acc);color:#fff;}
+.btn-pri{background:var(--pri);color:#fff;}
 .btn-ghost{background:var(--input-bg);color:var(--text);border:1.5px solid var(--input-bd);}
-.btn-ghost:hover{border-color:var(--acc);color:var(--acc);}
+.btn-ghost:hover{border-color:var(--pri);color:var(--pri);}
 .btn-suc{background:rgba(16,185,129,.1);color:var(--suc);border:1px solid rgba(16,185,129,.2);}
 .btn-suc:hover{background:var(--suc);color:#fff;}
 
-/* ── SUMMARY CARDS ── */
 .sum-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px;}
-.sum-card{
-  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
-  padding:16px 18px;box-shadow:var(--shadow);display:flex;align-items:center;gap:13px;transition:.2s;
-}
+.sum-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow);display:flex;align-items:center;gap:13px;transition:.2s;}
 .sum-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg);}
 .sum-icon{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;}
 .sum-val{font-size:1.8rem;font-weight:900;line-height:1;margin-top:2px;}
 .sum-lbl{font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:700;}
 
-/* ── MAIN CARD ── */
 .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:20px;overflow:hidden;}
 .card-hdr{padding:16px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
 .card-hdr h3{font-size:.95rem;font-weight:800;display:flex;align-items:center;gap:8px;margin:0;}
 
-/* ── TABLE ── */
 .tbl-wrap{overflow-x:auto;}
 table{width:100%;border-collapse:collapse;}
-thead th{
-  background:var(--input-bg);color:var(--muted);
-  font-size:11px;text-transform:uppercase;letter-spacing:.5px;
-  padding:12px 16px;border-bottom:2px solid var(--border);text-align:left;white-space:nowrap;
-}
+thead th{background:var(--input-bg);color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;padding:12px 16px;border-bottom:2px solid var(--border);text-align:left;white-space:nowrap;}
 tbody td{padding:13px 16px;border-bottom:1px solid var(--border);font-size:13.5px;vertical-align:middle;}
 tbody tr:last-child td{border-bottom:none;}
-tbody tr:hover td{background:rgba(79,126,247,.025);}
+tbody tr:hover td{background:rgba(15,118,110,.025);}
 
-/* ── DETAIL TABLE ── */
 .detail-wrap{padding:0 16px 16px;}
 .detail-tbl{width:100%;border-collapse:collapse;border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--border);}
 .detail-tbl th{background:var(--input-bg);padding:9px 13px;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);border-bottom:1px solid var(--border);text-align:left;}
 .detail-tbl td{padding:9px 13px;font-size:12.5px;border-bottom:1px solid var(--border);}
 .detail-tbl tr:last-child td{border-bottom:none;}
 
-/* ── PILLS ── */
 .pill{padding:4px 11px;border-radius:7px;font-size:11.5px;font-weight:700;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;}
 .p-present{background:rgba(16,185,129,.1);color:#047857;}
 .p-absent{background:rgba(239,68,68,.08);color:#b91c1c;}
@@ -124,19 +91,17 @@ tbody tr:hover td{background:rgba(79,126,247,.025);}
 [data-theme="dark"] .p-present{background:rgba(52,211,153,.12);color:var(--suc);}
 [data-theme="dark"] .p-absent{background:rgba(248,113,113,.1);color:var(--dan);}
 
-/* ── ACCORDION ── */
 .rec-row{cursor:pointer;}
-.rec-row:hover td{background:rgba(79,126,247,.04)!important;}
+.rec-row:hover td{background:rgba(15,118,110,.04)!important;}
 .detail-section{background:var(--input-bg);}
 .detail-section.hidden{display:none;}
 .expand-icon{transition:transform .2s;}
 .rec-row.open .expand-icon{transform:rotate(90deg);}
 
-/* ── BADGES ── */
 .badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;}
 .b-leader{background:rgba(245,158,11,.12);color:var(--war);}
 .b-lecturer{background:rgba(16,185,129,.12);color:var(--suc);}
-.b-locked{background:rgba(79,126,247,.1);color:var(--acc);}
+.b-locked{background:rgba(15,118,110,.1);color:var(--pri);}
 
 @media(max-width:680px){
   .sum-grid{grid-template-columns:repeat(2,1fr);}
@@ -175,7 +140,7 @@ tbody tr:hover td{background:rgba(79,126,247,.025);}
 
 <!-- Date Filter -->
 <div class="filter-card">
-  <h3><i class="fas fa-filter" style="color:var(--acc);"></i> Filter Records</h3>
+  <h3><i class="fas fa-filter" style="color:var(--pri);"></i> Filter Records</h3>
   <form action="/attendance-history" method="GET">
     <div class="filter-row">
       <div class="fg">
@@ -186,7 +151,7 @@ tbody tr:hover td{background:rgba(79,126,247,.025);}
         <label>End Date</label>
         <input type="date" name="endDate" class="fc" value="<%= endDate %>">
       </div>
-      <button type="submit" class="btn btn-acc"><i class="fas fa-search"></i> Filter</button>
+      <button type="submit" class="btn btn-pri"><i class="fas fa-search"></i> Filter</button>
       <a href="/attendance-history" class="btn btn-ghost"><i class="fas fa-rotate-left"></i> Reset</a>
     </div>
   </form>
@@ -205,7 +170,7 @@ tbody tr:hover td{background:rgba(79,126,247,.025);}
 %>
 <div class="sum-grid">
   <div class="sum-card">
-    <div class="sum-icon" style="background:rgba(79,126,247,.1);color:var(--acc);"><i class="fas fa-clipboard-list"></i></div>
+    <div class="sum-icon" style="background:rgba(15,118,110,.1);color:var(--pri);"><i class="fas fa-clipboard-list"></i></div>
     <div><div class="sum-lbl">Total Records</div><div class="sum-val"><%= totalRecs %></div></div>
   </div>
   <% if (user.role === 'Student') { %>
@@ -229,7 +194,7 @@ tbody tr:hover td{background:rgba(79,126,247,.025);}
 <!-- Records -->
 <div class="card">
   <div class="card-hdr">
-    <h3><i class="fas fa-list-check" style="color:var(--acc);"></i> Attendance Records</h3>
+    <h3><i class="fas fa-list-check" style="color:var(--pri);"></i> Attendance Records</h3>
     <span style="font-size:12px;color:var(--muted);"><%= totalRecs %> record(s)</span>
   </div>
   <div class="tbl-wrap">
@@ -261,7 +226,7 @@ tbody tr:hover td{background:rgba(79,126,247,.025);}
             <td style="font-size:12.5px;"><%= rec.lecturerEmail || '—' %></td>
           <% } %>
           <% if (['Lecturer','Master','SuperAdmin'].includes(user.role)) { %>
-            <td><span style="font-size:12px;font-weight:700;color:var(--acc);"><%=rec.section%></span></td>
+            <td><span style="font-size:12px;font-weight:700;color:var(--pri);"><%=rec.section%></span></td>
           <% } %>
           <% if (user.role === 'Student') { %>
             <td>
@@ -281,7 +246,7 @@ tbody tr:hover td{background:rgba(79,126,247,.025);}
           <% if (['Leader','Master','SuperAdmin'].includes(user.role)) { %>
             <td>
               <a href="/generate-day-pdf/<%= rec.date %>?section=<%= rec.section %>" onclick="event.stopPropagation();"
-                 class="btn" style="padding:5px 11px;font-size:11.5px;background:rgba(79,126,247,.1);color:var(--acc);border:1px solid rgba(79,126,247,.2);">
+                 class="btn" style="padding:5px 11px;font-size:11.5px;background:rgba(15,118,110,.1);color:var(--pri);border:1px solid rgba(15,118,110,.2);">
                 <i class="fas fa-file-pdf"></i> PDF
               </a>
             </td>
@@ -296,7 +261,7 @@ tbody tr:hover td{background:rgba(79,126,247,.025);}
                 <tbody>
                   <% rec.students.forEach(function(st) { %>
                   <tr>
-                    <td style="font-family:monospace;font-weight:700;color:var(--acc);"><%= st.studentId || 'N/A' %></td>
+                    <td style="font-family:monospace;font-weight:700;color:var(--pri);"><%= st.studentId || 'N/A' %></td>
                     <td><%= st.studentName || st.name || 'Unknown' %></td>
                     <td><span class="pill <%= st.status === 'Present' ? 'p-present' : 'p-absent' %>"><i class="fas fa-<%= st.status === 'Present' ? 'check' : 'xmark' %>"></i> <%= st.status %></span></td>
                   </tr>
@@ -316,7 +281,7 @@ tbody tr:hover td{background:rgba(79,126,247,.025);}
     <div style="text-align:center;padding:60px 20px;color:var(--muted);">
       <i class="fas fa-folder-open" style="font-size:2.5rem;opacity:.2;display:block;margin-bottom:12px;"></i>
       <p style="font-size:14px;">No attendance records found for this date range.</p>
-      <a href="/attendance-history" style="color:var(--acc);font-weight:700;font-size:13px;margin-top:10px;display:inline-block;">Reset filter →</a>
+      <a href="/attendance-history" style="color:var(--pri);font-weight:700;font-size:13px;margin-top:10px;display:inline-block;">Reset filter →</a>
     </div>
     <% } %>
   </div>

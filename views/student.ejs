@@ -5,56 +5,54 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>My Attendance — <%= user.name %></title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script>(function(){var t=localStorage.getItem('rku-theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
 <style>
 :root{
-  --pri:#0d1b3e;--pri2:#162d5a;
-  --acc:#4f7ef7;--acc2:#2563eb;--acc-glow:rgba(79,126,247,.18);
+  --pri:#0f766e;--pri2:#134e4a;
+  --acc:#f59e0b;--acc2:#d97706;--acc-glow:rgba(245,158,11,.18);
+  --vio:#7c3aed;
   --suc:#10b981;--dan:#ef4444;--war:#f59e0b;
-  --bg:#f0f4fb;--card:#fff;--border:#e4eaf4;
-  --text:#0e1526;--muted:#64748b;
-  --input-bg:#f6f9ff;--input-bd:#d4daea;
-  --shadow:0 2px 16px rgba(14,21,38,.07);
-  --shadow-lg:0 8px 36px rgba(14,21,38,.13);
+  --bg:#f0fdf9;--card:#fff;--border:#ccfbf1;
+  --text:#0d1f1c;--muted:#5a7a76;
+  --input-bg:#f0fdf9;--input-bd:#99f6e4;
+  --shadow:0 2px 16px rgba(15,118,110,.07);
+  --shadow-lg:0 8px 36px rgba(15,118,110,.13);
   --radius:16px;--radius-sm:10px;
 }
 [data-theme="dark"]{
-  --bg:#080e1d;--card:#0e1828;--border:#172035;
-  --text:#cdd9ee;--muted:#5e7898;
-  --input-bg:#0a1120;--input-bd:#1b2d4a;
-  --shadow:0 2px 20px rgba(0,0,0,.35);
-  --shadow-lg:0 8px 40px rgba(0,0,0,.55);
-  --pri:#060e20;--pri2:#0d1b36;
-  --acc:#6b93fa;--acc2:#4f7ef7;--acc-glow:rgba(107,147,250,.15);
+  --bg:#051714;--card:#071f1c;--border:#0d3330;
+  --text:#b2e8e2;--muted:#4a6e6a;
+  --input-bg:#051714;--input-bd:#0d3330;
+  --shadow:0 2px 20px rgba(0,0,0,.4);
+  --shadow-lg:0 8px 40px rgba(0,0,0,.6);
+  --pri:#0f766e;--pri2:#0d9488;
+  --acc:#fbbf24;--acc2:#f59e0b;--acc-glow:rgba(251,191,36,.15);
   --suc:#34d399;--dan:#f87171;--war:#fbbf24;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{transition:background .25s,color .25s;}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px 16px 40px;}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px 16px 40px;}
 
 .page{max-width:1040px;margin:0 auto;}
 
 /* ── HEADER ── */
 .hero{
-  background:linear-gradient(135deg,var(--pri) 0%,var(--pri2) 60%,#1e4fd8 100%);
+  background:linear-gradient(135deg,var(--pri2) 0%,var(--pri) 55%,#0d9488 100%);
   border-radius:var(--radius);padding:24px 28px;margin-bottom:22px;
   display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;
-  box-shadow:0 8px 32px rgba(13,27,62,.35);position:relative;overflow:hidden;
+  box-shadow:0 8px 32px rgba(15,118,110,.35);position:relative;overflow:hidden;
 }
-.hero::before{
-  content:'';position:absolute;right:-60px;top:-60px;
-  width:220px;height:220px;border-radius:50%;
-  background:rgba(255,255,255,.04);pointer-events:none;
-}
+.hero::before{content:'';position:absolute;right:-60px;top:-60px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.05);pointer-events:none;}
 .hero-left h1{font-size:1.35rem;font-weight:800;color:#fff;letter-spacing:-.2px;}
 .hero-left p{font-size:13px;color:rgba(255,255,255,.65);margin-top:5px;}
 .hero-right{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
-.chip{background:rgba(255,255,255,.12);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;border:1px solid rgba(255,255,255,.15);}
+.chip{background:rgba(255,255,255,.12);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;border:1px solid rgba(255,255,255,.18);}
 .hero-btn{
   display:inline-flex;align-items:center;gap:7px;padding:8px 15px;
   border-radius:var(--radius-sm);font-size:12.5px;font-weight:700;
-  text-decoration:none;border:none;cursor:pointer;transition:.2s;
-  background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.18);
+  text-decoration:none;border:1px solid rgba(255,255,255,.18);cursor:pointer;transition:.2s;
+  background:rgba(255,255,255,.12);color:#fff;font-family:inherit;
 }
 .hero-btn:hover{background:rgba(255,255,255,.22);}
 .hero-btn.danger{background:rgba(239,68,68,.2);border-color:rgba(239,68,68,.3);color:#fca5a5;}
@@ -93,7 +91,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
   padding:18px;transition:.22s;position:relative;overflow:hidden;
 }
 .sc::after{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:currentColor;opacity:.35;}
-.sc:hover{border-color:var(--acc);box-shadow:var(--shadow-lg);}
+.sc:hover{border-color:var(--pri);box-shadow:var(--shadow-lg);}
 .sc .sn{font-weight:800;font-size:.95rem;margin-bottom:4px;}
 .sc .sc2{font-size:12px;color:var(--muted);margin-bottom:12px;}
 .sc .sp{font-size:2rem;font-weight:900;letter-spacing:-1px;line-height:1;}
@@ -115,7 +113,7 @@ thead th{
 }
 tbody td{padding:13px 16px;border-bottom:1px solid var(--border);font-size:13.5px;vertical-align:middle;}
 tbody tr:last-child td{border-bottom:none;}
-tbody tr:hover td{background:rgba(79,126,247,.025);}
+tbody tr:hover td{background:rgba(15,118,110,.025);}
 .tfoot-row td{background:var(--input-bg);font-weight:700;}
 
 /* ── PILLS / STATUS ── */
@@ -128,9 +126,9 @@ tbody tr:hover td{background:rgba(79,126,247,.025);}
 
 /* ── BUTTONS ── */
 .btn-sm{display:inline-flex;align-items:center;gap:6px;padding:8px 15px;border-radius:var(--radius-sm);font-size:13px;font-weight:700;text-decoration:none;border:1.5px solid var(--border);cursor:pointer;transition:.2s;background:var(--card);color:var(--text);}
-.btn-sm:hover{border-color:var(--acc);color:var(--acc);}
-.btn-sm.filled{background:var(--acc);color:#fff;border-color:var(--acc);}
-.btn-sm.filled:hover{background:var(--acc2);border-color:var(--acc2);}
+.btn-sm:hover{border-color:var(--pri);color:var(--pri);}
+.btn-sm.filled{background:var(--pri);color:#fff;border-color:var(--pri);}
+.btn-sm.filled:hover{background:var(--pri2);border-color:var(--pri2);}
 
 /* ── THEME TOGGLE ── */
 .theme-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);color:#fff;padding:7px 11px;border-radius:var(--radius-sm);cursor:pointer;font-size:14px;transition:.2s;}
@@ -140,9 +138,16 @@ tbody tr:hover td{background:rgba(79,126,247,.025);}
   body{padding:14px 10px 32px;}
   .hero{padding:18px 16px;border-radius:14px;}
   .hero-left h1{font-size:1.1rem;}
+  .hero-right{gap:6px;}
+  .hero-btn{padding:7px 11px;font-size:11.5px;}
   .stats-grid{grid-template-columns:repeat(2,1fr);}
   .card-hdr,.card-body{padding:15px 16px;}
   .subj-grid{grid-template-columns:1fr;}
+  .chip{display:none;}
+}
+@media(max-width:380px){
+  .stats-grid{grid-template-columns:1fr 1fr;}
+  .hero-right .theme-btn,.hero-right .hero-btn:not(.danger){display:none;}
 }
 </style>
 </head>
@@ -164,9 +169,9 @@ tbody tr:hover td{background:rgba(79,126,247,.025);}
     <% if (_myRoles) { %>
     <form action="/switch-role" method="POST" style="display:inline-flex;align-items:center;gap:6px;">
       <select name="targetRole" style="background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:6px 10px;font-size:12px;font-family:inherit;outline:none;cursor:pointer;">
-        <% _myRoles.forEach(function(r){ %><option value="<%= r %>" style="background:#0d1b3e;" <%= r===user.role?'selected':'' %>><%= r %></option><% }); %>
+        <% _myRoles.forEach(function(r){ %><option value="<%= r %>" style="background:#0f766e;" <%= r===user.role?'selected':'' %>><%= r %></option><% }); %>
       </select>
-      <button type="submit" class="hero-btn">Switch</button>
+      <button type="submit" class="hero-btn" style="font-family:inherit;">Switch</button>
     </form>
     <% } %>
     <span class="chip"><i class="fas fa-user-graduate"></i> Student</span>
@@ -197,7 +202,7 @@ tbody tr:hover td{background:rgba(79,126,247,.025);}
 <!-- Stats Grid -->
 <div class="stats-grid">
   <div class="stat-card">
-    <div class="stat-icon" style="background:rgba(79,126,247,.1);color:var(--acc);"><i class="fas fa-chart-pie"></i></div>
+    <div class="stat-icon" style="background:rgba(15,118,110,.1);color:var(--pri);"><i class="fas fa-chart-pie"></i></div>
     <div>
       <div class="stat-lbl">Overall</div>
       <div class="stat-val" style="color:<%= barColor %>;"><%= pct %>%</div>
@@ -227,10 +232,10 @@ tbody tr:hover td{background:rgba(79,126,247,.025);}
   </div>
   <% var subCount = typeof subjectStats !== 'undefined' ? subjectStats.length : 0; %>
   <div class="stat-card">
-    <div class="stat-icon" style="background:rgba(139,92,246,.1);color:#8b5cf6;"><i class="fas fa-book-open"></i></div>
+    <div class="stat-icon" style="background:rgba(124,58,237,.1);color:var(--vio);"><i class="fas fa-book-open"></i></div>
     <div>
       <div class="stat-lbl">Subjects</div>
-      <div class="stat-val" style="color:#8b5cf6;"><%= subCount %></div>
+      <div class="stat-val" style="color:var(--vio);"><%= subCount %></div>
     </div>
   </div>
 </div>
@@ -238,7 +243,7 @@ tbody tr:hover td{background:rgba(79,126,247,.025);}
 <!-- Subject-wise Attendance -->
 <div class="card">
   <div class="card-hdr">
-    <h3><i class="fas fa-book-open" style="color:var(--acc);"></i> Subject-wise Attendance</h3>
+    <h3><i class="fas fa-book-open" style="color:var(--pri);"></i> Subject-wise Attendance</h3>
     <span style="font-size:12px;color:var(--muted);"><%= subCount %> subject(s)</span>
   </div>
   <div class="card-body">
@@ -323,7 +328,7 @@ tbody tr:hover td{background:rgba(79,126,247,.025);}
 <!-- Recent Activity -->
 <div class="card">
   <div class="card-hdr">
-    <h3><i class="fas fa-clock-rotate-left" style="color:var(--acc);"></i> Recent Activity</h3>
+    <h3><i class="fas fa-clock-rotate-left" style="color:var(--pri);"></i> Recent Activity</h3>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
       <a href="/attendance-history" class="btn-sm filled"><i class="fas fa-calendar-alt"></i> Full History</a>
     </div>
@@ -371,7 +376,7 @@ tbody tr:hover td{background:rgba(79,126,247,.025);}
   </div>
   <% if (records && records.length >= 50) { %>
     <div style="text-align:center;padding:12px;font-size:12.5px;color:var(--muted);border-top:1px solid var(--border);">
-      Showing recent 50 entries. <a href="/attendance-history" style="color:var(--acc);font-weight:700;">View all →</a>
+      Showing recent 50 entries. <a href="/attendance-history" style="color:var(--pri);font-weight:700;">View all →</a>
     </div>
   <% } %>
 </div>

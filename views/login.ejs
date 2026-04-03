@@ -5,57 +5,53 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RKU Attendance Portal — Login</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         *{box-sizing:border-box;margin:0;padding:0;}
         body{
             min-height:100vh;
-            background:linear-gradient(135deg,#1a2a6c,#b21f1f,#fdbb2d);
+            background:linear-gradient(135deg,#0f766e 0%,#0d9488 30%,#7c3aed 70%,#6d28d9 100%);
             background-size:400% 400%;
-            animation:bgMove 12s ease infinite;
+            animation:bgMove 14s ease infinite;
             display:flex;align-items:center;justify-content:center;
-            font-family:'Segoe UI',system-ui,sans-serif;padding:16px;
+            font-family:'Plus Jakarta Sans',sans-serif;padding:16px;
         }
         @keyframes bgMove{0%{background-position:0 50%}50%{background-position:100% 50%}100%{background-position:0 50%}}
 
         .card{
             background:#fff;width:100%;max-width:420px;
-            border-radius:24px;box-shadow:0 24px 60px rgba(0,0,0,0.25);
+            border-radius:24px;box-shadow:0 28px 70px rgba(0,0,0,.28);
             overflow:hidden;
         }
         .card-head{
-            background:linear-gradient(135deg,#0f2557,#1e3a8a);
-            padding:32px 32px 24px;text-align:center;color:#fff;
+            background:linear-gradient(135deg,#0f766e,#0d9488);
+            padding:32px 32px 26px;text-align:center;color:#fff;
+            position:relative;overflow:hidden;
         }
-        .card-head .icon{font-size:2.6rem;margin-bottom:10px;opacity:.9;}
+        .card-head::before{content:'';position:absolute;top:-40px;right:-40px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.07);pointer-events:none;}
+        .card-head::after{content:'';position:absolute;bottom:-30px;left:-30px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.05);pointer-events:none;}
+        .card-head .icon{font-size:2.6rem;margin-bottom:10px;opacity:.95;}
         .card-head h1{font-size:1.45rem;font-weight:800;letter-spacing:-.4px;}
-        .card-head p{font-size:.82rem;opacity:.7;margin-top:5px;}
+        .card-head p{font-size:.82rem;opacity:.72;margin-top:5px;}
         .card-body{padding:28px 32px 32px;}
 
-        /* Alerts */
-        .alert{
-            display:flex;align-items:center;gap:9px;
-            padding:11px 14px;border-radius:10px;font-size:13px;margin-bottom:18px;
-        }
+        .alert{display:flex;align-items:center;gap:9px;padding:11px 14px;border-radius:10px;font-size:13px;margin-bottom:18px;}
         .alert-err{background:#fff0f0;color:#b91c1c;border:1px solid #fecaca;}
-        .alert-ok {background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;}
+        .alert-ok {background:#f0fdf9;color:#047857;border:1px solid #a7f3d0;}
 
-        /* Google btn */
         .btn-google{
             display:flex;align-items:center;justify-content:center;gap:10px;
             width:100%;padding:13px 16px;border-radius:12px;
             font-size:14px;font-weight:600;text-decoration:none;
             background:#fff;color:#3c4043;border:1.5px solid #dadce0;
-            transition:.2s;cursor:pointer;
+            transition:.2s;cursor:pointer;font-family:inherit;
         }
-        .btn-google:hover{border-color:#4285f4;box-shadow:0 2px 12px rgba(66,133,244,.2);transform:translateY(-1px);}
-        .btn-google:active{transform:none;}
+        .btn-google:hover{border-color:#0d9488;box-shadow:0 2px 14px rgba(13,148,136,.2);transform:translateY(-1px);}
         .g-logo{width:20px;height:20px;flex-shrink:0;}
 
-        /* Divider */
         .divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:#9ca3af;font-size:12px;}
         .divider::before,.divider::after{content:'';flex:1;height:1px;background:#e5e7eb;}
 
-        /* Form */
         .fg{margin-bottom:14px;}
         .fg label{display:block;font-size:11.5px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.45px;margin-bottom:6px;}
         .input-wrap{position:relative;}
@@ -65,22 +61,21 @@
             border:1.5px solid #e5e7eb;font-size:14px;font-family:inherit;
             background:#f9fafb;outline:none;transition:.2s;color:#111827;
         }
-        .fc:focus{border-color:#1e3a8a;background:#fff;box-shadow:0 0 0 3px rgba(30,58,138,.1);}
+        .fc:focus{border-color:#0d9488;background:#fff;box-shadow:0 0 0 3px rgba(13,148,136,.12);}
         .eye-toggle{cursor:pointer;}
 
-        /* Submit button */
         .btn-login{
             width:100%;padding:13px;border:none;border-radius:12px;
             font-size:15px;font-weight:700;cursor:pointer;transition:.2s;
-            background:linear-gradient(135deg,#1e3a8a,#1d4ed8);color:#fff;
+            background:linear-gradient(135deg,#0f766e,#0d9488);color:#fff;
             display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px;
+            font-family:inherit;
         }
-        .btn-login:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(29,78,216,.3);}
+        .btn-login:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(13,148,136,.35);}
         .btn-login:active{transform:none;}
 
-        /* Footer */
         .footer{text-align:center;margin-top:20px;font-size:12px;color:#9ca3af;}
-        .footer a{color:#1d4ed8;font-weight:600;text-decoration:none;}
+        .footer a{color:#0d9488;font-weight:600;text-decoration:none;}
         .footer a:hover{text-decoration:underline;}
         .secure{display:flex;align-items:center;justify-content:center;gap:5px;font-size:11px;color:#9ca3af;margin-top:14px;}
 
@@ -106,7 +101,6 @@
             <div class="alert alert-ok"><i class="fas fa-check-circle"></i> <%= message %></div>
         <% } %>
 
-        <!-- Google SSO -->
         <a href="/auth/google" class="btn-google">
             <svg class="g-logo" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -119,7 +113,6 @@
 
         <div class="divider">or sign in with email &amp; password</div>
 
-        <!-- Unified email/password form — works for ALL roles (Student, Lecturer, Leader, Master, SuperAdmin) -->
         <form action="/login" method="POST" novalidate>
             <div class="fg">
                 <label>Email Address</label>
@@ -145,7 +138,7 @@
         </div>
 
         <div class="secure">
-            <i class="fas fa-shield-alt" style="color:#16a34a;"></i>
+            <i class="fas fa-shield-alt" style="color:#059669;"></i>
             Strictly authorized for <strong>&nbsp;@rku.ac.in&nbsp;</strong> users only
         </div>
     </div>
