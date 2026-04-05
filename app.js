@@ -469,9 +469,15 @@ app.get('/student', async (req, res) => {
             }))
             .sort((a, b) => a.subject.localeCompare(b.subject));
 
+        const totalCount = records.length;
+        const pct = totalCount > 0 ? +((presentCount / totalCount) * 100).toFixed(1) : 0;
+        const barColor = pct >= 75 ? 'var(--suc)' : (pct >= 60 ? 'var(--war)' : 'var(--dan)');
+        const subCount = subjectStats.length;
+
         res.render('student', {
             user, records: records.slice(0, 50),
-            presentCount, totalCount: records.length, subjectStats
+            presentCount, totalCount, subjectStats,
+            pct, barColor, subCount
         });
     } catch(err) {
         res.status(500).render('error', { message: 'Could not load Student portal.' });
@@ -503,9 +509,11 @@ app.get('/attendance-history', async (req, res) => {
             const d = new Date(); d.setDate(d.getDate() - 30);
             query.date = { $gte: d.toISOString().split('T')[0] };
         }
-        if (user.role === 'Student')   { query['students.studentId'] = user.rollNo; query.section = user.section; }
-        else if (user.role === 'Lecturer') { query.lecturerEmail = user.email; }
-        else if (user.role === 'Leader')   { query.section = user.section; }
+        if (user.role === 'Student')        { query['students.studentId'] = user.rollNo; query.section = user.section; }
+        else if (user.role === 'Lecturer')  { query.lecturerEmail = user.email.toLowerCase(); }
+        else if (user.role === 'Leader')    { query.section = user.section; }
+        else if (user.role === 'Master')    { query.section = user.section; }
+        // SuperAdmin: no section filter — sees all records
         const history = await Attendance.find(query).sort({ date: -1 }).lean();
         res.render('history', { user, records: history, startDate: startDate||'', endDate: endDate||'' });
     } catch(err) { res.status(500).render('error', { message: 'Failed to load history.' }); }
@@ -516,16 +524,19 @@ app.get('/generate-day-pdf/:date', async (req, res) => {
         const user = getUser(req);
         if (!user) return res.redirect('/login');
         const { date } = req.params;
-        const { filter } = req.query;
-        const records = await Attendance.find({ date, section: user.section }).sort({ manualTime:1 });
+        const statusFilter = req.query.filter || req.query.section_filter || '';
+        // Allow section override via query param (e.g. from Lecturer who spans sections)
+        const targetSection = req.query.section || user.section || '';
+        if (!targetSection) return res.status(400).send('Section not specified.');
+        const records = await Attendance.find({ date, section: targetSection }).sort({ manualTime:1 });
         const doc = new PDFDocument({ margin:50, size:'A4' });
         res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `inline; filename=Attendance_${user.section}_${date}.pdf`);
+        res.setHeader('Content-Disposition', `inline; filename=Attendance_${targetSection}_${date}.pdf`);
         doc.pipe(res);
         doc.fillColor('#2c3e50').fontSize(22).text('RKU Attendance Report', { align:'center' });
         doc.fontSize(12).fillColor('#7f8c8d').text(`Generated: ${new Date().toLocaleString()}`, { align:'center' });
         doc.moveDown();
-        doc.fillColor('black').fontSize(14).text(`Date: ${date} | Section: ${user.section}`);
+        doc.fillColor('black').fontSize(14).text(`Date: ${date} | Section: ${targetSection}`);
         doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
         doc.moveDown();
         if (!records.length) {
@@ -540,7 +551,7 @@ app.get('/generate-day-pdf/:date', async (req, res) => {
                 doc.moveDown(0.5);
                 doc.moveTo(50,doc.y).lineTo(550,doc.y).strokeColor('#dfe4ea').stroke();
                 rec.students.forEach(s => {
-                    if (!filter || s.status === filter) {
+                    if (!statusFilter || s.status === statusFilter) {
                         if (doc.y > 700) doc.addPage();
                         doc.fillColor('#34495e').fontSize(9)
                             .text(s.studentId,60,doc.y).text(s.studentName||'',160,doc.y-9)
@@ -552,7 +563,7 @@ app.get('/generate-day-pdf/:date', async (req, res) => {
             });
         }
         doc.end();
-    } catch(err) { res.status(500).send('Error generating PDF.'); }
+    } catch(err) { res.status(500).send('Error generating PDF: ' + err.message); }
 });
 
 app.get('/export-attendance', async (req, res) => {
@@ -964,7 +975,7 @@ app.post('/set-class-teacher/:id', isSuperAdmin, async (req, res) => {
 app.post('/upload-users', isAdmin, async (req, res) => {
     try {
         const adminUser = getUser(req);
-        if (adminUser.role !== 'Master') return res.status(403).send('Only Masters can bulk import.');
+        if (!['Master', 'SuperAdmin'].includes(adminUser.role)) return res.status(403).send('Only Masters and SuperAdmins can bulk import.');
         if (!req.files || !req.files.csvFile) return res.status(400).send('No file uploaded');
         const lines = req.files.csvFile.data.toString('utf8').split(/\r?\n/);
         const section = req.body.section;
@@ -979,7 +990,8 @@ app.post('/upload-users', isAdmin, async (req, res) => {
                 );
             }
         }
-        req.session.save(() => res.redirect('/master?success=Bulk+import+completed'));
+        const redirectPath = adminUser.role === 'SuperAdmin' ? '/super-admin-dashboard' : '/master';
+        req.session.save(() => res.redirect(`${redirectPath}?success=Bulk+import+completed`));
     } catch(err) { res.status(500).send('Error processing file: ' + err.message); }
 });
 
