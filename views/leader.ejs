@@ -320,7 +320,7 @@ input[type="checkbox"]{width:17px;height:17px;accent-color:var(--acc);cursor:poi
                              value="Present"
                              class="student-checkbox"
                              data-rollno="<%= (u.rollNo || u.rollno || '').toString().replace(/^0+/,'') || '0' %>"
-                             data-name="<%= u.name %>"
+                             data-name="<%= (u.name||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;') %>"
                              onchange="updateCount()">
                       <span>Present</span>
                     </label>
@@ -542,10 +542,31 @@ input[type="checkbox"]{width:17px;height:17px;accent-color:var(--acc);cursor:poi
     rows.forEach(function (row) {
       var cb = row.querySelector('.student-checkbox');
       if (!cb) return;
+
+      /* ── Roll No: read from visible .roll-col cell ── */
       var rollCell = row.querySelector('.roll-col');
       var rollNo   = rollCell ? rollCell.textContent.trim() : '—';
-      var name     = cb.dataset.name || '';
-      var entry    = rollNo + '. ' + name;
+
+      /* ── Name: try data-attr → hidden input → 3rd <td> cell ── */
+      var name = (cb.dataset.name || '').trim();
+
+      if (!name) {
+        /* Fallback 1: hidden input students[N][name] in same row */
+        var nameInput = row.querySelector('input[name$="[name]"]');
+        if (nameInput) name = (nameInput.value || '').trim();
+      }
+
+      if (!name) {
+        /* Fallback 2: 3rd td cell — clone it, strip spans, read text */
+        var tds = row.querySelectorAll('td');
+        if (tds[2]) {
+          var clone = tds[2].cloneNode(true);
+          clone.querySelectorAll('span').forEach(function (s) { s.parentNode.removeChild(s); });
+          name = clone.textContent.trim();
+        }
+      }
+
+      var entry = rollNo + '. ' + (name || 'Unknown');
       if (cb.checked) {
         presentList.push(entry);
       } else {
