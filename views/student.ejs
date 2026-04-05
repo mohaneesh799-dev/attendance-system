@@ -140,6 +140,7 @@ tbody tr:hover td{background:rgba(79,126,247,.03);}
         <select name="targetRole" class="sw-sel" onchange="this.form.submit()">
           <% _allRoles.forEach(function(r){ %><option value="<%= r %>" <%= r===user.role?"selected":"" %>><%= r %></option><% }); %>
         </select>
+        <button type="submit" class="sw-btn">Go</button>
       </form>
     </div>
     <% } %>
