@@ -4,142 +4,139 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Lecturer Portal — <%= user.name %></title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <script>(function(){var t=localStorage.getItem('rku-theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
 <style>
 :root{
-  --pri:#0f766e;--pri2:#134e4a;
-  --acc:#f59e0b;--acc2:#d97706;
-  --vio:#7c3aed;
-  --suc:#10b981;--dan:#ef4444;--war:#f59e0b;--pur:#7c3aed;
-  --bg:#f0fdf9;--card:#fff;--border:#ccfbf1;
-  --text:#0d1f1c;--muted:#5a7a76;
-  --input-bg:#f0fdf9;--input-bd:#99f6e4;
-  --shadow:0 2px 16px rgba(15,118,110,.07);
-  --shadow-lg:0 8px 36px rgba(15,118,110,.13);
-  --radius:16px;--radius-sm:10px;--sidebar-w:260px;
+  --sb-w:264px;--pri:#05091a;--pri2:#0d1535;--acc:#4f7ef7;--acc2:#6366f1;
+  --suc:#059669;--dan:#dc2626;--war:#d97706;--pur:#7c3aed;
+  --bg:#f1f5fb;--card:#fff;--border:#e4eaf3;
+  --text:#0f172a;--muted:#64748b;--input-bg:#f8fafc;--input-bd:#cbd5e1;
+  --sh:0 1px 3px rgba(0,0,0,.05),0 4px 16px rgba(0,0,0,.06);
+  --sh2:0 8px 30px rgba(0,0,0,.1);--r:16px;--rs:10px;--sidebar-w:264px;
 }
 [data-theme="dark"]{
-  --bg:#051714;--card:#071f1c;--border:#0d3330;
-  --text:#b2e8e2;--muted:#4a6e6a;
-  --input-bg:#051714;--input-bd:#0d3330;
-  --shadow:0 2px 20px rgba(0,0,0,.4);
-  --shadow-lg:0 8px 40px rgba(0,0,0,.6);
-  --pri:#0d9488;--pri2:#0f766e;
-  --acc:#fbbf24;--acc2:#f59e0b;
-  --suc:#34d399;--dan:#f87171;--war:#fbbf24;--pur:#a78bfa;
+    --bg:#080d18;--card:#0f1624;--border:#1a2740;
+    --text:#dde6f0;--muted:#6b7f97;--input-bg:#0b1220;--input-bd:#1e3050;
+    --shadow:0 4px 24px rgba(0,0,0,.3);--shadow-lg:0 12px 40px rgba(0,0,0,.45);
+    --pri:#061128;--pri2:#0d1b36;--acc:#60a5fa;--acc2:#3b82f6;
+    --suc:#34d399;--dan:#f87171;--war:#fbbf24;--pur:#a78bfa;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-html,body{transition:background .25s,color .25s;}
-body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;}
+html,body{transition:background .22s,color .22s;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;}
 
 /* ══ SIDEBAR ══ */
 .sidebar{
-  width:var(--sidebar-w);background:linear-gradient(180deg,var(--pri2) 0%,var(--pri) 100%);
-  height:100vh;position:fixed;top:0;left:0;
-  display:flex;flex-direction:column;z-index:400;overflow-y:auto;
-  transition:transform .28s cubic-bezier(.4,0,.2,1);
-  box-shadow:4px 0 30px rgba(0,0,0,.2);
+    width:var(--sidebar-w);background:linear-gradient(175deg,#05091a 0%,#0e1840 55%,#1a1045 100%);
+    height:100vh;position:fixed;top:0;left:0;
+    display:flex;flex-direction:column;z-index:400;overflow-y:auto;
+    transition:transform .28s ease;box-shadow:4px 0 30px rgba(0,0,0,.2);
 }
-.sb-top{padding:22px 16px 0;}
+.sb-top{padding:22px 18px 0;}
 .brand{display:flex;align-items:center;gap:11px;margin-bottom:20px;}
 .brand-icon{
-  width:42px;height:42px;flex-shrink:0;border-radius:12px;
-  background:linear-gradient(135deg,var(--acc),#f97316);
-  display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;
-  box-shadow:0 4px 14px rgba(245,158,11,.4);
+    width:42px;height:42px;
+    background:linear-gradient(135deg,#059669,#047857);
+    border-radius:12px;display:flex;align-items:center;justify-content:center;
+    font-size:18px;color:#fff;flex-shrink:0;
+    box-shadow:0 4px 14px rgba(59,127,244,.4);
 }
-.brand-name{font-size:.9rem;font-weight:800;color:#fff;letter-spacing:-.2px;}
+.brand-name{font-size:.95rem;font-weight:800;color:#fff;letter-spacing:-.2px;}
 .brand-sub{font-size:10.5px;color:rgba(255,255,255,.4);margin-top:2px;}
 
 .user-chip{
-  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);
-  border-radius:var(--radius-sm);padding:12px 13px;margin-bottom:18px;
+    background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);
+    border-radius:var(--radius-sm);padding:13px 14px;margin-bottom:20px;
 }
-.user-chip small{font-size:10px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px;}
-.user-chip strong{color:#fff;font-size:13px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:7px;}
-.role-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(245,158,11,.25);border:1px solid rgba(245,158,11,.3);color:#fde68a;padding:4px 10px;border-radius:20px;font-size:10.5px;font-weight:700;}
+.user-chip small{font-size:10px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px;}
+.user-chip strong{color:#fff;font-size:13.5px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:6px;}
+.role-badge{display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,rgba(59,127,244,.3),rgba(139,92,246,.2));border:1px solid rgba(59,127,244,.3);color:#93c5fd;padding:3px 10px;border-radius:20px;font-size:10.5px;font-weight:700;}
 
-.role-sw{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:var(--radius-sm);padding:11px 13px;margin-bottom:16px;}
-.role-sw label{font-size:10px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:5px;margin-bottom:7px;}
-.role-sw-row{display:flex;gap:6px;}
-.role-sel{flex:1;padding:7px 10px;border-radius:7px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:#fff;font-size:12.5px;font-family:inherit;outline:none;cursor:pointer;}
-.role-sel option{background:#0f766e;color:#fff;}
-.role-go{padding:7px 12px;border-radius:7px;background:var(--acc);color:#fff;border:none;font-size:12px;font-weight:700;cursor:pointer;transition:.18s;}
-.role-go:hover{background:var(--acc2);}
+/* Role Switcher in sidebar */
+.role-switcher{
+    background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
+    border-radius:var(--radius-sm);padding:11px 14px;margin-bottom:16px;
+}
+.role-switcher label{font-size:10px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:7px;}
+.role-switcher-row{display:flex;gap:6px;}
+.role-select{
+    flex:1;padding:7px 10px;border-radius:7px;border:1px solid rgba(255,255,255,.15);
+    background:rgba(255,255,255,.08);color:#fff;font-size:12.5px;font-family:inherit;
+    outline:none;cursor:pointer;
+}
+.role-select option{background:#1a3560;color:#fff;}
+.role-go-btn{
+    padding:7px 12px;border-radius:7px;background:var(--acc);color:#fff;
+    border:none;font-size:12px;font-weight:700;cursor:pointer;transition:.18s;white-space:nowrap;
+}
+.role-go-btn:hover{background:var(--acc2);}
 
 .sb-nav{padding:0 10px 16px;flex:1;}
 .nav-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:rgba(255,255,255,.28);padding:12px 8px 5px;}
 .nav-link{
-  display:flex;align-items:center;gap:10px;padding:10px 11px;
-  border-radius:var(--radius-sm);margin-bottom:2px;
-  color:rgba(255,255,255,.52);text-decoration:none;font-size:13px;font-weight:600;
-  transition:.18s;border:none;background:none;cursor:pointer;width:100%;text-align:left;
+    display:flex;align-items:center;gap:10px;padding:10px 12px;
+    border-radius:var(--radius-sm);margin-bottom:2px;
+    color:rgba(255,255,255,.55);text-decoration:none;font-size:13.5px;font-weight:600;
+    transition:.18s;border:none;background:none;cursor:pointer;width:100%;text-align:left;
 }
 .nav-link:hover{background:rgba(255,255,255,.08);color:#fff;}
-.nav-link.active{background:rgba(245,158,11,.22);color:#fde68a;border-left:3px solid var(--acc);padding-left:8px;}
-.nav-link i{width:18px;text-align:center;flex-shrink:0;font-size:13.5px;}
+.nav-link.active{background:rgba(59,127,244,.2);color:#fff;border-left:3px solid var(--acc);padding-left:9px;}
+.nav-link i{width:18px;text-align:center;flex-shrink:0;font-size:14px;}
 .nav-link.danger{color:rgba(248,113,113,.65);}
 .nav-link.danger:hover{background:rgba(239,68,68,.12);color:var(--dan);}
 .nav-link.export{color:rgba(52,211,153,.65);}
 .nav-link.export:hover{background:rgba(16,185,129,.12);color:var(--suc);}
-
-.sb-foot{padding:12px 14px;border-top:1px solid rgba(255,255,255,.07);}
+.sb-foot{padding:12px 16px;border-top:1px solid rgba(255,255,255,.07);}
 .clock-txt{font-size:.78rem;color:rgba(255,255,255,.3);text-align:center;font-variant-numeric:tabular-nums;}
 
 /* ══ OVERLAY + HAMBURGER ══ */
-.sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:350;}
-.sb-overlay.open{display:block;}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:350;}
+.sidebar-overlay.open{display:block;}
 .ham{
-  display:none;position:fixed;top:14px;left:14px;z-index:500;
-  background:var(--pri2);border:none;color:#fff;
-  padding:10px 13px;border-radius:var(--radius-sm);font-size:18px;cursor:pointer;
-  box-shadow:0 3px 14px rgba(0,0,0,.35);
+    display:none;position:fixed;top:14px;left:14px;z-index:500;
+    background:var(--pri);border:none;color:#fff;
+    padding:10px 13px;border-radius:var(--radius-sm);font-size:18px;cursor:pointer;
+    box-shadow:0 3px 14px rgba(0,0,0,.35);transition:.18s;
 }
+.ham:hover{opacity:.85;}
 
 /* ══ MOBILE TOPBAR ══ */
 .mob-topbar{
-  display:none;position:fixed;top:0;left:0;right:0;height:54px;z-index:300;
-  background:var(--pri2);padding:0 16px 0 60px;
-  align-items:center;justify-content:space-between;
-  box-shadow:0 2px 12px rgba(0,0,0,.2);
+    display:none;position:fixed;top:0;left:0;right:0;height:52px;z-index:300;
+    background:var(--pri);padding:0 16px 0 60px;
+    align-items:center;justify-content:space-between;
+    box-shadow:0 2px 12px rgba(0,0,0,.2);
 }
 .mob-topbar span{color:#fff;font-size:13.5px;font-weight:700;}
-.btn-theme{background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:7px 11px;border-radius:7px;cursor:pointer;font-size:14px;transition:.18s;}
+.btn-theme{background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:6px 10px;border-radius:7px;cursor:pointer;font-size:14px;transition:.18s;}
 .btn-theme:hover{background:rgba(255,255,255,.18);color:#fff;}
 
 /* ══ MAIN ══ */
 .main{margin-left:var(--sidebar-w);flex:1;padding:28px 28px 50px;min-width:0;}
 
 /* ══ PAGE HEADER ══ */
-.pg-hdr{
-  background:linear-gradient(135deg,var(--pri2) 0%,var(--pri) 55%,#0d9488 100%);
-  border-radius:var(--radius);padding:22px 26px;margin-bottom:24px;
-  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;
-  box-shadow:0 6px 28px rgba(15,118,110,.32);position:relative;overflow:hidden;
-}
-.pg-hdr::before{content:'';position:absolute;right:-50px;top:-50px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.04);pointer-events:none;}
-.pg-hdr h1{font-size:1.3rem;font-weight:900;color:#fff;letter-spacing:-.2px;}
-.pg-hdr p{font-size:13px;color:rgba(255,255,255,.65);margin-top:4px;}
+.pg-hdr{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:24px;}
+.pg-hdr h1{font-size:1.35rem;font-weight:900;letter-spacing:-.3px;}
+.pg-hdr p{font-size:13px;color:var(--muted);margin-top:3px;}
 .hdr-right{display:flex;align-items:center;gap:10px;}
 
 /* ══ STATS ══ */
 .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
 .stat-card{
-  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
-  padding:18px;box-shadow:var(--shadow);transition:.22s;display:flex;align-items:center;gap:14px;
+    background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+    padding:18px;box-shadow:var(--shadow);transition:.2s;display:flex;align-items:center;gap:14px;
 }
-.stat-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg);}
+.stat-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg);}
 .stat-icon{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;}
-.stat-body small{font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:700;display:block;margin-bottom:3px;}
-.stat-body h2{font-size:1.85rem;font-weight:900;line-height:1;}
+.stat-body small{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:700;display:block;margin-bottom:3px;}
+.stat-body h2{font-size:1.8rem;font-weight:900;line-height:1;}
 
 /* ══ CARD ══ */
 .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;margin-bottom:20px;}
-.card-hdr{padding:16px 22px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;background:var(--input-bg);}
-.card-hdr h3{font-size:.95rem;font-weight:800;display:flex;align-items:center;gap:8px;margin:0;}
-.card-body{padding:22px;}
+.card-hdr{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;background:var(--input-bg);}
+.card-hdr h3{font-size:.95rem;font-weight:800;display:flex;align-items:center;gap:8px;}
+.card-body{padding:20px;}
 
 /* ══ LIVE TAG ══ */
 .live-tag{background:rgba(16,185,129,.1);color:var(--suc);border:1px solid rgba(16,185,129,.2);padding:4px 12px;border-radius:20px;font-size:11.5px;font-weight:700;display:inline-flex;align-items:center;gap:6px;}
@@ -148,396 +145,479 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 
 /* ══ DIVISION TABS ══ */
 .div-tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:18px;}
-.tab-btn{padding:7px 16px;border:1.5px solid var(--border);border-radius:20px;cursor:pointer;font-weight:700;font-size:12.5px;background:var(--card);color:var(--muted);transition:.18s;font-family:inherit;}
-.tab-btn:hover,.tab-btn.active{background:var(--pri);color:#fff;border-color:var(--pri);}
-.hidden{display:none!important;}
-
-/* ══ GROUP HEADER ══ */
-.grp-hdr{
-  background:linear-gradient(135deg,var(--input-bg),var(--card));
-  border:1px solid var(--border);border-radius:var(--radius-sm);
-  padding:12px 18px;margin-bottom:12px;
-  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;
+.tab-btn{
+    padding:7px 16px;border:1.5px solid var(--border);border-radius:20px;
+    cursor:pointer;font-weight:700;font-size:12.5px;background:var(--card);
+    color:var(--muted);transition:.18s;font-family:inherit;
 }
-.grp-hdr h4{font-size:.9rem;font-weight:800;display:flex;align-items:center;gap:8px;margin:0;}
-.grp-hdr-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.tab-btn:hover{border-color:var(--acc);color:var(--acc);}
+.tab-btn.active{background:var(--acc);color:#fff;border-color:var(--acc);box-shadow:0 3px 10px rgba(59,127,244,.3);}
+
+/* ══ DIVISION GROUP ══ */
+.div-group{margin-bottom:22px;}
+.div-group.hidden{display:none;}
+.div-hdr{
+    display:flex;align-items:center;gap:10px;
+    background:linear-gradient(135deg,rgba(59,127,244,.06),rgba(139,92,246,.04));
+    border:1px solid rgba(59,127,244,.15);border-radius:var(--radius-sm);
+    padding:10px 16px;margin-bottom:12px;
+}
+.div-badge{background:var(--pri);color:#fff;padding:3px 12px;border-radius:20px;font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.3px;}
+
+/* ══ RECORD CARD ══ */
+.rec-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);margin-bottom:12px;transition:.18s;}
+.rec-card:hover{border-color:rgba(59,127,244,.3);box-shadow:var(--shadow-lg);}
+.rec-hdr{
+    display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;
+    padding:14px 18px;border-bottom:1px solid var(--border);background:var(--input-bg);
+}
+.rec-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.subj-badge{background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff;padding:4px 12px;border-radius:7px;font-size:12px;font-weight:700;}
+.time-badge{font-size:13px;font-weight:600;color:var(--muted);display:flex;align-items:center;gap:5px;}
+.status-chips{display:flex;gap:6px;flex-wrap:wrap;}
+.chip{padding:4px 11px;border-radius:20px;font-size:11.5px;font-weight:700;}
+.chip-p{background:rgba(16,185,129,.1);color:var(--suc);border:1px solid rgba(16,185,129,.2);}
+.chip-a{background:rgba(239,68,68,.08);color:var(--dan);border:1px solid rgba(239,68,68,.18);}
 
 /* ══ TABLE ══ */
-.tbl-wrap{overflow-x:auto;}
-table{width:100%;border-collapse:collapse;min-width:400px;}
-thead th{background:var(--input-bg);padding:11px 15px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);border-bottom:2px solid var(--border);white-space:nowrap;}
-tbody td{padding:12px 15px;border-bottom:1px solid var(--border);font-size:13.5px;vertical-align:middle;}
+.tbl-scroll{max-height:340px;overflow-y:auto;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+table{width:100%;border-collapse:collapse;}
+thead th{
+    background:linear-gradient(135deg,var(--pri),var(--pri2));
+    color:#fff;padding:11px 14px;font-size:11px;text-transform:uppercase;
+    letter-spacing:.5px;text-align:left;white-space:nowrap;position:sticky;top:0;z-index:1;
+}
+tbody td{padding:11px 14px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle;}
 tbody tr:last-child td{border-bottom:none;}
-tbody tr:hover td{background:rgba(15,118,110,.025);}
+tbody tr:hover td{background:rgba(59,127,244,.03);}
+.sp{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap;}
+.sp.Present{background:rgba(16,185,129,.1);color:var(--suc);border:1px solid rgba(16,185,129,.2);}
+.sp.Absent{background:rgba(239,68,68,.08);color:var(--dan);border:1px solid rgba(239,68,68,.18);}
 
-/* ══ STATUS ══ */
-.sp{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:7px;font-size:11.5px;font-weight:700;}
-.sp.Present{background:rgba(16,185,129,.1);color:#047857;}
-.sp.Absent{background:rgba(239,68,68,.08);color:#b91c1c;}
-[data-theme="dark"] .sp.Present{background:rgba(52,211,153,.12);color:var(--suc);}
-[data-theme="dark"] .sp.Absent{background:rgba(248,113,113,.1);color:var(--dan);}
+/* ══ EMPTY STATE ══ */
+.empty{text-align:center;padding:60px 24px;color:var(--muted);border:2px dashed var(--border);border-radius:var(--radius);background:var(--card);}
+.empty i{font-size:3rem;opacity:.18;display:block;margin-bottom:16px;}
+.empty h3{font-size:1rem;font-weight:700;margin-bottom:8px;color:var(--text);opacity:.7;}
+.empty p{font-size:13.5px;margin-bottom:20px;}
 
-/* ══ TOGGLE BTN ══ */
-.toggle-btn{padding:4px 10px;font-size:11px;font-weight:700;border-radius:6px;border:none;cursor:pointer;transition:.18s;background:rgba(15,118,110,.1);color:var(--pri);}
-.toggle-btn:hover{background:var(--pri);color:#fff;}
-
-/* ══ ALERTS ══ */
-.alert{display:flex;align-items:center;gap:10px;padding:13px 16px;border-radius:var(--radius-sm);margin-bottom:18px;font-size:13.5px;animation:slideIn .3s ease;}
-@keyframes slideIn{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:none;}}
-
-/* ══ EMPTY ══ */
-.empty{text-align:center;padding:60px 20px;color:var(--muted);}
-.empty i{font-size:3rem;opacity:.15;display:block;margin-bottom:14px;}
-.empty h3{font-size:1rem;font-weight:700;margin-bottom:8px;color:var(--text);}
-.empty p{font-size:13.5px;max-width:360px;margin:0 auto 18px;}
-
-/* ══ BUTTONS ══ */
-.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:700;cursor:pointer;transition:.18s;text-decoration:none;white-space:nowrap;}
+/* ══ BUTTON ══ */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:700;cursor:pointer;transition:.18s;text-decoration:none;font-family:inherit;}
 .btn:hover{opacity:.88;transform:translateY(-1px);}
-.btn:active{transform:scale(.98);}
+.btn-acc{background:var(--acc);color:#fff;}
 .btn-pri{background:var(--pri);color:#fff;}
+.btn-ghost{background:rgba(59,127,244,.08);color:var(--acc);border:1px solid rgba(59,127,244,.2);}
+.btn-ghost:hover{background:var(--acc);color:#fff;}
+
+/* ══ ALERT ══ */
+.alert{display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:var(--radius-sm);margin-bottom:18px;font-size:13.5px;animation:slideIn .3s ease;}
+@keyframes slideIn{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:none;}}
+.alert-ct{background:rgba(245,158,11,.08);color:var(--war);border:1px solid rgba(245,158,11,.22);border-left:4px solid var(--war);}
+
+/* ══ QUICK MARK PANEL ══ */
+.qp{
+    background:linear-gradient(135deg,rgba(59,127,244,.06),rgba(139,92,246,.04));
+    border:1px solid rgba(59,127,244,.2);border-radius:var(--radius);
+    padding:20px;margin-bottom:20px;
+}
+.qp h4{font-size:.9rem;font-weight:800;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.qp-form{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;}
+.qp-fg{flex:1;min-width:220px;}
+.qp-fg label{font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:700;display:block;margin-bottom:5px;}
+.qp-input{
+    width:100%;padding:10px 14px;border-radius:var(--radius-sm);border:1.5px solid var(--input-bd);
+    font-size:13.5px;font-family:inherit;background:var(--card);color:var(--text);outline:none;transition:.18s;
+}
+.qp-input:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(59,127,244,.1);}
 
 /* ══ RESPONSIVE ══ */
-@media(max-width:1060px){.stats-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:900px){
+    .stats-grid{grid-template-columns:1fr 1fr;}
+}
 @media(max-width:768px){
-  .sidebar{transform:translateX(-100%);}
-  .sidebar.open{transform:translateX(0);}
-  .main{margin-left:0;padding:68px 14px 40px;}
-  .ham{display:flex;}
-  .mob-topbar{display:flex;}
-  .stats-grid{grid-template-columns:repeat(2,1fr);gap:10px;}
-  .stat-card{padding:14px;}
-  .stat-icon{width:40px;height:40px;font-size:1rem;}
-  .stat-body h2{font-size:1.5rem;}
-  .card-body,.card-hdr{padding:14px 16px;}
-  .pg-hdr{padding:18px 16px;border-radius:14px;}
-  .pg-hdr h1{font-size:1.1rem;}
+    .sidebar{transform:translateX(-100%);}
+    .sidebar.open{transform:translateX(0);}
+    .main{margin-left:0;padding:70px 14px 40px;}
+    .ham{display:flex;}
+    .mob-topbar{display:flex;}
+    .stats-grid{grid-template-columns:1fr 1fr;}
+    .pg-hdr h1{font-size:1.1rem;}
 }
 @media(max-width:480px){
-  .stats-grid{grid-template-columns:1fr 1fr;}
+    .stats-grid{grid-template-columns:1fr 1fr;}
+    .stat-body h2{font-size:1.5rem;}
+    .rec-hdr{flex-direction:column;align-items:flex-start;}
+    thead th,tbody td{padding:9px 10px;font-size:12px;}
 }
 </style>
 </head>
 <body>
 
 <!-- Hamburger -->
-<button class="ham" id="hamBtn" aria-label="Menu"><i class="fas fa-bars"></i></button>
+<button class="ham" id="hamBtn" aria-label="Open menu"><i class="fas fa-bars"></i></button>
 
 <!-- Mobile Topbar -->
 <div class="mob-topbar" id="mobTopbar">
-  <span><i class="fas fa-chalkboard-teacher" style="color:var(--acc);margin-right:6px;"></i> Lecturer Portal</span>
-  <button id="themeToggleMob" class="btn-theme" aria-label="Toggle theme"><i class="fas fa-moon" id="themeIconMob"></i></button>
+    <span><i class="fas fa-chalkboard-teacher" style="color:var(--acc);margin-right:6px;"></i> Lecturer Portal</span>
+    <button id="themeToggleMob" class="btn-theme" aria-label="Toggle theme"><i class="fas fa-moon" id="themeIconMob"></i></button>
 </div>
 
 <!-- Sidebar Overlay -->
-<div class="sb-overlay" id="sidebarOverlay"></div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-<!-- Sidebar -->
-<aside class="sidebar" id="sidebar">
-  <div class="sb-top">
-    <div class="brand">
-      <div class="brand-icon"><i class="fas fa-chalkboard-teacher"></i></div>
-      <div>
-        <div class="brand-name">LECTURER</div>
-        <div class="brand-sub">RKU Attendance</div>
-      </div>
-    </div>
-    <div class="user-chip">
-      <small>Faculty Member</small>
-      <strong><%= user.name %></strong>
-      <span class="role-badge"><i class="fas fa-circle" style="font-size:6px;"></i> <%= user.role %></span>
+<!-- ══ SIDEBAR ══ -->
+<div class="sidebar" id="sidebar">
+    <div class="sb-top">
+        <div class="brand">
+            <div class="brand-icon"><i class="fas fa-chalkboard-teacher"></i></div>
+            <div>
+                <div class="brand-name">LECTURER</div>
+                <div class="brand-sub">Teaching Portal</div>
+            </div>
+        </div>
+
+        <div class="user-chip">
+            <small>Signed in as</small>
+            <strong><%= user.name %></strong>
+            <span class="role-badge"><i class="fas fa-circle" style="font-size:6px;"></i> Lecturer</span>
+        </div>
+
+        <% var allRoles = user.roles && user.roles.length > 1 ? user.roles : null; %>
+        <% if (allRoles) { %>
+        <div class="role-switcher">
+            <label><i class="fas fa-exchange-alt" style="margin-right:4px;"></i> Switch Role</label>
+            <form action="/switch-role" method="POST" class="role-switcher-row">
+                <select name="targetRole" class="role-select">
+                    <% allRoles.forEach(function(r){ %>
+                        <option value="<%= r %>" <%= r === user.role ? 'selected' : '' %>><%= r %></option>
+                    <% }); %>
+                </select>
+                <button type="submit" class="role-go-btn"><i class="fas fa-arrow-right"></i> Go</button>
+            </form>
+        </div>
+        <% } %>
     </div>
 
-    <% var lecRoles = user.roles && user.roles.length > 1 ? user.roles : null; %>
-    <% if (lecRoles) { %>
-    <div class="role-sw">
-      <label><i class="fas fa-shuffle"></i> Switch Role</label>
-      <form action="/switch-role" method="POST" class="role-sw-row">
-        <select name="targetRole" class="role-sel">
-          <% lecRoles.forEach(function(r){ %>
-            <option value="<%= r %>" <%= r===user.role?'selected':'' %>><%= r %></option>
-          <% }); %>
-        </select>
-        <button type="submit" class="role-go">Go</button>
-      </form>
+    <nav class="sb-nav">
+        <div class="nav-lbl">Navigation</div>
+        <a href="/lecturer" class="nav-link active"><i class="fas fa-th-large"></i> Dashboard</a>
+        <a href="/attendance-history" class="nav-link"><i class="fas fa-history"></i> Attendance History</a>
+        <a href="/settings" class="nav-link"><i class="fas fa-cog"></i> Settings</a>
+        <a href="/export-attendance" class="nav-link export"><i class="fas fa-file-excel"></i> Export CSV</a>
+
+        <% if (user.isClassTeacher) { %>
+        <div class="nav-lbl" style="margin-top:8px;">Class Teacher</div>
+        <a href="/master" class="nav-link" style="color:rgba(251,191,36,.75);">
+            <i class="fas fa-star"></i> CT Panel (<%= user.classTeacherSection %>)
+        </a>
+        <% } %>
+
+        <div class="nav-lbl" style="margin-top:8px;">Account</div>
+        <a href="/logout" class="nav-link danger"><i class="fas fa-power-off"></i> Logout</a>
+    </nav>
+
+    <div class="sb-foot">
+        <div class="clock-txt" id="sbClock"></div>
+    </div>
+</div>
+
+<!-- ══ MAIN ══ -->
+<div class="main" id="mainContent">
+
+    <!-- Page Header -->
+    <div class="pg-hdr">
+        <div>
+            <h1><i class="fas fa-chalkboard-teacher" style="color:var(--acc);margin-right:8px;"></i>Lecturer Dashboard</h1>
+            <p>Welcome back, <strong><%= user.name %></strong> — here's your attendance summary for today.</p>
+        </div>
+        <div class="hdr-right">
+            <button id="themeToggle" class="btn-theme" aria-label="Toggle theme"><i class="fas fa-moon" id="themeIcon"></i></button>
+            <div id="desktopClock" style="font-weight:800;font-size:1rem;color:var(--muted);font-variant-numeric:tabular-nums;min-width:88px;text-align:right;"></div>
+        </div>
+    </div>
+
+    <% if (user.isClassTeacher) { %>
+    <div class="alert alert-ct">
+        <i class="fas fa-star" style="font-size:1rem;"></i>
+        <span>You are the <strong>Class Teacher</strong> for Division <strong><%= user.classTeacherSection %></strong>.
+        <a href="/master" style="color:inherit;font-weight:800;text-decoration:underline;margin-left:6px;">Open CT Panel →</a></span>
     </div>
     <% } %>
-  </div>
 
-  <nav class="sb-nav">
-    <div class="nav-lbl">Navigation</div>
-    <a href="/lecturer" class="nav-link active"><i class="fas fa-house"></i> Dashboard</a>
-    <a href="/attendance-history" class="nav-link"><i class="fas fa-clock-rotate-left"></i> History</a>
-    <a href="/settings" class="nav-link"><i class="fas fa-gear"></i> Settings</a>
-    <a href="/export-attendance" class="nav-link export"><i class="fas fa-file-csv"></i> Export CSV</a>
-    <div class="nav-lbl" style="margin-top:8px;">Account</div>
-    <a href="/logout" class="nav-link danger"><i class="fas fa-power-off"></i> Logout</a>
-  </nav>
-
-  <div class="sb-foot">
-    <div class="clock-txt" id="sbClock">--:--:--</div>
-  </div>
-</aside>
-
-<!-- Main Content -->
-<main class="main">
-
-  <!-- Page Header -->
-  <div class="pg-hdr">
-    <div>
-      <h1><i class="fas fa-chalkboard-teacher" style="margin-right:8px;opacity:.8;"></i> Lecturer Dashboard</h1>
-      <p>Welcome back, <strong style="color:#fff;"><%= user.name %></strong> — Today's attendance records are shown below.</p>
-    </div>
-    <div class="hdr-right">
-      <span id="desktopClock" style="font-size:13px;color:rgba(255,255,255,.6);font-variant-numeric:tabular-nums;"></span>
-      <button id="themeToggle" class="btn-theme" aria-label="Toggle theme"><i class="fas fa-moon" id="themeIcon"></i></button>
-    </div>
-  </div>
-
-  <!-- Stats -->
-  <%
-    var totalStudents = 0;
-    var totalPresent = 0;
-    var totalAbsent = 0;
-    if (todayRecords && todayRecords.length > 0) {
-      todayRecords.forEach(function(rec){
-        rec.students.forEach(function(s){
-          totalStudents++;
-          if (s.status === 'Present') totalPresent++; else totalAbsent++;
-        });
-      });
-    }
-  %>
-  <div class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-icon" style="background:rgba(15,118,110,.1);color:var(--pri);"><i class="fas fa-clipboard-list"></i></div>
-      <div class="stat-body"><small>Today's Classes</small><h2><%= todayRecords ? todayRecords.length : 0 %></h2></div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon" style="background:rgba(16,185,129,.1);color:var(--suc);"><i class="fas fa-circle-check"></i></div>
-      <div class="stat-body"><small>Present Today</small><h2 style="color:var(--suc);"><%= totalPresent %></h2></div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon" style="background:rgba(239,68,68,.1);color:var(--dan);"><i class="fas fa-circle-xmark"></i></div>
-      <div class="stat-body"><small>Absent Today</small><h2 style="color:var(--dan);"><%= totalAbsent %></h2></div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon" style="background:rgba(124,58,237,.1);color:var(--pur);"><i class="fas fa-layer-group"></i></div>
-      <div class="stat-body"><small>Sections Today</small><h2 style="color:var(--pur);"><%= sectionsToday ? sectionsToday.length : 0 %></h2></div>
-    </div>
-  </div>
-
-  <!-- Today's Attendance -->
-  <div class="card">
-    <div class="card-hdr">
-      <h3>
-        <i class="fas fa-calendar-day" style="color:var(--pri);"></i>
-        Today's Attendance
-        <% if (todayRecords && todayRecords.length > 0) { %>
-          <span class="live-tag"><span class="live-dot"></span> Live</span>
-        <% } %>
-      </h3>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <span style="font-size:12px;color:var(--muted);"><%= new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long'}) %></span>
-      </div>
-    </div>
-    <div class="card-body">
-
-      <% if (todayRecords && todayRecords.length > 0) { %>
-
-        <!-- Division tabs -->
-        <% if (sectionsToday && sectionsToday.length > 1) { %>
-        <div class="div-tabs" id="divTabs">
-          <button class="tab-btn active" data-div="all">All Sections (<%= sectionsToday.length %>)</button>
-          <% sectionsToday.forEach(function(sec){ %>
-            <button class="tab-btn" data-div="<%= sec %>"><i class="fas fa-layer-group" style="font-size:11px;"></i> <%= sec %></button>
-          <% }); %>
+    <!-- Stats -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:rgba(59,127,244,.1);color:var(--acc);"><i class="fas fa-layer-group"></i></div>
+            <div class="stat-body">
+                <small>Divisions Today</small>
+                <h2 style="color:var(--acc);"><%= sectionsToday && sectionsToday.length ? sectionsToday.length : 0 %></h2>
+            </div>
         </div>
-        <% } %>
-
-        <%
-          var groupedByDiv = {};
-          todayRecords.forEach(function(rec){
-            var sec = rec.section || 'Unknown';
-            if (!groupedByDiv[sec]) groupedByDiv[sec] = [];
-            groupedByDiv[sec].push(rec);
-          });
-        %>
-
-        <% Object.keys(groupedByDiv).forEach(function(div){ %>
-        <div class="div-group" data-division="<%= div %>">
-          <div class="grp-hdr">
-            <h4><i class="fas fa-layer-group" style="color:var(--pri);"></i> Section: <%= div %></h4>
-            <div class="grp-hdr-right">
-              <a href="/generate-day-pdf/<%= new Date().toISOString().split('T')[0] %>?section=<%= div %>" class="btn btn-pri" style="padding:6px 13px;font-size:12px;">
-                <i class="fas fa-file-pdf"></i> Download PDF
-              </a>
+        <div class="stat-card">
+            <div class="stat-icon" style="background:rgba(16,185,129,.1);color:var(--suc);"><i class="fas fa-clipboard-check"></i></div>
+            <div class="stat-body">
+                <small>Classes Today</small>
+                <h2 style="color:var(--suc);"><%= todayRecords ? todayRecords.length : 0 %></h2>
             </div>
-          </div>
-
-          <% groupedByDiv[div].forEach(function(record){ %>
-          <div class="card" style="margin-bottom:14px;">
-            <div class="card-hdr" style="background:transparent;">
-              <h3 style="font-size:.88rem;">
-                <i class="fas fa-book" style="color:var(--acc);"></i>
-                <%= record.subject || 'Unknown Subject' %>
-                &nbsp;<span style="color:var(--muted);font-weight:400;font-size:.85em;">· <%= record.manualTime || 'N/A' %></span>
-              </h3>
-              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-                <% var pCount = record.students.filter(function(s){return s.status==='Present';}).length; %>
-                <span style="font-size:12px;color:var(--suc);font-weight:700;"><i class="fas fa-check"></i> <%= pCount %> Present</span>
-                <span style="font-size:12px;color:var(--dan);font-weight:700;"><i class="fas fa-times"></i> <%= record.students.length - pCount %> Absent</span>
-                <% if (record.isLockedByLeader) { %>
-                  <span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;background:rgba(15,118,110,.1);color:var(--pri);">
-                    <i class="fas fa-lock"></i> Locked
-                  </span>
-                <% } %>
-              </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="background:rgba(245,158,11,.1);color:var(--war);"><i class="fas fa-user-check"></i></div>
+            <div class="stat-body">
+                <small>Present Today</small>
+                <h2 style="color:var(--war);">
+                    <%= todayRecords ? todayRecords.reduce(function(s,r){ return s+(r.students||[]).filter(function(x){ return x.status==='Present';}).length; },0) : 0 %>
+                </h2>
             </div>
-            <div class="tbl-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Roll No</th>
-                    <th>Student Name</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <% if (record.students && record.students.length > 0) { %>
-                    <% record.students.forEach(function(student) { %>
-                    <tr id="row-<%= record._id %>-<%= student.studentId %>">
-                      <td style="font-family:monospace;font-weight:700;color:var(--pri);"><%= student.studentId || 'N/A' %></td>
-                      <td><%= student.studentName || student.name || 'Unknown' %></td>
-                      <td>
-                        <div style="display:flex;align-items:center;gap:8px;">
-                          <span class="sp <%= student.status %>" id="badge-<%= record._id %>-<%= student.studentId %>">
-                            <i class="fas fa-<%= student.status==='Present'?'check':'xmark' %>"></i> <%= student.status %>
-                          </span>
-                          <button type="button"
-                            class="toggle-btn toggle-status-btn"
-                            data-attendance-id="<%= record._id %>"
-                            data-student-id="<%= student.studentId %>"
-                            data-current="<%= student.status %>"
-                            title="Toggle status">
-                            <i class="fas fa-shuffle"></i> Toggle
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="background:rgba(239,68,68,.08);color:var(--dan);"><i class="fas fa-user-times"></i></div>
+            <div class="stat-body">
+                <small>Absent Today</small>
+                <h2 style="color:var(--dan);">
+                    <%= todayRecords ? todayRecords.reduce(function(s,r){ return s+(r.students||[]).filter(function(x){ return x.status==='Absent';}).length; },0) : 0 %>
+                </h2>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Mark Panel -->
+    <div class="qp">
+        <h4>
+            <i class="fas fa-bolt" style="color:var(--war);"></i>
+            Quick Mark — Update Student Status
+        </h4>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">
+            To update attendance, use the <strong>Status</strong> buttons in the table below. Click <span style="background:rgba(16,185,129,.1);color:var(--suc);padding:1px 8px;border-radius:4px;font-size:12px;font-weight:700;">Present</span> or <span style="background:rgba(239,68,68,.08);color:var(--dan);padding:1px 8px;border-radius:4px;font-size:12px;font-weight:700;">Absent</span> to toggle a student's status instantly via AJAX.
+        </p>
+        <div class="qp-form">
+            <div class="qp-fg">
+                <label><i class="fas fa-info-circle"></i> Note</label>
+                <input type="text" class="qp-input" placeholder="Attendance submitted by Section Leaders — you can edit status below" readonly style="cursor:default;opacity:.7;">
+            </div>
+            <a href="/attendance-history" class="btn btn-acc" style="height:42px;align-self:flex-end;">
+                <i class="fas fa-history"></i> View Full History
+            </a>
+        </div>
+    </div>
+
+    <!-- Today's Attendance -->
+    <div class="card">
+        <div class="card-hdr">
+            <h3><i class="fas fa-clipboard-list" style="color:var(--acc);"></i> Today's Attendance Logs</h3>
+            <span class="live-tag"><span class="live-dot"></span> Live Updates</span>
+        </div>
+        <div class="card-body">
+            <p style="font-size:13px;color:var(--muted);margin-bottom:18px;">
+                All attendance submitted across every division where you are assigned as lecturer today.
+            </p>
+
+            <% if (todayRecords && todayRecords.length > 0) { %>
+                <%
+                    var grouped = {};
+                    todayRecords.forEach(function(r) {
+                        var sec = r.section || 'Unknown';
+                        if (!grouped[sec]) grouped[sec] = [];
+                        grouped[sec].push(r);
+                    });
+                    var divKeys = Object.keys(grouped).sort();
+                %>
+
+                <!-- Division Tabs -->
+                <div class="div-tabs" id="divTabs">
+                    <button type="button" class="tab-btn active" data-div="all">
+                        <i class="fas fa-th-large"></i> All
+                    </button>
+                    <% divKeys.forEach(function(sec) { %>
+                    <button type="button" class="tab-btn" data-div="<%= sec %>">
+                        <i class="fas fa-layer-group"></i> <%= sec %>
+                        <span style="background:rgba(255,255,255,.15);border-radius:10px;padding:0 6px;font-size:10px;margin-left:3px;"><%= grouped[sec].length %></span>
+                    </button>
                     <% }); %>
-                  <% } else { %>
-                    <tr><td colspan="3" style="text-align:center;color:var(--muted);padding:24px;">No students listed.</td></tr>
-                  <% } %>
-                </tbody>
-              </table>
+                </div>
+
+                <!-- Division Groups -->
+                <% divKeys.forEach(function(sec) { %>
+                <div class="div-group" data-division="<%= sec %>">
+                    <div class="div-hdr">
+                        <span class="div-badge"><%= sec %></span>
+                        <span style="font-size:13px;color:var(--muted);font-weight:600;">
+                            <%= grouped[sec].length %> class<%= grouped[sec].length > 1 ? 'es' : '' %> recorded
+                        </span>
+                    </div>
+
+                    <% grouped[sec].forEach(function(record) {
+                        var pCnt = (record.students||[]).filter(function(s){ return s.status==='Present'; }).length;
+                        var aCnt = (record.students||[]).filter(function(s){ return s.status==='Absent'; }).length;
+                    %>
+                    <div class="rec-card">
+                        <div class="rec-hdr">
+                            <div class="rec-meta">
+                                <span class="subj-badge"><%= record.subject || 'Unknown Subject' %></span>
+                                <span class="time-badge"><i class="far fa-clock"></i> <%= record.manualTime || '—' %></span>
+                                <span style="font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:4px;"><i class="far fa-calendar-alt"></i> <%= record.date %></span>
+                            </div>
+                            <div class="status-chips">
+                                <span class="chip chip-p"><i class="fas fa-check-circle"></i> <%= pCnt %> Present</span>
+                                <span class="chip chip-a"><i class="fas fa-times-circle"></i> <%= aCnt %> Absent</span>
+                            </div>
+                        </div>
+                        <div class="tbl-scroll">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th style="width:90px;">Roll No</th>
+                                        <th>Student Name</th>
+                                        <th style="width:180px;">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% if (record.students && record.students.length > 0) { %>
+                                        <% record.students.forEach(function(student) { %>
+                                        <tr id="row-<%= record._id %>-<%= student.studentId %>">
+                                            <td style="font-family:monospace;font-weight:700;color:var(--acc);">
+                                                <%= student.studentId || 'N/A' %>
+                                            </td>
+                                            <td><%= student.studentName || student.name || 'Unknown' %></td>
+                                            <td>
+                                                <div style="display:flex;align-items:center;gap:7px;">
+                                                    <span class="sp <%= student.status %>" id="badge-<%= record._id %>-<%= student.studentId %>">
+                                                        <% if(student.status==='Present'){ %><i class="fas fa-check"></i><% } else { %><i class="fas fa-times"></i><% } %>
+                                                        <%= student.status %>
+                                                    </span>
+                                                    <button type="button"
+                                                        class="toggle-status-btn"
+                                                        data-attendance-id="<%= record._id %>"
+                                                        data-student-id="<%= student.studentId %>"
+                                                        data-current="<%= student.status %>"
+                                                        style="padding:3px 9px;font-size:11px;font-weight:700;border-radius:6px;border:none;cursor:pointer;transition:.18s;background:rgba(59,127,244,.1);color:var(--acc);"
+                                                        title="Toggle status">
+                                                        <i class="fas fa-exchange-alt"></i> Toggle
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <% }); %>
+                                    <% } else { %>
+                                        <tr><td colspan="3" style="text-align:center;color:var(--muted);padding:24px;">No students listed.</td></tr>
+                                    <% } %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <% }); %>
+                </div>
+                <% }); %>
+
+            <% } else { %>
+            <div class="empty">
+                <i class="fas fa-clipboard-list"></i>
+                <h3>No attendance today</h3>
+                <p>No records have been submitted for your classes today. They will appear here once Section Leaders submit attendance.</p>
+                <a href="/attendance-history" class="btn btn-acc"><i class="fas fa-history"></i> View Previous Logs</a>
             </div>
-          </div>
-          <% }); %>
+            <% } %>
+
         </div>
-        <% }); %>
-
-      <% } else { %>
-      <div class="empty">
-        <i class="fas fa-clipboard-list"></i>
-        <h3>No Attendance Today</h3>
-        <p>No records have been submitted for your classes today. They will appear here once section leaders submit attendance.</p>
-        <a href="/attendance-history" class="btn btn-pri"><i class="fas fa-clock-rotate-left"></i> View Previous Records</a>
-      </div>
-      <% } %>
-
     </div>
-  </div>
 
-</main>
+</div><!-- /main -->
 
 <script>
 (function(){
-  function setTheme(t){
-    document.documentElement.setAttribute('data-theme',t);
-    localStorage.setItem('rku-theme',t);
-    document.querySelectorAll('[id^="themeIcon"]').forEach(function(i){
-      i.className = t==='dark'?'fas fa-sun':'fas fa-moon';
-    });
-  }
-  var _t = document.documentElement.getAttribute('data-theme')||'light';
-  setTheme(_t);
-
-  document.addEventListener('DOMContentLoaded',function(){
-    ['themeToggle','themeToggleMob'].forEach(function(id){
-      var btn=document.getElementById(id);
-      if(btn) btn.addEventListener('click',function(){
-        var c=document.documentElement.getAttribute('data-theme')||'light';
-        setTheme(c==='dark'?'light':'dark');
-      });
-    });
-
-    function tick(){
-      var t=new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-      ['desktopClock','sbClock'].forEach(function(id){
-        var el=document.getElementById(id); if(el) el.textContent=t;
-      });
-    }
-    tick(); setInterval(tick,1000);
-
-    var ham=document.getElementById('hamBtn');
-    var sb=document.getElementById('sidebar');
-    var ov=document.getElementById('sidebarOverlay');
-    function openSb(){ sb.classList.add('open'); ov.classList.add('open'); }
-    function closeSb(){ sb.classList.remove('open'); ov.classList.remove('open'); }
-    if(ham) ham.addEventListener('click',openSb);
-    if(ov) ov.addEventListener('click',closeSb);
-
-    var tabs=document.getElementById('divTabs');
-    if(tabs){
-      tabs.addEventListener('click',function(e){
-        var btn=e.target.closest('.tab-btn'); if(!btn) return;
-        tabs.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active');});
-        btn.classList.add('active');
-        var dv=btn.dataset.div;
-        document.querySelectorAll('.div-group').forEach(function(g){
-          g.classList.toggle('hidden', dv!=='all' && g.dataset.division!==dv);
+    // ── Theme ──
+    function setTheme(t){
+        document.documentElement.setAttribute('data-theme',t);
+        localStorage.setItem('rku-theme',t);
+        document.querySelectorAll('[id^="themeIcon"]').forEach(function(i){
+            i.className = t === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
         });
-      });
     }
+    var cur = document.documentElement.getAttribute('data-theme') || 'light';
+    setTheme(cur);
+    document.addEventListener('DOMContentLoaded', function(){
+        ['themeToggle','themeToggleMob'].forEach(function(id){
+            var btn = document.getElementById(id);
+            if(btn) btn.addEventListener('click', function(){
+                var c = document.documentElement.getAttribute('data-theme') || 'light';
+                setTheme(c === 'dark' ? 'light' : 'dark');
+            });
+        });
 
-    document.body.addEventListener('click',function(e){
-      var btn=e.target.closest('.toggle-status-btn'); if(!btn) return;
-      var aid=btn.dataset.attendanceId;
-      var sid=btn.dataset.studentId;
-      var cur=btn.dataset.current;
-      var ns=cur==='Present'?'Absent':'Present';
-      btn.disabled=true;
-      btn.innerHTML='<i class="fas fa-spinner fa-spin"></i>';
-      fetch('/update-attendance-status',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({attendanceId:aid,studentId:sid,newStatus:ns})
-      })
-      .then(function(r){return r.json();})
-      .then(function(data){
-        if(data.success){
-          btn.dataset.current=ns;
-          var badge=document.getElementById('badge-'+aid+'-'+sid);
-          if(badge){
-            badge.className='sp '+ns;
-            badge.innerHTML=(ns==='Present'?'<i class="fas fa-check"></i> ':'<i class="fas fa-xmark"></i> ')+ns;
-          }
-          btn.innerHTML='<i class="fas fa-shuffle"></i> Toggle';
-          btn.disabled=false;
-        } else {
-          alert('Failed: '+(data.message||'Unknown error'));
-          btn.innerHTML='<i class="fas fa-shuffle"></i> Toggle';
-          btn.disabled=false;
+        // ── Clock ──
+        function tick(){
+            var now = new Date();
+            var t = now.toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+            var dc = document.getElementById('desktopClock');
+            var sb = document.getElementById('sbClock');
+            if(dc) dc.textContent = t;
+            if(sb) sb.textContent = t;
         }
-      })
-      .catch(function(){
-        alert('Network error — try again.');
-        btn.innerHTML='<i class="fas fa-shuffle"></i> Toggle';
-        btn.disabled=false;
-      });
+        tick(); setInterval(tick, 1000);
+
+        // ── Hamburger ──
+        var ham = document.getElementById('hamBtn');
+        var sidebar = document.getElementById('sidebar');
+        var overlay = document.getElementById('sidebarOverlay');
+        function openSb(){ sidebar.classList.add('open'); overlay.classList.add('open'); }
+        function closeSb(){ sidebar.classList.remove('open'); overlay.classList.remove('open'); }
+        if(ham) ham.addEventListener('click', openSb);
+        if(overlay) overlay.addEventListener('click', closeSb);
+
+        // ── Division tabs ──
+        var tabsWrap = document.getElementById('divTabs');
+        if(tabsWrap){
+            tabsWrap.addEventListener('click', function(e){
+                var btn = e.target.closest('.tab-btn');
+                if(!btn) return;
+                tabsWrap.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
+                btn.classList.add('active');
+                var dv = btn.dataset.div;
+                document.querySelectorAll('.div-group').forEach(function(g){
+                    g.classList.toggle('hidden', dv !== 'all' && g.dataset.division !== dv);
+                });
+            });
+        }
+
+        // ── Toggle attendance status (AJAX) ──
+        document.body.addEventListener('click', function(e){
+            var btn = e.target.closest('.toggle-status-btn');
+            if(!btn) return;
+            var attendanceId = btn.dataset.attendanceId;
+            var studentId    = btn.dataset.studentId;
+            var current      = btn.dataset.current;
+            var newStatus    = current === 'Present' ? 'Absent' : 'Present';
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+            fetch('/update-attendance-status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ attendanceId: attendanceId, studentId: studentId, newStatus: newStatus })
+            })
+            .then(function(r){ return r.json(); })
+            .then(function(data){
+                if(data.success){
+                    btn.dataset.current = newStatus;
+                    var badge = document.getElementById('badge-' + attendanceId + '-' + studentId);
+                    if(badge){
+                        badge.className = 'sp ' + newStatus;
+                        badge.innerHTML = (newStatus === 'Present' ? '<i class="fas fa-check"></i> ' : '<i class="fas fa-times"></i> ') + newStatus;
+                    }
+                    btn.innerHTML = '<i class="fas fa-exchange-alt"></i> Toggle';
+                    btn.disabled = false;
+                } else {
+                    alert('Failed to update: ' + (data.message || 'Unknown error'));
+                    btn.innerHTML = '<i class="fas fa-exchange-alt"></i> Toggle';
+                    btn.disabled = false;
+                }
+            })
+            .catch(function(err){
+                alert('Network error — please try again.');
+                btn.innerHTML = '<i class="fas fa-exchange-alt"></i> Toggle';
+                btn.disabled = false;
+            });
+        });
     });
-  });
 })();
 </script>
 </body>

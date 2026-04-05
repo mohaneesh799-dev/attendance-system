@@ -3,435 +3,674 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Leader Portal — <%= user.section %></title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<title>Leader Dashboard — <%= user.section %></title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <script>(function(){var t=localStorage.getItem('rku-theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
 <style>
 :root{
-  --pri:#0f766e;--pri2:#134e4a;
-  --acc:#f59e0b;--acc2:#d97706;
-  --suc:#10b981;--dan:#ef4444;--war:#f59e0b;--wa:#25d366;
-  --bg:#f0fdf9;--card:#fff;--border:#ccfbf1;
-  --text:#0d1f1c;--muted:#5a7a76;
-  --input-bg:#f0fdf9;--input-bd:#99f6e4;
-  --shadow:0 2px 16px rgba(15,118,110,.07);
-  --shadow-lg:0 8px 36px rgba(15,118,110,.13);
-  --radius:16px;--radius-sm:10px;
+  --sb-w:264px;--pri:#05091a;--pri2:#0d1535;--acc:#4f7ef7;--acc2:#6366f1;
+  --suc:#059669;--dan:#dc2626;--war:#d97706;--pur:#7c3aed;--wa:#25D366;
+  --bg:#f1f5fb;--card:#fff;--border:#e4eaf3;
+  --text:#0f172a;--muted:#64748b;--input-bg:#f8fafc;--input-bd:#cbd5e1;
+  --sh:0 1px 3px rgba(0,0,0,.05),0 4px 16px rgba(0,0,0,.06);
+  --sh2:0 8px 30px rgba(0,0,0,.1);--r:16px;--rs:10px;
 }
 [data-theme="dark"]{
-  --bg:#051714;--card:#071f1c;--border:#0d3330;
-  --text:#b2e8e2;--muted:#4a6e6a;
-  --input-bg:#051714;--input-bd:#0d3330;
-  --shadow:0 2px 20px rgba(0,0,0,.4);
-  --shadow-lg:0 8px 40px rgba(0,0,0,.6);
-  --pri:#0d9488;--pri2:#0f766e;
-  --acc:#fbbf24;--acc2:#f59e0b;
-  --suc:#34d399;--dan:#f87171;--war:#fbbf24;
+  --bg:#060b17;--card:#0c1426;--border:#162236;
+  --text:#dde6f4;--muted:#6b7f97;--input-bg:#09111f;--input-bd:#1e3050;
+  --sh:0 1px 3px rgba(0,0,0,.3),0 4px 16px rgba(0,0,0,.3);
+  --sh2:0 8px 30px rgba(0,0,0,.4);
+  --acc:#6390f5;--suc:#34d399;--dan:#f87171;--war:#fbbf24;--pur:#a78bfa;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-html,body{transition:background .25s,color .25s;}
-body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:18px 16px 50px;}
-.page{max-width:1040px;margin:0 auto;}
+html,body{transition:background .2s,color .2s;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;}
 
-/* ── HERO HEADER ── */
-.hero{
-  background:linear-gradient(135deg,var(--pri2) 0%,var(--pri) 55%,#0d9488 100%);
-  border-radius:var(--radius);padding:22px 26px;margin-bottom:20px;
-  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;
-  box-shadow:0 8px 32px rgba(15,118,110,.32);position:relative;overflow:hidden;
-}
-.hero::before{content:'';position:absolute;right:-60px;top:-60px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.04);pointer-events:none;}
-.hero-left h1{font-size:1.3rem;font-weight:900;color:#fff;}
-.hero-left p{font-size:13px;color:rgba(255,255,255,.65);margin-top:5px;}
-.hero-right{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
-.chip{background:rgba(255,255,255,.12);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;border:1px solid rgba(255,255,255,.15);}
-.hero-btn{display:inline-flex;align-items:center;gap:7px;padding:8px 15px;border-radius:var(--radius-sm);font-size:12.5px;font-weight:700;text-decoration:none;border:1px solid rgba(255,255,255,.18);cursor:pointer;transition:.2s;background:rgba(255,255,255,.12);color:#fff;font-family:inherit;}
-.hero-btn:hover{background:rgba(255,255,255,.22);}
-.hero-btn.danger{background:rgba(239,68,68,.2);border-color:rgba(239,68,68,.3);color:#fca5a5;}
-.theme-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);color:#fff;padding:7px 11px;border-radius:var(--radius-sm);cursor:pointer;font-size:14px;transition:.2s;}
-.theme-btn:hover{background:rgba(255,255,255,.2);}
+/* ══ SIDEBAR ══ */
+.sidebar{width:var(--sb-w);background:linear-gradient(175deg,#05091a 0%,#0e1840 55%,#1a1045 100%);height:100vh;position:fixed;top:0;left:0;display:flex;flex-direction:column;z-index:400;overflow-y:auto;transition:transform .28s ease;box-shadow:4px 0 30px rgba(0,0,0,.3);}
+.sb-top{padding:22px 16px 0;}
+.brand{display:flex;align-items:center;gap:11px;margin-bottom:20px;}
+.brand-icon{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#f59e0b,#d97706);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;flex-shrink:0;box-shadow:0 4px 16px rgba(245,158,11,.4);}
+.brand-text .bname{font-size:.9rem;font-weight:800;color:#fff;}
+.brand-text .bsub{font-size:10.5px;color:rgba(255,255,255,.38);}
+.user-chip{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:var(--rs);padding:12px 14px;margin-bottom:14px;}
+.uc-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.35);display:block;margin-bottom:4px;}
+.uc-name{color:#fff;font-size:13.5px;font-weight:700;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:7px;}
+.sec-badge{display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+.sb-switcher{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:var(--rs);padding:11px 12px;margin-bottom:12px;}
+.sw-lbl{font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:5px;margin-bottom:7px;}
+.sw-sel{flex:1;padding:7px 9px;border-radius:7px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.07);color:#fff;font-size:12px;font-family:inherit;outline:none;cursor:pointer;}
+.sw-sel option{background:#0d1535;color:#fff;}
+.sw-btn{padding:7px 12px;border-radius:7px;background:var(--acc);color:#fff;border:none;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;}
+.sb-nav{padding:4px 10px 16px;flex:1;}
+.nav-grp-lbl{font-size:9.5px;text-transform:uppercase;letter-spacing:.7px;color:rgba(255,255,255,.25);padding:12px 8px 4px;font-weight:700;}
+.nav-link{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--rs);margin-bottom:2px;color:rgba(255,255,255,.52);text-decoration:none;font-size:13px;font-weight:600;transition:.18s;border:none;background:none;cursor:pointer;width:100%;text-align:left;}
+.nav-link:hover{background:rgba(255,255,255,.07);color:#fff;}
+.nav-link.active{background:rgba(245,158,11,.2);color:#fff;border-left:3px solid #f59e0b;padding-left:9px;}
+.nav-link.danger{color:rgba(248,113,113,.6);}
+.nav-link.danger:hover{background:rgba(220,38,38,.12);color:var(--dan);}
+.nav-link i{width:18px;text-align:center;flex-shrink:0;}
+.sb-foot{padding:12px 14px;border-top:1px solid rgba(255,255,255,.06);}
+.sb-clock{font-size:.75rem;color:rgba(255,255,255,.28);text-align:center;font-variant-numeric:tabular-nums;}
+.sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:350;}
+.sb-overlay.open{display:block;}
+.ham{display:none;position:fixed;top:13px;left:13px;z-index:500;background:var(--pri);border:none;color:#fff;padding:10px 13px;border-radius:var(--rs);font-size:18px;cursor:pointer;box-shadow:0 3px 14px rgba(0,0,0,.35);}
+.mob-topbar{display:none;background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff;padding:0 16px 0 58px;height:52px;position:fixed;top:0;left:0;right:0;z-index:300;align-items:center;justify-content:space-between;box-shadow:0 2px 14px rgba(0,0,0,.25);}
+.mob-topbar span{font-size:14px;font-weight:800;}
+.btn-icon{background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:6px 10px;border-radius:7px;cursor:pointer;font-size:14px;}
 
-/* ── ALERTS ── */
-.alert{display:flex;align-items:center;gap:10px;padding:13px 16px;border-radius:var(--radius-sm);margin-bottom:16px;font-size:13.5px;animation:slideIn .3s ease;}
-@keyframes slideIn{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:none;}}
-.alert-ok{background:rgba(16,185,129,.08);color:#047857;border:1px solid rgba(16,185,129,.2);border-left:4px solid var(--suc);}
-.alert-err{background:rgba(239,68,68,.07);color:#b91c1c;border:1px solid rgba(239,68,68,.18);border-left:4px solid var(--dan);}
-[data-theme="dark"] .alert-ok{background:rgba(16,185,129,.1);color:var(--suc);}
-[data-theme="dark"] .alert-err{background:rgba(239,68,68,.1);color:var(--dan);}
+/* ══ MAIN ══ */
+.main{margin-left:var(--sb-w);padding:28px 28px 60px;flex:1;min-width:0;}
+.pg-hdr{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:26px;}
+.pg-hdr h1{font-size:1.45rem;font-weight:900;letter-spacing:-.4px;margin-bottom:4px;}
+.pg-hdr p{font-size:13px;color:var(--muted);}
+.pg-hdr-right{display:flex;align-items:center;gap:10px;}
+.btn-icon-desk{background:var(--card);border:1.5px solid var(--border);color:var(--muted);padding:9px 12px;border-radius:var(--rs);cursor:pointer;font-size:15px;transition:.18s;display:inline-flex;align-items:center;}
+.btn-icon-desk:hover{border-color:var(--acc);color:var(--acc);}
+#desktopClock{font-size:1rem;font-weight:800;color:var(--muted);font-variant-numeric:tabular-nums;min-width:88px;text-align:right;}
 
-/* ── QUICK MARK ── */
-.qm-box{
-  background:linear-gradient(135deg,rgba(15,118,110,.06),rgba(13,148,136,.04));
-  border:1.5px solid rgba(15,118,110,.2);border-radius:var(--radius);padding:18px 20px;margin-bottom:18px;
-}
-[data-theme="dark"] .qm-box{background:linear-gradient(135deg,rgba(15,118,110,.08),rgba(13,148,136,.06));border-color:rgba(13,148,136,.25);}
-.qm-box h4{font-size:.9rem;font-weight:800;display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+/* ══ ALERTS ══ */
+.alert{display:flex;align-items:center;gap:10px;padding:13px 16px;border-radius:var(--rs);margin-bottom:20px;font-size:13.5px;animation:slideDown .3s ease;}
+@keyframes slideDown{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:none;}}
+.alert-ok{background:rgba(5,150,105,.08);color:var(--suc);border:1px solid rgba(5,150,105,.2);}
+.alert-err{background:rgba(220,38,38,.06);color:var(--dan);border:1px solid rgba(220,38,38,.18);}
+
+/* ══ QUICK MARK ══ */
+.qm-box{background:linear-gradient(135deg,rgba(245,158,11,.07),rgba(217,119,6,.04));border:1px solid rgba(245,158,11,.22);border-radius:var(--r);padding:20px;margin-bottom:22px;}
+.qm-box h4{margin:0 0 13px;font-size:.9rem;font-weight:800;display:flex;align-items:center;gap:8px;}
 .qm-row{display:flex;gap:10px;flex-wrap:wrap;}
-.qm-row input{flex:1;min-width:180px;}
-.qm-tip{font-size:12px;color:var(--muted);margin-top:9px;}
-.qm-feedback{display:none;padding:11px 14px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;margin-top:10px;align-items:center;gap:8px;}
+.qm-row input{flex:1;min-width:200px;}
+.qm-actions{display:flex;gap:8px;flex-wrap:wrap;}
+.qm-tip{font-size:11.5px;color:var(--muted);margin:9px 0 0;display:flex;align-items:center;gap:5px;}
+.qm-feedback{display:none;padding:11px 14px;border-radius:var(--rs);font-size:13px;font-weight:600;margin-top:10px;align-items:center;gap:8px;}
 .qm-feedback.show{display:flex;}
-.qm-feedback.ok{background:rgba(16,185,129,.08);color:#047857;border:1px solid rgba(16,185,129,.2);}
-.qm-feedback.no{background:rgba(239,68,68,.07);color:#b91c1c;border:1px solid rgba(239,68,68,.15);}
+.qm-feedback.ok{background:rgba(5,150,105,.08);color:var(--suc);border:1px solid rgba(5,150,105,.2);}
+.qm-feedback.no{background:rgba(220,38,38,.06);color:var(--dan);border:1px solid rgba(220,38,38,.18);}
 
-/* ── CARD ── */
-.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:16px;overflow:hidden;}
+/* ══ CARD ══ */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh);margin-bottom:22px;overflow:hidden;}
 .card-hdr{padding:16px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;background:var(--input-bg);}
-.card-hdr h3{font-size:.95rem;font-weight:800;display:flex;align-items:center;gap:8px;margin:0;}
-.card-body{padding:20px 22px;}
-.sec-heading{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:16px 22px 0;}
-.sec-heading h3{font-size:.95rem;font-weight:800;display:flex;align-items:center;gap:8px;margin:0;border-left:4px solid var(--pri);padding-left:10px;}
-
-/* ── FORM ── */
-.grid-inputs{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;padding:18px 22px;}
+.card-hdr h3{font-size:.92rem;font-weight:800;display:flex;align-items:center;gap:8px;}
+.card-body{padding:22px;}
+.grid-inputs{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:14px;}
 .fg{display:flex;flex-direction:column;gap:5px;}
-.fg label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
-.fc{
-  padding:11px 13px;border-radius:var(--radius-sm);border:1.5px solid var(--input-bd);
-  font-size:13.5px;font-family:inherit;background:var(--input-bg);color:var(--text);outline:none;transition:.2s;width:100%;
-}
-.fc:focus{border-color:var(--pri);background:var(--card);box-shadow:0 0 0 3px rgba(15,118,110,.12);}
-select.fc option{background:var(--card);color:var(--text);}
+.fg label{font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;}
+.fc{padding:11px 13px;border-radius:var(--rs);border:1.5px solid var(--input-bd);font-size:13.5px;font-family:inherit;background:var(--input-bg);color:var(--text);outline:none;transition:.2s;width:100%;}
+.fc:focus{border-color:var(--acc);background:var(--card);box-shadow:0 0 0 3px rgba(79,126,247,.1);}
 
-/* ── TABLE ── */
-.tbl-wrap{overflow-x:auto;}
-table{width:100%;border-collapse:collapse;min-width:380px;}
-thead th{background:var(--pri2);color:#fff;padding:11px 14px;font-size:11.5px;text-transform:uppercase;letter-spacing:.4px;text-align:left;white-space:nowrap;}
-tbody td{padding:12px 14px;border-bottom:1px solid var(--border);font-size:13.5px;vertical-align:middle;}
+/* ══ TABLE ══ */
+.sec-heading{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin:20px 0 12px;}
+.sec-heading h3{margin:0;font-size:1rem;font-weight:700;border-left:4px solid var(--war);padding-left:10px;}
+.tbl-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border);}
+table{width:100%;border-collapse:collapse;background:var(--card);}
+thead th{background:linear-gradient(135deg,#05091a,#0e1840);color:#fff;padding:12px 14px;font-size:11.5px;text-transform:uppercase;letter-spacing:.4px;text-align:left;white-space:nowrap;}
+tbody td{padding:12px 14px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle;}
 tbody tr:last-child td{border-bottom:none;}
-tbody tr:hover{background:rgba(15,118,110,.03);}
-tbody tr.qm-hit{background:rgba(16,185,129,.05)!important;}
-[data-theme="dark"] tbody tr.qm-hit{background:rgba(52,211,153,.06)!important;}
-
-/* ── CHECKBOX ── */
+tbody tr:hover td{background:rgba(79,126,247,.03);}
+tbody tr.qm-hit td{background:rgba(5,150,105,.06)!important;}
+[data-theme="dark"] tbody tr.qm-hit td{background:rgba(52,211,153,.06)!important;}
 .cb-wrap{display:flex;align-items:center;gap:8px;cursor:pointer;}
-input[type="checkbox"]{width:17px;height:17px;accent-color:var(--pri);cursor:pointer;flex-shrink:0;}
+input[type="checkbox"]{width:17px;height:17px;accent-color:var(--acc);cursor:pointer;flex-shrink:0;}
+.badge-leader{background:rgba(124,58,237,.1);color:var(--pur);padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;margin-left:6px;}
+#presentCount{font-size:13px;font-weight:700;color:var(--suc);background:rgba(5,150,105,.1);padding:4px 12px;border-radius:20px;}
 
-/* ── BUTTONS ── */
-.btn{display:inline-flex;align-items:center;gap:7px;padding:10px 18px;border:none;border-radius:var(--radius-sm);font-size:13.5px;font-weight:700;cursor:pointer;transition:.2s;text-decoration:none;white-space:nowrap;font-family:inherit;}
+/* ══ BUTTONS ══ */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:10px 18px;border:none;border-radius:var(--rs);font-size:14px;font-weight:700;cursor:pointer;transition:.2s;text-decoration:none;font-family:inherit;white-space:nowrap;}
 .btn:hover{opacity:.88;transform:translateY(-1px);}
 .btn:active{transform:scale(.98);}
-.btn-pri{background:var(--pri);color:#fff;}
-.btn-acc{background:var(--acc);color:#fff;}
-.btn-suc{background:var(--suc);color:#fff;}
-.btn-dan{background:var(--dan);color:#fff;}
-.btn-ghost{background:var(--input-bg);color:var(--text);border:1.5px solid var(--input-bd);}
-.btn-ghost:hover{border-color:var(--pri);color:var(--pri);}
+.btn-acc{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;box-shadow:0 4px 14px rgba(79,126,247,.25);}
+.btn-suc{background:linear-gradient(135deg,var(--suc),#047857);color:#fff;box-shadow:0 4px 14px rgba(5,150,105,.25);}
+.btn-dan{background:linear-gradient(135deg,var(--dan),#b91c1c);color:#fff;box-shadow:0 4px 14px rgba(220,38,38,.25);}
+.btn-war{background:linear-gradient(135deg,var(--war),#b45309);color:#fff;}
+.btn-wa{background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;box-shadow:0 4px 14px rgba(37,211,102,.25);}
+.btn-ghost{background:var(--input-bg);color:var(--text);border:1.5px solid var(--border);}
+.btn-ghost:hover{border-color:var(--acc);color:var(--acc);}
 .btn-full{width:100%;justify-content:center;}
-.btn-wa{background:var(--wa);color:#fff;}
+.btn-sm{padding:7px 14px;font-size:12.5px;}
 
-/* ── BADGE ── */
-.badge-leader{background:rgba(124,58,237,.12);color:#6d28d9;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;}
-[data-theme="dark"] .badge-leader{background:rgba(167,139,250,.15);color:#a78bfa;}
+/* ══ REPORT ══ */
+.report-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+@media(max-width:540px){.report-grid{grid-template-columns:1fr;}}
 
-#presentCount{font-size:13px;font-weight:700;color:var(--pri);}
-
-.report-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
-@media(max-width:500px){.report-grid{grid-template-columns:1fr;}}
-
-@media(max-width:640px){
-  body{padding:14px 10px 40px;}
-  .hero{padding:18px 16px;border-radius:14px;}
-  .hero-left h1{font-size:1.1rem;}
-  .hero-right{gap:6px;}
-  .hero-btn{padding:7px 10px;font-size:11.5px;}
-  .card-body,.card-hdr,.sec-heading,.grid-inputs{padding:14px 16px;}
-  .qm-box{padding:14px;}
+/* ══ RESPONSIVE ══ */
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%);}
+  .sidebar.open{transform:translateX(0);}
+  .main{margin-left:0;padding:70px 14px 40px;}
+  .ham{display:flex;} .mob-topbar{display:flex;}
+  #desktopClock{display:none;}
   .qm-row{flex-direction:column;}
-}
-@media(max-width:380px){
-  .chip{display:none;}
-  .hero-right .theme-btn{display:none;}
+  .qm-actions{width:100%;}
+  .qm-actions .btn{flex:1;justify-content:center;}
 }
 </style>
 </head>
 <body>
-<div class="page">
 
-<!-- Hero Header -->
-<div class="hero">
-  <div class="hero-left">
-    <h1><i class="fas fa-clipboard-check" style="margin-right:8px;opacity:.8;"></i> Attendance Entry</h1>
-    <p>Leader: <strong style="color:#fff;"><%= user.name %></strong> &nbsp;·&nbsp; Section: <strong style="color:#fff;"><%= user.section %></strong></p>
-  </div>
-  <div class="hero-right">
-    <span class="chip"><i class="fas fa-layer-group"></i> <%= user.section %></span>
-    <button class="theme-btn" id="themeToggle" aria-label="Toggle theme"><i class="fas fa-moon" id="themeIco"></i></button>
-    <a href="/attendance-history" class="hero-btn"><i class="fas fa-clock-rotate-left"></i> History</a>
-    <a href="/settings" class="hero-btn"><i class="fas fa-gear"></i> Settings</a>
-    <a href="/logout" class="hero-btn danger"><i class="fas fa-power-off"></i> Logout</a>
-  </div>
+<button class="ham" id="hamBtn" aria-label="Menu"><i class="fas fa-bars"></i></button>
+<div class="mob-topbar">
+  <span><i class="fas fa-clipboard-check" style="color:#f59e0b;margin-right:6px;"></i>Attendance Entry</span>
+  <button id="themeToggleMob" class="btn-icon" aria-label="Toggle theme"><i class="fas fa-moon" id="themeIconMob"></i></button>
 </div>
+<div class="sb-overlay" id="sbOverlay"></div>
 
-<!-- Flash Messages -->
-<% if (typeof success !== 'undefined' && success) { %>
-  <div class="alert alert-ok"><i class="fas fa-circle-check"></i> <%= success %></div>
-<% } %>
-<% if (typeof error !== 'undefined' && error) { %>
-  <div class="alert alert-err"><i class="fas fa-circle-exclamation"></i> <%= error %></div>
-<% } %>
-
-<!-- Quick Mark -->
-<div class="qm-box">
-  <h4><i class="fas fa-bolt" style="color:var(--acc);"></i> Quick Mark Present by Roll Numbers</h4>
-  <div class="qm-row">
-    <input type="text" id="quickInput" class="fc" placeholder="e.g. 101, 102, 105 or paste a list…">
-    <button type="button" class="btn btn-pri" onclick="applyQuickMark()">
-      <i class="fas fa-check-double"></i> Mark Present
-    </button>
-    <button type="button" class="btn btn-ghost" onclick="markAll(true)"><i class="fas fa-users"></i> All Present</button>
-    <button type="button" class="btn btn-ghost" onclick="markAll(false)"><i class="fas fa-user-xmark"></i> Clear All</button>
-  </div>
-  <p class="qm-tip"><i class="fas fa-circle-info" style="color:var(--pri);"></i> Enter comma-separated roll numbers. Supports leading zeros. Press <strong>Enter</strong> to apply.</p>
-  <div class="qm-feedback" id="qmFeedback"></div>
-</div>
-
-<!-- Attendance Form -->
-<form action="/lock-attendance" method="POST" id="attendanceForm">
-  <input type="hidden" name="section" value="<%= user.section %>">
-
-  <!-- Session Details -->
-  <div class="card">
-    <div class="card-hdr">
-      <h3><i class="fas fa-circle-info" style="color:var(--pri);"></i> Session Details</h3>
+<aside class="sidebar" id="sidebar">
+  <div class="sb-top">
+    <div class="brand">
+      <div class="brand-icon"><i class="fas fa-clipboard-check"></i></div>
+      <div class="brand-text"><div class="bname">LEADER</div><div class="bsub">Attendance Entry</div></div>
     </div>
-    <div class="grid-inputs">
-      <div class="fg">
-        <label>Assigned Lecturer</label>
-        <select name="lecturerEmail" class="fc" required>
-          <option value="">— Select Lecturer —</option>
-          <% var lecturerList = typeof lecturers !== 'undefined' ? lecturers : [];
-             lecturerList.forEach(function(l){ %>
-            <option value="<%= l.email %>"><%= l.name %> &lt;<%= l.email %>&gt;</option>
+    <div class="user-chip">
+      <span class="uc-lbl">Section Leader</span>
+      <strong class="uc-name"><%= user.name %></strong>
+      <span class="sec-badge"><i class="fas fa-layer-group" style="font-size:9px;"></i> <%= user.section %></span>
+    </div>
+
+    <%
+      var leaderRoles = user.roles && user.roles.length > 1 ? user.roles : null;
+    %>
+    <% if (leaderRoles) { %>
+    <div class="sb-switcher">
+      <div class="sw-lbl"><i class="fas fa-exchange-alt"></i> Switch Role</div>
+      <form action="/switch-role" method="POST" style="display:flex;gap:6px;">
+        <select name="targetRole" class="sw-sel">
+          <% leaderRoles.forEach(function(r){ %>
+            <option value="<%= r %>" <%= r === user.role ? 'selected' : '' %>><%= r %></option>
           <% }); %>
         </select>
-      </div>
-      <div class="fg">
-        <label>Period / Time Slot</label>
-        <input type="text" name="manualTime" class="fc" placeholder="e.g. 09:00 AM – 10:00 AM" required>
-      </div>
-      <div class="fg">
-        <label>Class Date</label>
-        <input type="date" name="date" id="currentDate" class="fc" value="<%= new Date().toISOString().split('T')[0] %>" required>
-      </div>
-      <div class="fg">
-        <label>Subject</label>
-        <select name="subject" class="fc" required>
-          <option value="">— Select Subject —</option>
-          <% if (masterSubjects && masterSubjects.length > 0) {
-               masterSubjects.forEach(function(sub){ %>
-            <option value="<%= sub.name %>"><%= sub.name %><% if(sub.code){ %> (<%= sub.code %>)<% } %></option>
-          <% }); } else { %>
-            <option disabled>No subjects — ask Master to add subjects</option>
-          <% } %>
-        </select>
-      </div>
-    </div>
-  </div>
-
-  <!-- Student Table -->
-  <div class="card">
-    <div class="sec-heading">
-      <h3><i class="fas fa-users" style="color:var(--pri);"></i> Students — Section <%= user.section %></h3>
-      <span id="presentCount">0 marked present</span>
-    </div>
-    <div style="height:14px;"></div>
-
-    <% if (allUsers && allUsers.length > 0) { %>
-    <div class="tbl-wrap">
-      <table id="studentTable">
-        <thead>
-          <tr>
-            <th style="width:44px;">#</th>
-            <th style="width:110px;">Roll No</th>
-            <th>Student Name</th>
-            <th style="width:140px;text-align:center;">Present</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% var _idx = 0;
-             allUsers.forEach(function(u){
-               if(u.role==='Master'||u.role==='Lecturer'||u.role==='SuperAdmin') return;
-               var ri = _idx; %>
-          <tr id="row-<%= ri %>">
-            <td style="color:var(--muted);font-size:12px;"><%= ri + 1 %></td>
-            <td class="roll-col" style="font-family:monospace;font-weight:700;color:var(--pri);">
-              <%= u.rollNo || u.rollno || '—' %>
-            </td>
-            <td>
-              <%= u.name %>
-              <% if(u.role==='Leader'){ %>
-                <span class="badge-leader">Leader</span>
-              <% } %>
-            </td>
-            <td style="text-align:center;">
-              <input type="hidden" name="students[<%= ri %>][id]"   value="<%= u.rollNo || u.rollno || '' %>">
-              <input type="hidden" name="students[<%= ri %>][name]" value="<%= u.name %>">
-              <label class="cb-wrap" style="justify-content:center;">
-                <input type="checkbox"
-                  name="students[<%= ri %>][status]"
-                  value="Present"
-                  class="student-checkbox"
-                  data-row="<%= ri %>"
-                  onchange="updateCount()">
-                <span style="font-size:13px;font-weight:600;">Present</span>
-              </label>
-            </td>
-          </tr>
-          <% _idx++; }); %>
-        </tbody>
-      </table>
-    </div>
-    <% } else { %>
-    <div style="text-align:center;padding:50px 20px;color:var(--muted);">
-      <i class="fas fa-user-slash" style="font-size:2.5rem;opacity:.2;display:block;margin-bottom:12px;"></i>
-      <p>No students found in Section <%= user.section %>. Ask your Master to add students.</p>
+        <button type="submit" class="sw-btn">Go</button>
+      </form>
     </div>
     <% } %>
+  </div>
 
-    <div style="padding:16px 22px 20px;">
-      <button type="submit" class="btn btn-dan btn-full" style="padding:15px;font-size:15px;letter-spacing:-.2px;">
-        <i class="fas fa-lock"></i> Finalize &amp; Lock Attendance
-      </button>
+  <nav class="sb-nav">
+    <div class="nav-grp-lbl">Navigation</div>
+    <a href="/leader" class="nav-link active"><i class="fas fa-th-large"></i> Dashboard</a>
+    <a href="/attendance-history" class="nav-link"><i class="fas fa-history"></i> Attendance History</a>
+    <a href="/settings" class="nav-link"><i class="fas fa-cog"></i> Settings</a>
+    <div class="nav-grp-lbl" style="margin-top:6px;">Account</div>
+    <a href="/logout" class="nav-link danger"><i class="fas fa-power-off"></i> Logout</a>
+  </nav>
+  <div class="sb-foot"><div class="sb-clock" id="sbClock"></div></div>
+</aside>
+
+<main class="main" id="mainContent">
+  <% if (typeof success !== 'undefined' && success) { %>
+    <div class="alert alert-ok"><i class="fas fa-check-circle"></i> <%= success %></div>
+  <% } %>
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div class="alert alert-err"><i class="fas fa-exclamation-circle"></i> <%= error %></div>
+  <% } %>
+
+  <div class="pg-hdr">
+    <div>
+      <h1><i class="fas fa-clipboard-check" style="color:var(--war);margin-right:8px;"></i>Attendance Entry</h1>
+      <p>Leader: <strong><%= user.name %></strong> &nbsp;·&nbsp; Section: <strong><%= user.section %></strong></p>
+    </div>
+    <div class="pg-hdr-right">
+      <button id="themeToggle" class="btn-icon-desk" title="Toggle theme"><i class="fas fa-moon" id="themeIcon"></i></button>
+      <div id="desktopClock"></div>
     </div>
   </div>
-</form>
 
-<!-- Reports -->
-<div class="card">
-  <div class="card-hdr">
-    <h3><i class="fas fa-file-lines" style="color:var(--pri);"></i> Report Management</h3>
-  </div>
-  <div class="card-body">
-    <div class="report-grid" style="margin-bottom:14px;">
-      <div class="fg">
-        <label>Filter By Status</label>
-        <select id="reportFilter" class="fc">
-          <option value="">Full List (All Students)</option>
-          <option value="Present">Present Students Only</option>
-          <option value="Absent">Absent Students Only</option>
-        </select>
-      </div>
-      <div class="fg">
-        <label style="opacity:0;">.</label>
-        <button type="button" class="btn btn-pri" onclick="downloadPDF()">
-          <i class="fas fa-file-pdf"></i> Download PDF
+  <!-- Quick Mark Panel -->
+  <div class="qm-box">
+    <h4><i class="fas fa-bolt" style="color:#f59e0b;"></i> Quick Mark Present by Roll Numbers</h4>
+    <div class="qm-row">
+      <input type="text" id="quickInput" class="fc" placeholder="e.g. 101, 102, 105 or paste a list…">
+      <div class="qm-actions">
+        <button type="button" class="btn btn-suc" id="markPresentBtn">
+          <i class="fas fa-check-double"></i> Mark Present
+        </button>
+        <button type="button" class="btn btn-acc btn-sm" onclick="markAll(true)">
+          <i class="fas fa-users"></i> All Present
+        </button>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="markAll(false)">
+          <i class="fas fa-user-times"></i> Clear All
         </button>
       </div>
     </div>
-    <button type="button" class="btn btn-wa btn-full" onclick="submitToWhatsApp()">
-      <i class="fab fa-whatsapp"></i> Share Report via WhatsApp
-    </button>
+    <p class="qm-tip"><i class="fas fa-info-circle"></i> Enter comma-separated roll numbers. Supports leading zeros. Press <strong>Enter</strong> to apply.</p>
+    <div class="qm-feedback" id="qmFeedback"></div>
   </div>
-</div>
 
-</div><!-- /page -->
+  <!-- Attendance Form -->
+  <form action="/lock-attendance" method="POST" id="attendanceForm">
+    <input type="hidden" name="section" value="<%= user.section %>">
+
+    <div class="card">
+      <div class="card-hdr">
+        <h3><i class="fas fa-info-circle" style="color:var(--acc);"></i> Session Details</h3>
+      </div>
+      <div class="card-body">
+        <div class="grid-inputs">
+          <div class="fg">
+            <label>Assigned Lecturer</label>
+            <select name="lecturerEmail" class="fc" required>
+              <option value="">— Select Lecturer —</option>
+              <% var lecturerList = typeof lecturers !== 'undefined' ? lecturers : [];
+                 lecturerList.forEach(function(l){ %>
+                <option value="<%= l.email %>"><%= l.name %> &lt;<%= l.email %>&gt;</option>
+              <% }); %>
+            </select>
+          </div>
+          <div class="fg">
+            <label>Period / Time Slot</label>
+            <input type="text" name="manualTime" class="fc" placeholder="e.g. 09:00 AM – 10:00 AM" required>
+          </div>
+          <div class="fg">
+            <label>Class Date</label>
+            <input type="date" name="date" id="currentDate" class="fc" value="<%= new Date().toISOString().split('T')[0] %>" required>
+          </div>
+          <div class="fg">
+            <label>Subject</label>
+            <select name="subject" class="fc" required>
+              <option value="">— Select Subject —</option>
+              <% if (masterSubjects && masterSubjects.length > 0) {
+                   masterSubjects.forEach(function(sub){ %>
+                <option value="<%= sub.name %>"><%= sub.name %><% if(sub.code){ %> (<%= sub.code %>)<% } %></option>
+              <% }); } else { %>
+                <option disabled>No subjects — ask Master to add subjects</option>
+              <% } %>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Student Table -->
+    <div class="card">
+      <div class="card-hdr">
+        <h3><i class="fas fa-users" style="color:var(--war);"></i> Students — Section <%= user.section %></h3>
+        <span id="presentCount">0 / 0 marked present</span>
+      </div>
+      <div class="card-body" style="padding-top:0;">
+        <% if (allUsers && allUsers.length > 0) { %>
+          <div class="tbl-wrap">
+            <table id="studentTable">
+              <thead>
+                <tr>
+                  <th style="width:50px;">#</th>
+                  <th style="width:120px;">Roll No</th>
+                  <th>Student Name</th>
+                  <th style="width:160px;">Attendance</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% var idx = 0;
+                   allUsers.forEach(function(u){
+                     if(u.role==='Master'||u.role==='Lecturer'||u.role==='SuperAdmin') return;
+                     var rowIdx = idx; %>
+                <tr id="row-<%= rowIdx %>">
+                  <td style="color:var(--muted);font-size:12px;"><%= rowIdx + 1 %></td>
+                  <td class="roll-col" style="font-family:monospace;font-weight:700;color:var(--acc);">
+                    <%= u.rollNo || u.rollno || '—' %>
+                  </td>
+                  <td>
+                    <%= u.name %>
+                    <% if(u.role==='Leader'){ %><span class="badge-leader">Leader</span><% } %>
+                  </td>
+                  <td>
+                    <input type="hidden" name="students[<%= rowIdx %>][id]"   value="<%= u.rollNo || u.rollno || '' %>">
+                    <input type="hidden" name="students[<%= rowIdx %>][name]" value="<%= u.name %>">
+                    <label class="cb-wrap">
+                      <input type="checkbox"
+                             name="students[<%= rowIdx %>][status]"
+                             value="Present"
+                             class="student-checkbox"
+                             data-rollno="<%= (u.rollNo || u.rollno || '').toString().replace(/^0+/,'') || '0' %>"
+                             data-name="<%= u.name %>"
+                             onchange="updateCount()">
+                      <span>Present</span>
+                    </label>
+                  </td>
+                </tr>
+                <% idx++; }); %>
+              </tbody>
+            </table>
+          </div>
+        <% } else { %>
+          <div style="text-align:center;padding:50px;color:var(--muted);">
+            <i class="fas fa-user-slash" style="font-size:2.5rem;opacity:.3;display:block;margin-bottom:12px;"></i>
+            <p>No students found in Section <%= user.section %>. Ask your Master to add students.</p>
+          </div>
+        <% } %>
+
+        <button type="submit" class="btn btn-dan btn-full" style="margin-top:18px;padding:15px;font-size:15px;">
+          <i class="fas fa-lock"></i> Finalize &amp; Lock Attendance
+        </button>
+      </div>
+    </div>
+  </form>
+
+  <!-- Report Management -->
+  <div class="card">
+    <div class="card-hdr">
+      <h3><i class="fas fa-file-alt" style="color:var(--acc);"></i> Report Management</h3>
+    </div>
+    <div class="card-body">
+      <div class="report-grid">
+        <div class="fg">
+          <label>Filter By Status</label>
+          <select id="reportFilter" class="fc">
+            <option value="">Full List (All Students)</option>
+            <option value="Present">Present Students Only</option>
+            <option value="Absent">Absent Students Only</option>
+          </select>
+        </div>
+        <div class="fg" style="justify-content:flex-end;">
+          <label>&nbsp;</label>
+          <button type="button" class="btn btn-acc" id="downloadPdfBtn">
+            <i class="fas fa-file-pdf"></i> Download PDF
+          </button>
+        </div>
+      </div>
+      <button type="button" class="btn btn-wa btn-full" style="margin-top:14px;" id="whatsappBtn">
+        <i class="fab fa-whatsapp"></i> Share Report via WhatsApp
+      </button>
+    </div>
+  </div>
+
+</main>
 
 <script>
-document.addEventListener('DOMContentLoaded', function(){
-  updateCount();
-
-  var themeBtn = document.getElementById('themeToggle');
-  if (themeBtn) themeBtn.addEventListener('click', function(){
-    var c = document.documentElement.getAttribute('data-theme') || 'light';
-    var t = c === 'dark' ? 'light' : 'dark';
+(function () {
+  /* ══ Theme ══ */
+  function setTheme(t) {
     document.documentElement.setAttribute('data-theme', t);
     localStorage.setItem('rku-theme', t);
-    var i = document.getElementById('themeIco');
-    if (i) i.className = t === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-  });
-  var _ti = document.getElementById('themeIco');
-  var _tc = document.documentElement.getAttribute('data-theme') || 'light';
-  if (_ti) _ti.className = _tc === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+    syncIcons(t);
+  }
+  function syncIcons(t) {
+    var dark = t === 'dark';
+    ['themeIcon', 'themeIconMob'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.className = dark ? 'fas fa-sun' : 'fas fa-moon';
+    });
+  }
 
-  var qi = document.getElementById('quickInput');
-  if (qi) qi.addEventListener('keydown', function(e){ if(e.key==='Enter'){e.preventDefault();applyQuickMark();} });
+  /* ══ Clock ══ */
+  function updateClock() {
+    var n = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    ['desktopClock', 'sbClock'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.textContent = n;
+    });
+  }
 
-  document.getElementById('attendanceForm').addEventListener('submit', function(e){
-    if (!confirm('Lock this attendance? This cannot be undone.')) { e.preventDefault(); return; }
-    var form = this;
-    document.querySelectorAll('.student-checkbox').forEach(function(cb){
-      if (!cb.checked) {
-        var h = document.createElement('input');
-        h.type = 'hidden'; h.name = cb.name; h.value = 'Absent';
-        form.appendChild(h);
+  /* ══ Sidebar ══ */
+  function openSb() {
+    document.getElementById('sidebar').classList.add('open');
+    document.getElementById('sbOverlay').classList.add('open');
+  }
+  function closeSb() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sbOverlay').classList.remove('open');
+  }
+
+  /* ══ Present counter ══ */
+  window.updateCount = function () {
+    var total   = document.querySelectorAll('.student-checkbox').length;
+    var present = document.querySelectorAll('.student-checkbox:checked').length;
+    var el = document.getElementById('presentCount');
+    if (el) el.textContent = present + ' / ' + total + ' marked present';
+  };
+
+  /* ══ Mark All / Clear All ══ */
+  window.markAll = function (val) {
+    document.querySelectorAll('.student-checkbox').forEach(function (cb) {
+      cb.checked = val;
+      var row = cb.closest('tr');
+      if (row) row.classList.toggle('qm-hit', val);
+    });
+    updateCount();
+  };
+
+  /* ══ Normalize roll (strip leading zeros + whitespace) ══ */
+  function normalizeRoll(r) {
+    var s = String(r || '').replace(/\s+/g, '').toLowerCase();
+    var stripped = s.replace(/^0+/, '');
+    return stripped.length ? stripped : (s.length ? s : '');
+  }
+
+  /* ══ Quick Mark ══ */
+  window.applyQuickMark = function () {
+    var inputEl   = document.getElementById('quickInput');
+    var feedbackEl = document.getElementById('qmFeedback');
+    var input = inputEl ? inputEl.value.trim() : '';
+
+    feedbackEl.className = 'qm-feedback';
+    feedbackEl.innerHTML = '';
+
+    if (!input) {
+      feedbackEl.className = 'qm-feedback show no';
+      feedbackEl.innerHTML = '<i class="fas fa-exclamation-circle"></i> Please enter at least one roll number.';
+      return;
+    }
+
+    /* Parse — commas, spaces, semicolons, pipes, newlines, tabs */
+    var parts = input.split(/[\s,;|\n\t]+/).filter(Boolean);
+    var rollsToMark = [];
+    parts.forEach(function (p) {
+      var n = normalizeRoll(p);
+      if (n && rollsToMark.indexOf(n) === -1) rollsToMark.push(n);
+    });
+
+    if (rollsToMark.length === 0) {
+      feedbackEl.className = 'qm-feedback show no';
+      feedbackEl.innerHTML = '<i class="fas fa-exclamation-circle"></i> No valid roll numbers found in input.';
+      return;
+    }
+
+    var rows = document.querySelectorAll('#studentTable tbody tr');
+    var matchedCount = 0;
+    var foundInTable = [];
+
+    rows.forEach(function (row) {
+      var cb = row.querySelector('.student-checkbox');
+      if (!cb) return;
+      var rollRaw  = cb.dataset.rollno || '';
+      var cellEl   = row.querySelector('.roll-col');
+      var cellText = cellEl ? (cellEl.textContent || cellEl.innerText || '').trim() : '';
+      var cellNorm = normalizeRoll(cellText);
+      var rowNorm  = normalizeRoll(rollRaw);
+
+      /* Match against both data-rollno and cell text */
+      var matched = (rowNorm && rollsToMark.indexOf(rowNorm) !== -1) ||
+                    (cellNorm && cellNorm !== '—' && rollsToMark.indexOf(cellNorm) !== -1);
+
+      if (cellNorm) foundInTable.push(cellNorm);
+      if (rowNorm && rowNorm !== cellNorm) foundInTable.push(rowNorm);
+
+      if (matched) {
+        cb.checked = true;
+        row.classList.add('qm-hit');
+        matchedCount++;
       }
+    });
+
+    var notFound = rollsToMark.filter(function (r) {
+      return foundInTable.indexOf(r) === -1;
+    });
+
+    updateCount();
+
+    if (matchedCount > 0) {
+      if (inputEl) inputEl.value = '';
+      var msg = '<i class="fas fa-check-circle"></i> ' + matchedCount + ' student(s) marked Present.';
+      if (notFound.length > 0) {
+        msg += ' &nbsp;<span style="font-weight:400;opacity:.8;">Not found: ' + notFound.join(', ') + '</span>';
+      }
+      feedbackEl.className = 'qm-feedback show ok';
+      feedbackEl.innerHTML = msg;
+    } else {
+      feedbackEl.className = 'qm-feedback show no';
+      feedbackEl.innerHTML = '<i class="fas fa-times-circle"></i> No matching roll numbers found. Entered: ' + rollsToMark.join(', ');
+    }
+
+    setTimeout(function () { feedbackEl.className = 'qm-feedback'; }, 6000);
+  };
+
+  /* ══ Download PDF ══ */
+  function downloadPDF() {
+    var dateEl   = document.getElementById('currentDate');
+    var filterEl = document.getElementById('reportFilter');
+    var date     = dateEl ? dateEl.value : '';
+    var filter   = filterEl ? filterEl.value : '';
+    if (!date) { alert('Please select a date first.'); return; }
+    window.open('/generate-day-pdf/' + date + '?filter=' + encodeURIComponent(filter), '_blank');
+  }
+
+  /* ══ WhatsApp — text format ══ */
+  function submitToWhatsApp() {
+    var dateEl     = document.getElementById('currentDate');
+    var filterEl   = document.getElementById('reportFilter');
+    var subjectEl  = document.querySelector('select[name="subject"]');
+    var timeSlotEl = document.querySelector('input[name="manualTime"]');
+
+    var date     = dateEl     ? dateEl.value     : '—';
+    var filter   = filterEl   ? filterEl.value   : '';
+    var subject  = subjectEl  ? subjectEl.value  : '';
+    var timeSlot = timeSlotEl ? timeSlotEl.value  : '';
+
+    /* Build student list from current form state */
+    var rows = document.querySelectorAll('#studentTable tbody tr');
+    var presentList = [];
+    var absentList  = [];
+
+    rows.forEach(function (row) {
+      var cb = row.querySelector('.student-checkbox');
+      if (!cb) return;
+      var rollCell = row.querySelector('.roll-col');
+      var rollNo   = rollCell ? rollCell.textContent.trim() : '—';
+      var name     = cb.dataset.name || '';
+      var entry    = rollNo + '. ' + name;
+      if (cb.checked) {
+        presentList.push(entry);
+      } else {
+        absentList.push(entry);
+      }
+    });
+
+    /* Compose text message */
+    var lines = [];
+    lines.push('📋 *Attendance Report*');
+    lines.push('━━━━━━━━━━━━━━━━━━━━');
+    lines.push('📅 Date: ' + date);
+    lines.push('🏫 Section: <%= user.section %>');
+    if (subject)  lines.push('📚 Subject: ' + subject);
+    if (timeSlot) lines.push('⏰ Time: ' + timeSlot);
+    lines.push('━━━━━━━━━━━━━━━━━━━━');
+    lines.push('✅ Present (' + presentList.length + ')');
+
+    if (filter === 'Absent') {
+      /* Only absent */
+      lines.push('🚫 Absent (' + absentList.length + ')');
+      absentList.forEach(function (e) { lines.push('  ❌ ' + e); });
+    } else if (filter === 'Present') {
+      /* Only present */
+      presentList.forEach(function (e) { lines.push('  ✓ ' + e); });
+    } else {
+      /* Full list — present then absent */
+      presentList.forEach(function (e) { lines.push('  ✓ ' + e); });
+      if (absentList.length > 0) {
+        lines.push('━━━━━━━━━━━━━━━━━━━━');
+        lines.push('🚫 Absent (' + absentList.length + ')');
+        absentList.forEach(function (e) { lines.push('  ❌ ' + e); });
+      }
+    }
+
+    lines.push('━━━━━━━━━━━━━━━━━━━━');
+    lines.push('Total: ' + (presentList.length + absentList.length) +
+               ' | Present: ' + presentList.length +
+               ' | Absent: ' + absentList.length);
+
+    var msg = lines.join('\n');
+    window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(msg), '_blank');
+  }
+
+  /* ══ DOMContentLoaded ══ */
+  document.addEventListener('DOMContentLoaded', function () {
+    /* Sync theme */
+    syncIcons(document.documentElement.getAttribute('data-theme'));
+
+    /* Theme toggles */
+    ['themeToggle', 'themeToggleMob'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.addEventListener('click', function () {
+        var c = document.documentElement.getAttribute('data-theme') || 'light';
+        setTheme(c === 'dark' ? 'light' : 'dark');
+      });
+    });
+
+    /* Sidebar */
+    var ham = document.getElementById('hamBtn');
+    var ov  = document.getElementById('sbOverlay');
+    if (ham) ham.addEventListener('click', openSb);
+    if (ov)  ov.addEventListener('click', closeSb);
+    document.querySelectorAll('.sidebar .nav-link').forEach(function (a) {
+      a.addEventListener('click', function () { if (window.innerWidth <= 768) closeSb(); });
+    });
+
+    /* Clock */
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    /* Initial count */
+    updateCount();
+
+    /* Quick Mark button */
+    var markBtn = document.getElementById('markPresentBtn');
+    if (markBtn) markBtn.addEventListener('click', applyQuickMark);
+
+    /* Enter key in quick input */
+    var qi = document.getElementById('quickInput');
+    if (qi) qi.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); applyQuickMark(); }
+    });
+
+    /* PDF button */
+    var pdfBtn = document.getElementById('downloadPdfBtn');
+    if (pdfBtn) pdfBtn.addEventListener('click', downloadPDF);
+
+    /* WhatsApp button */
+    var waBtn = document.getElementById('whatsappBtn');
+    if (waBtn) waBtn.addEventListener('click', submitToWhatsApp);
+
+    /* Form submit — append Absent for unchecked students */
+    var form = document.getElementById('attendanceForm');
+    if (form) form.addEventListener('submit', function (e) {
+      if (!confirm('Lock this attendance? This cannot be undone.')) {
+        e.preventDefault();
+        return;
+      }
+      document.querySelectorAll('.student-checkbox').forEach(function (cb) {
+        if (!cb.checked) {
+          var h = document.createElement('input');
+          h.type  = 'hidden';
+          h.name  = cb.name;
+          h.value = 'Absent';
+          form.appendChild(h);
+        }
+      });
+    });
+
+    /* Auto-dismiss alerts */
+    document.querySelectorAll('.alert').forEach(function (a) {
+      setTimeout(function () {
+        a.style.transition = 'opacity .5s';
+        a.style.opacity = '0';
+        setTimeout(function () { if (a.parentNode) a.parentNode.removeChild(a); }, 500);
+      }, 5000);
     });
   });
 
-  document.querySelectorAll('.alert').forEach(function(a){
-    setTimeout(function(){
-      a.style.transition = 'opacity .5s'; a.style.opacity = '0';
-      setTimeout(function(){ if(a.parentNode) a.parentNode.removeChild(a); }, 500);
-    }, 5000);
-  });
-});
-
-function updateCount(){
-  var total = document.querySelectorAll('.student-checkbox').length;
-  var present = document.querySelectorAll('.student-checkbox:checked').length;
-  var el = document.getElementById('presentCount');
-  if (el) el.textContent = present + ' / ' + total + ' marked present';
-}
-
-function markAll(val){
-  document.querySelectorAll('.student-checkbox').forEach(function(cb){
-    cb.checked = val;
-    var row = cb.closest('tr');
-    if (row) row.classList.toggle('qm-hit', val);
-  });
-  updateCount();
-}
-
-function normalizeRoll(r){ return String(r).replace(/\s+/g,'').toLowerCase().replace(/^0+/,'')||'0'; }
-
-function applyQuickMark(){
-  var input = (document.getElementById('quickInput').value||'').trim();
-  var fb = document.getElementById('qmFeedback');
-  fb.className = 'qm-feedback'; fb.textContent = '';
-  if (!input){ fb.className='qm-feedback show no'; fb.innerHTML='<i class="fas fa-circle-exclamation"></i> Please enter at least one roll number.'; return; }
-  var rolls = input.split(/[\s,;|\n\t]+/).map(normalizeRoll).filter(Boolean);
-  rolls = rolls.filter(function(v,i,a){ return a.indexOf(v)===i; });
-  if (!rolls.length){ fb.className='qm-feedback show no'; fb.innerHTML='<i class="fas fa-circle-exclamation"></i> No valid roll numbers found.'; return; }
-  var rows = document.querySelectorAll('#studentTable tbody tr');
-  var matched = 0; var foundRolls = [];
-  rows.forEach(function(row){
-    var cellEl = row.querySelector('.roll-col'); if (!cellEl) return;
-    var cellRoll = normalizeRoll(cellEl.textContent||'');
-    foundRolls.push(cellRoll);
-    var cb = row.querySelector('.student-checkbox'); if (!cb) return;
-    if (rolls.indexOf(cellRoll) !== -1){ cb.checked = true; row.classList.add('qm-hit'); matched++; }
-  });
-  var notFound = rolls.filter(function(r){ return foundRolls.indexOf(r)===-1; });
-  updateCount();
-  if (matched > 0){
-    document.getElementById('quickInput').value = '';
-    var msg = '<i class="fas fa-circle-check"></i> ' + matched + ' student(s) marked Present.';
-    if (notFound.length) msg += ' &nbsp;<span style="opacity:.75;font-weight:400;">Not found: ' + notFound.join(', ') + '</span>';
-    fb.className = 'qm-feedback show ok'; fb.innerHTML = msg;
-  } else {
-    fb.className = 'qm-feedback show no';
-    fb.innerHTML = '<i class="fas fa-circle-xmark"></i> No matching roll numbers found. Entered: ' + rolls.join(', ');
+  /* Immediate sync if DOM already ready */
+  if (document.readyState !== 'loading') {
+    syncIcons(document.documentElement.getAttribute('data-theme'));
   }
-  setTimeout(function(){ fb.className='qm-feedback'; }, 5000);
-}
-
-function downloadPDF(){
-  var date = document.getElementById('currentDate').value;
-  var filter = document.getElementById('reportFilter').value;
-  if (!date){ alert('Please select a date first.'); return; }
-  window.open('/generate-day-pdf/' + date + '?filter=' + encodeURIComponent(filter), '_blank');
-}
-
-function submitToWhatsApp(){
-  var date = document.getElementById('currentDate').value;
-  var filter = document.getElementById('reportFilter').value;
-  if (!date){ alert('Please select a date first.'); return; }
-  var pdfUrl = window.location.origin + '/generate-day-pdf/' + date + '?filter=' + encodeURIComponent(filter);
-  var msg = '*Attendance Report — ' + date + '*\nSection: <%= user.section %>\nType: ' + (filter||'Full List') + '\n\nPDF Link:\n' + pdfUrl;
-  window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(msg), '_blank');
-}
+}());
 </script>
 </body>
 </html>

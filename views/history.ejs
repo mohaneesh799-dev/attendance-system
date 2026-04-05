@@ -4,318 +4,176 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Attendance History — RKU</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<script>(function(){var t=localStorage.getItem('rku-theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<script>(function(){var t=localStorage.getItem("rku-theme")||"light";document.documentElement.setAttribute("data-theme",t);})();</script>
 <style>
 :root{
-  --pri:#0f766e;--pri2:#134e4a;
-  --acc:#f59e0b;
-  --suc:#10b981;--dan:#ef4444;--war:#f59e0b;
-  --bg:#f0fdf9;--card:#fff;--border:#ccfbf1;
-  --text:#0d1f1c;--muted:#5a7a76;
-  --input-bg:#f0fdf9;--input-bd:#99f6e4;
-  --shadow:0 2px 16px rgba(15,118,110,.07);
-  --shadow-lg:0 8px 36px rgba(15,118,110,.13);
-  --radius:16px;--radius-sm:10px;
+  --pri:#05091a;--pri2:#0d1535;--acc:#4f7ef7;--acc2:#6366f1;
+  --suc:#059669;--dan:#dc2626;--war:#d97706;
+  --bg:#f1f5fb;--card:#fff;--border:#e4eaf3;
+  --text:#0f172a;--muted:#64748b;--input-bg:#f8fafc;--input-bd:#cbd5e1;
+  --sh:0 1px 3px rgba(0,0,0,.05),0 4px 16px rgba(0,0,0,.06);
+  --sh2:0 8px 30px rgba(0,0,0,.1);--r:16px;--rs:10px;
 }
 [data-theme="dark"]{
-  --bg:#051714;--card:#071f1c;--border:#0d3330;
-  --text:#b2e8e2;--muted:#4a6e6a;
-  --input-bg:#051714;--input-bd:#0d3330;
-  --shadow:0 2px 20px rgba(0,0,0,.4);
-  --shadow-lg:0 8px 40px rgba(0,0,0,.6);
-  --pri:#0d9488;--pri2:#0f766e;
-  --acc:#fbbf24;
-  --suc:#34d399;--dan:#f87171;--war:#fbbf24;
+  --bg:#060b17;--card:#0c1426;--border:#162236;
+  --text:#dde6f4;--muted:#6b7f97;--input-bg:#09111f;--input-bd:#1e3050;
+  --sh:0 1px 3px rgba(0,0,0,.3),0 4px 16px rgba(0,0,0,.3);
+  --acc:#6390f5;--suc:#34d399;--dan:#f87171;--war:#fbbf24;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-html,body{transition:background .25s,color .25s;}
-body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px 16px 40px;}
+html,body{transition:background .2s,color .2s;}
+body{font-family:"Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px 16px;}
 .page{max-width:1080px;margin:0 auto;}
-
-.topbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:22px;}
-.back-btn{display:inline-flex;align-items:center;gap:8px;background:var(--card);border:1.5px solid var(--border);color:var(--text);text-decoration:none;padding:9px 16px;border-radius:var(--radius-sm);font-size:13px;font-weight:700;box-shadow:var(--shadow);transition:.18s;}
-.back-btn:hover{border-color:var(--pri);color:var(--pri);}
-.page-title{font-size:1.3rem;font-weight:900;letter-spacing:-.3px;}
-.page-title span{color:var(--pri);}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px;}
+.back-btn{display:inline-flex;align-items:center;gap:8px;background:var(--card);border:1.5px solid var(--border);color:var(--text);text-decoration:none;padding:9px 16px;border-radius:var(--rs);font-weight:700;font-size:13px;box-shadow:var(--sh);transition:.18s;}
+.back-btn:hover{border-color:var(--acc);color:var(--acc);}
+.page-title{font-size:1.4rem;font-weight:900;letter-spacing:-.3px;}
+.page-title span{color:var(--acc);}
 .topbar-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
-.theme-btn{background:var(--card);border:1.5px solid var(--border);color:var(--muted);padding:8px 12px;border-radius:var(--radius-sm);cursor:pointer;font-size:14px;transition:.18s;}
-.theme-btn:hover{border-color:var(--pri);color:var(--pri);}
-
-.filter-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px 22px;margin-bottom:20px;box-shadow:var(--shadow);}
-.filter-card h3{font-size:.9rem;font-weight:800;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
-.filter-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;}
-.fg{display:flex;flex-direction:column;gap:5px;flex:1;min-width:180px;}
-.fg label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
-.fc{padding:10px 13px;border:1.5px solid var(--input-bd);border-radius:var(--radius-sm);font-size:13.5px;font-family:inherit;background:var(--input-bg);color:var(--text);outline:none;transition:.18s;}
-.fc:focus{border-color:var(--pri);box-shadow:0 0 0 3px rgba(15,118,110,.12);}
-
-.btn{display:inline-flex;align-items:center;gap:7px;padding:10px 18px;border:none;border-radius:var(--radius-sm);font-size:13.5px;font-weight:700;cursor:pointer;transition:.2s;text-decoration:none;white-space:nowrap;font-family:inherit;}
+.btn-icon{background:var(--card);border:1.5px solid var(--border);color:var(--muted);padding:9px 12px;border-radius:var(--rs);cursor:pointer;font-size:15px;transition:.18s;display:inline-flex;align-items:center;}
+.btn-icon:hover{border-color:var(--acc);color:var(--acc);}
+.filter-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:22px;box-shadow:var(--sh);margin-bottom:22px;}
+.filter-card h4{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:14px;}
+.filter-row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;}
+.fg{display:flex;flex-direction:column;gap:5px;flex:1;min-width:140px;}
+.fg label{font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;}
+.fc{width:100%;padding:10px 13px;border-radius:var(--rs);border:1.5px solid var(--input-bd);font-size:13.5px;font-family:inherit;background:var(--input-bg);color:var(--text);outline:none;transition:.18s;}
+.fc:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(79,126,247,.12);}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:10px 20px;border:none;border-radius:var(--rs);font-size:13.5px;font-weight:700;cursor:pointer;transition:.18s;text-decoration:none;white-space:nowrap;font-family:inherit;}
 .btn:hover{opacity:.88;transform:translateY(-1px);}
-.btn:active{transform:scale(.98);}
-.btn-pri{background:var(--pri);color:#fff;}
-.btn-ghost{background:var(--input-bg);color:var(--text);border:1.5px solid var(--input-bd);}
-.btn-ghost:hover{border-color:var(--pri);color:var(--pri);}
-.btn-suc{background:rgba(16,185,129,.1);color:var(--suc);border:1px solid rgba(16,185,129,.2);}
-.btn-suc:hover{background:var(--suc);color:#fff;}
-
-.sum-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px;}
-.sum-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow);display:flex;align-items:center;gap:13px;transition:.2s;}
-.sum-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg);}
-.sum-icon{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;}
-.sum-val{font-size:1.8rem;font-weight:900;line-height:1;margin-top:2px;}
-.sum-lbl{font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:700;}
-
-.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:20px;overflow:hidden;}
-.card-hdr{padding:16px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
-.card-hdr h3{font-size:.95rem;font-weight:800;display:flex;align-items:center;gap:8px;margin:0;}
-
-.tbl-wrap{overflow-x:auto;}
+.btn-acc{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;box-shadow:0 4px 14px rgba(79,126,247,.25);}
+.btn-ghost{background:var(--card);color:var(--muted);border:1.5px solid var(--border);}
+.btn-ghost:hover{border-color:var(--acc);color:var(--acc);}
+.stats-row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:22px;}
+.stat-pill{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--border);border-left:4px solid var(--acc);padding:16px 20px;border-radius:var(--rs);box-shadow:var(--sh);flex:1;min-width:140px;}
+.stat-pill.green{border-left-color:var(--suc);}
+.stat-pill.red{border-left-color:var(--dan);}
+.stat-pill .stat-val{font-size:1.6rem;font-weight:800;color:var(--acc);line-height:1;}
+.stat-pill.green .stat-val{color:var(--suc);}
+.stat-pill.red .stat-val{color:var(--dan);}
+.stat-pill small{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;font-weight:600;}
+.table-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden;}
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
 table{width:100%;border-collapse:collapse;}
-thead th{background:var(--input-bg);color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;padding:12px 16px;border-bottom:2px solid var(--border);text-align:left;white-space:nowrap;}
+thead th{background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff;padding:13px 16px;font-size:11.5px;text-transform:uppercase;letter-spacing:.5px;text-align:left;white-space:nowrap;}
 tbody td{padding:13px 16px;border-bottom:1px solid var(--border);font-size:13.5px;vertical-align:middle;}
 tbody tr:last-child td{border-bottom:none;}
-tbody tr:hover td{background:rgba(15,118,110,.025);}
-
-.detail-wrap{padding:0 16px 16px;}
-.detail-tbl{width:100%;border-collapse:collapse;border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--border);}
-.detail-tbl th{background:var(--input-bg);padding:9px 13px;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);border-bottom:1px solid var(--border);text-align:left;}
-.detail-tbl td{padding:9px 13px;font-size:12.5px;border-bottom:1px solid var(--border);}
-.detail-tbl tr:last-child td{border-bottom:none;}
-
-.pill{padding:4px 11px;border-radius:7px;font-size:11.5px;font-weight:700;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;}
-.p-present{background:rgba(16,185,129,.1);color:#047857;}
-.p-absent{background:rgba(239,68,68,.08);color:#b91c1c;}
-.p-na{background:var(--input-bg);color:var(--muted);}
-[data-theme="dark"] .p-present{background:rgba(52,211,153,.12);color:var(--suc);}
-[data-theme="dark"] .p-absent{background:rgba(248,113,113,.1);color:var(--dan);}
-
-.rec-row{cursor:pointer;}
-.rec-row:hover td{background:rgba(15,118,110,.04)!important;}
-.detail-section{background:var(--input-bg);}
-.detail-section.hidden{display:none;}
-.expand-icon{transition:transform .2s;}
-.rec-row.open .expand-icon{transform:rotate(90deg);}
-
-.badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;}
-.b-leader{background:rgba(245,158,11,.12);color:var(--war);}
-.b-lecturer{background:rgba(16,185,129,.12);color:var(--suc);}
-.b-locked{background:rgba(15,118,110,.1);color:var(--pri);}
-
-@media(max-width:680px){
-  .sum-grid{grid-template-columns:repeat(2,1fr);}
-  .card-hdr,.filter-card{padding:14px 16px;}
-  .filter-row{flex-direction:column;}
-  .fg{min-width:100%;}
-  .page-title{font-size:1.1rem;}
-}
+tbody tr:hover td{background:rgba(79,126,247,.03);}
+.sp{padding:4px 11px;border-radius:20px;font-size:11.5px;font-weight:700;display:inline-flex;align-items:center;gap:5px;}
+.sp-present{background:rgba(5,150,105,.1);color:var(--suc);border:1px solid rgba(5,150,105,.2);}
+.sp-absent{background:rgba(220,38,38,.08);color:var(--dan);border:1px solid rgba(220,38,38,.18);}
+.sp-na{background:rgba(100,116,139,.1);color:var(--muted);border:1px solid var(--border);}
+.pct-wrap{display:flex;align-items:center;gap:8px;min-width:120px;}
+.pct-bar{flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.pct-fill{height:100%;background:var(--suc);border-radius:3px;}
+.pct-fill.warn{background:var(--war);}
+.pct-fill.bad{background:var(--dan);}
+.pct-num{font-weight:700;font-size:12px;color:var(--muted);min-width:36px;text-align:right;}
+.empty-state{text-align:center;padding:60px 20px;color:var(--muted);}
+.empty-state i{font-size:2.5rem;opacity:.25;display:block;margin-bottom:14px;}
+.subj-tag{font-weight:700;color:var(--text);}
+.time-tag{font-size:12px;color:var(--muted);margin-top:2px;}
+@media print{.no-print{display:none!important;}body{background:#fff;color:#000;}.table-card{box-shadow:none;}}
+@media(max-width:600px){body{padding:14px 12px;}.page-title{font-size:1.1rem;}.filter-row{flex-direction:column;}.filter-row .fg{min-width:unset;}.stats-row{gap:8px;}.stat-pill{min-width:unset;flex:1 1 45%;}}
 </style>
 </head>
 <body>
 <div class="page">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+      <%
+        var _hBackPath = {
+          "superadmin": "/super-admin-dashboard", "master": "/master",
+          "lecturer": "/lecturer", "leader": "/leader", "student": "/student"
+        }[(user.role||"").toLowerCase()] || "/login";
+      %>
+      <a href="<%= _hBackPath %>" class="back-btn"><i class="fas fa-arrow-left"></i> Dashboard</a>
+      <h1 class="page-title"><i class="fas fa-history" style="color:var(--acc);margin-right:8px;"></i>Attendance <span>History</span></h1>
+    </div>
+    <div class="topbar-right no-print">
+      <button class="btn-icon" id="themeToggle" title="Toggle theme"><i class="fas fa-moon" id="themeIcon"></i></button>
+      <button class="btn btn-ghost" onclick="window.print()"><i class="fas fa-print"></i> Print</button>
+    </div>
+  </div>
 
-<!-- Topbar -->
-<div class="topbar">
-  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-    <%
-      var _role2 = user.role||'student';
-      var _backP2 = {superadmin:'/super-admin-dashboard',master:'/master',lecturer:'/lecturer',leader:'/leader',student:'/student'}[_role2.toLowerCase()]||'/login';
+  <div class="filter-card no-print">
+    <h4><i class="fas fa-filter"></i> &nbsp;Filter Records</h4>
+    <form action="/attendance-history" method="GET" class="filter-row">
+      <div class="fg"><label>From Date</label><input type="date" name="startDate" class="fc" value="<%= startDate %>" required></div>
+      <div class="fg"><label>To Date</label><input type="date" name="endDate" class="fc" value="<%= endDate %>" required></div>
+      <div style="align-self:flex-end;"><button type="submit" class="btn btn-acc"><i class="fas fa-search"></i> Apply Filter</button></div>
+    </form>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-pill">
+      <div><div class="stat-val"><%= records.length %></div><small>Records Found</small></div>
+    </div>
+    <% if (user.role === "Student") {
+      var pCount = 0;
+      records.forEach(function(r){ var me = r.students.find(function(s){ return s.studentId === user.rollNo; }); if(me && me.status === "Present") pCount++; });
+      var sPct = records.length > 0 ? ((pCount/records.length)*100) : 0;
     %>
-    <a href="<%= _backP2 %>" class="back-btn"><i class="fas fa-arrow-left"></i> Back</a>
-    <div>
-      <div class="page-title">Attendance <span>History</span></div>
-      <div style="font-size:12px;color:var(--muted);margin-top:2px;">View and filter your attendance records</div>
+    <div class="stat-pill green"><div><div class="stat-val"><%= pCount %></div><small>Present</small></div></div>
+    <div class="stat-pill <%= sPct >= 75 ? "green" : sPct >= 60 ? "" : "red" %>">
+      <div><div class="stat-val"><%= sPct.toFixed(1) %>%</div><small>Attendance Rate</small></div>
     </div>
-  </div>
-  <div class="topbar-right">
-    <% if (['Lecturer','Leader','SuperAdmin','Master'].includes(user.role)) { %>
-      <a href="/export-attendance<% if(startDate&&endDate){ %>?startDate=<%= startDate %>&endDate=<%= endDate %><% } %>" class="btn btn-suc">
-        <i class="fas fa-file-csv"></i> Export CSV
-      </a>
     <% } %>
-    <button class="theme-btn" id="themeToggle" aria-label="Toggle theme"><i class="fas fa-moon" id="themeIco"></i></button>
+    <% if (user.role !== "Student" && records.length > 0) {
+      var totalPresent = 0, totalStudents = 0;
+      records.forEach(function(r){ totalPresent += (r.students||[]).filter(function(s){ return s.status==="Present"; }).length; totalStudents += (r.students||[]).length; });
+    %>
+    <div class="stat-pill green"><div><div class="stat-val"><%= totalPresent %></div><small>Total Present</small></div></div>
+    <% } %>
   </div>
-</div>
 
-<!-- Date Filter -->
-<div class="filter-card">
-  <h3><i class="fas fa-filter" style="color:var(--pri);"></i> Filter Records</h3>
-  <form action="/attendance-history" method="GET">
-    <div class="filter-row">
-      <div class="fg">
-        <label>Start Date</label>
-        <input type="date" name="startDate" class="fc" value="<%= startDate %>">
-      </div>
-      <div class="fg">
-        <label>End Date</label>
-        <input type="date" name="endDate" class="fc" value="<%= endDate %>">
-      </div>
-      <button type="submit" class="btn btn-pri"><i class="fas fa-search"></i> Filter</button>
-      <a href="/attendance-history" class="btn btn-ghost"><i class="fas fa-rotate-left"></i> Reset</a>
-    </div>
-  </form>
-</div>
-
-<!-- Summary -->
-<%
-  var totalRecs = records ? records.length : 0;
-  var presentRecs = 0;
-  if (records && user.role === 'Student') {
-    records.forEach(function(r){
-      var me = r.students.find(function(s){ return s.studentId === user.rollNo; });
-      if (me && me.status === 'Present') presentRecs++;
-    });
-  }
-%>
-<div class="sum-grid">
-  <div class="sum-card">
-    <div class="sum-icon" style="background:rgba(15,118,110,.1);color:var(--pri);"><i class="fas fa-clipboard-list"></i></div>
-    <div><div class="sum-lbl">Total Records</div><div class="sum-val"><%= totalRecs %></div></div>
-  </div>
-  <% if (user.role === 'Student') { %>
-  <div class="sum-card">
-    <div class="sum-icon" style="background:rgba(16,185,129,.1);color:var(--suc);"><i class="fas fa-circle-check"></i></div>
-    <div><div class="sum-lbl">Present</div><div class="sum-val" style="color:var(--suc);"><%= presentRecs %></div></div>
-  </div>
-  <div class="sum-card">
-    <div class="sum-icon" style="background:rgba(239,68,68,.1);color:var(--dan);"><i class="fas fa-circle-xmark"></i></div>
-    <div><div class="sum-lbl">Absent</div><div class="sum-val" style="color:var(--dan);"><%= totalRecs - presentRecs %></div></div>
-  </div>
-  <% } %>
-  <% if (startDate && endDate) { %>
-  <div class="sum-card">
-    <div class="sum-icon" style="background:rgba(245,158,11,.1);color:var(--war);"><i class="fas fa-calendar-range"></i></div>
-    <div><div class="sum-lbl">Date Range</div><div style="font-size:.85rem;font-weight:700;margin-top:2px;"><%= startDate %> → <%= endDate %></div></div>
-  </div>
-  <% } %>
-</div>
-
-<!-- Records -->
-<div class="card">
-  <div class="card-hdr">
-    <h3><i class="fas fa-list-check" style="color:var(--pri);"></i> Attendance Records</h3>
-    <span style="font-size:12px;color:var(--muted);"><%= totalRecs %> record(s)</span>
-  </div>
-  <div class="tbl-wrap">
-    <% if (records && records.length > 0) { %>
-    <table>
-      <thead>
-        <tr>
-          <th style="width:32px;"></th>
-          <th>Date</th>
-          <th>Subject</th>
-          <th>Time Slot</th>
-          <% if (['Leader','Master','SuperAdmin'].includes(user.role)) { %><th>Lecturer</th><% } %>
-          <% if (['Lecturer','Master','SuperAdmin'].includes(user.role)) { %><th>Section</th><% } %>
-          <% if (user.role === 'Student') { %><th>Status</th><% } %>
-          <th>Students</th>
-          <% if (['Leader','Master','SuperAdmin'].includes(user.role)) { %><th>Actions</th><% } %>
-        </tr>
-      </thead>
+  <div class="table-card">
+    <div class="tbl-wrap"><table>
+      <thead><tr>
+        <th><i class="far fa-calendar-alt"></i> Date</th>
+        <th><i class="fas fa-book"></i> Subject</th>
+        <th><i class="far fa-clock"></i> Time Slot</th>
+        <th><%= user.role === "Student" ? "Your Status" : "Strength" %></th>
+        <% if(user.role !== "Student"){ %><th>Rate</th><% } %>
+      </tr></thead>
       <tbody>
-        <% records.forEach(function(rec, idx) {
-          var myEntry = user.role === 'Student' ? rec.students.find(function(s){ return s.studentId === user.rollNo; }) : null;
-        %>
-        <tr class="rec-row" id="row-<%= idx %>" onclick="toggleDetail('<%= idx %>')">
-          <td style="color:var(--muted);"><i class="fas fa-chevron-right expand-icon" style="font-size:11px;"></i></td>
-          <td style="font-weight:700;white-space:nowrap;"><%= rec.date %></td>
-          <td><strong><%= rec.subject || '—' %></strong></td>
-          <td style="color:var(--muted);font-size:12.5px;white-space:nowrap;"><i class="far fa-clock"></i> <%= rec.manualTime || 'N/A' %></td>
-          <% if (['Leader','Master','SuperAdmin'].includes(user.role)) { %>
-            <td style="font-size:12.5px;"><%= rec.lecturerEmail || '—' %></td>
-          <% } %>
-          <% if (['Lecturer','Master','SuperAdmin'].includes(user.role)) { %>
-            <td><span style="font-size:12px;font-weight:700;color:var(--pri);"><%=rec.section%></span></td>
-          <% } %>
-          <% if (user.role === 'Student') { %>
-            <td>
-              <% if (myEntry) { %>
-                <span class="pill <%= myEntry.status === 'Present' ? 'p-present' : 'p-absent' %>">
-                  <i class="fas fa-<%= myEntry.status === 'Present' ? 'check' : 'xmark' %>"></i> <%= myEntry.status %>
-                </span>
-              <% } else { %>
-                <span class="pill p-na">Not Marked</span>
-              <% } %>
-            </td>
-          <% } %>
+        <% if (records && records.length > 0) { %>
+        <% records.forEach(function(rec){ var presentCnt = (rec.students||[]).filter(function(s){ return s.status==="Present"; }).length; var totalCnt = (rec.students||[]).length; var recPct = totalCnt > 0 ? (presentCnt/totalCnt)*100 : 0; %>
+        <tr>
+          <td><strong style="font-variant-numeric:tabular-nums;"><%= rec.date %></strong></td>
+          <td><div class="subj-tag"><%= rec.subject || "—" %></div><% if(rec.section){ %><div class="time-tag"><i class="fas fa-layer-group" style="opacity:.6;"></i> <%= rec.section %></div><% } %></td>
+          <td><span style="color:var(--muted);font-size:12.5px;"><i class="far fa-clock" style="opacity:.6;"></i> <%= rec.manualTime || "—" %></span></td>
           <td>
-            <span style="font-size:12px;color:var(--muted);"><%= rec.students ? rec.students.length : 0 %> students</span>
-            <% if (rec.isLockedByLeader) { %><span class="badge b-locked" style="margin-left:6px;"><i class="fas fa-lock" style="font-size:9px;"></i> Locked</span><% } %>
+            <% if (user.role === "Student") { var me = (rec.students||[]).find(function(s){ return s.studentId === user.rollNo; }); var st = me ? me.status : "N-A"; %>
+            <span class="sp sp-<%= st==="Present"?"present":st==="Absent"?"absent":"na" %>">
+              <% if(st==="Present"){ %><i class="fas fa-check-circle"></i><% } %>
+              <% if(st==="Absent"){ %><i class="fas fa-times-circle"></i><% } %>
+              <%= me ? me.status : "Not Marked" %>
+            </span>
+            <% } else { %>
+            <span style="font-weight:700;"><%= presentCnt %> / <%= totalCnt %></span><span style="font-size:12px;color:var(--muted);"> present</span>
+            <% } %>
           </td>
-          <% if (['Leader','Master','SuperAdmin'].includes(user.role)) { %>
-            <td>
-              <a href="/generate-day-pdf/<%= rec.date %>?section=<%= rec.section %>" onclick="event.stopPropagation();"
-                 class="btn" style="padding:5px 11px;font-size:11.5px;background:rgba(15,118,110,.1);color:var(--pri);border:1px solid rgba(15,118,110,.2);">
-                <i class="fas fa-file-pdf"></i> PDF
-              </a>
-            </td>
+          <% if(user.role !== "Student"){ %>
+          <td><div class="pct-wrap"><div class="pct-bar"><div class="pct-fill <%= recPct>=75?"":recPct>=60?"warn":"bad" %>" style="width:<%= recPct.toFixed(0) %>%;"></div></div><span class="pct-num"><%= recPct.toFixed(0) %>%</span></div></td>
           <% } %>
-        </tr>
-        <tr id="detail-<%= idx %>" class="detail-section hidden">
-          <td colspan="99" style="padding:0;">
-            <div class="detail-wrap">
-              <% if (rec.students && rec.students.length > 0) { %>
-              <table class="detail-tbl">
-                <thead><tr><th>Student ID</th><th>Name</th><th>Status</th></tr></thead>
-                <tbody>
-                  <% rec.students.forEach(function(st) { %>
-                  <tr>
-                    <td style="font-family:monospace;font-weight:700;color:var(--pri);"><%= st.studentId || 'N/A' %></td>
-                    <td><%= st.studentName || st.name || 'Unknown' %></td>
-                    <td><span class="pill <%= st.status === 'Present' ? 'p-present' : 'p-absent' %>"><i class="fas fa-<%= st.status === 'Present' ? 'check' : 'xmark' %>"></i> <%= st.status %></span></td>
-                  </tr>
-                  <% }); %>
-                </tbody>
-              </table>
-              <% } else { %>
-                <p style="color:var(--muted);font-size:13px;padding:12px 0;">No student data available.</p>
-              <% } %>
-            </div>
-          </td>
         </tr>
         <% }); %>
+        <% } else { %>
+        <tr><td colspan="<%= user.role === "Student" ? 4 : 5 %>"><div class="empty-state"><i class="fas fa-search"></i><p>No records found for the selected date range.</p></div></td></tr>
+        <% } %>
       </tbody>
-    </table>
-    <% } else { %>
-    <div style="text-align:center;padding:60px 20px;color:var(--muted);">
-      <i class="fas fa-folder-open" style="font-size:2.5rem;opacity:.2;display:block;margin-bottom:12px;"></i>
-      <p style="font-size:14px;">No attendance records found for this date range.</p>
-      <a href="/attendance-history" style="color:var(--pri);font-weight:700;font-size:13px;margin-top:10px;display:inline-block;">Reset filter →</a>
-    </div>
-    <% } %>
+    </table></div>
   </div>
 </div>
-
-</div><!-- /page -->
 
 <script>
 (function(){
-  function setTheme(t){
-    document.documentElement.setAttribute('data-theme',t);
-    localStorage.setItem('rku-theme',t);
-    var i=document.getElementById('themeIco');
-    if(i) i.className = t==='dark'?'fas fa-sun':'fas fa-moon';
-  }
-  document.addEventListener('DOMContentLoaded',function(){
-    var t=document.documentElement.getAttribute('data-theme')||'light';
-    var i=document.getElementById('themeIco');
-    if(i) i.className = t==='dark'?'fas fa-sun':'fas fa-moon';
-    var btn=document.getElementById('themeToggle');
-    if(btn) btn.addEventListener('click',function(){
-      var cur=document.documentElement.getAttribute('data-theme')||'light';
-      setTheme(cur==='dark'?'light':'dark');
-    });
-  });
-
-  window.toggleDetail = function(idx){
-    var row = document.getElementById('row-' + idx);
-    var det = document.getElementById('detail-' + idx);
-    if (!det) return;
-    var isOpen = !det.classList.contains('hidden');
-    det.classList.toggle('hidden', isOpen);
-    if (row) row.classList.toggle('open', !isOpen);
-  };
+  function setTheme(t){document.documentElement.setAttribute("data-theme",t);localStorage.setItem("rku-theme",t);var icon=document.getElementById("themeIcon");if(icon)icon.className=t==="dark"?"fas fa-sun":"fas fa-moon";}
+  function syncTheme(){var t=document.documentElement.getAttribute("data-theme")||"light";var icon=document.getElementById("themeIcon");if(icon)icon.className=t==="dark"?"fas fa-sun":"fas fa-moon";}
+  document.addEventListener("DOMContentLoaded",function(){syncTheme();var tog=document.getElementById("themeToggle");if(tog)tog.addEventListener("click",function(){var cur=document.documentElement.getAttribute("data-theme")||"light";setTheme(cur==="dark"?"light":"dark");});});
+  if(document.readyState!=="loading")syncTheme();
 })();
 </script>
 </body>

@@ -3,73 +3,41 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>System Error — RKU Attendance</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<script>(function(){var t=localStorage.getItem('rku-theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
+<title>System Error — RKU Portal</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <style>
-:root{
-  --bg:#f0fdf9;--card:#fff;--border:#ccfbf1;
-  --text:#0d1f1c;--muted:#5a7a76;
-  --dan:#ef4444;--pri:#0f766e;
-  --shadow:0 8px 40px rgba(15,118,110,.12);
-}
-[data-theme="dark"]{
-  --bg:#051714;--card:#071f1c;--border:#0d3330;
-  --text:#b2e8e2;--muted:#4a6e6a;
-  --dan:#f87171;--pri:#0d9488;
-  --shadow:0 8px 40px rgba(0,0,0,.5);
-}
 *{box-sizing:border-box;margin:0;padding:0;}
-html,body{transition:background .25s,color .25s;}
-body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
-
-.error-card{
-  background:var(--card);border:1px solid var(--border);border-radius:20px;
-  box-shadow:var(--shadow);max-width:480px;width:100%;
-  text-align:center;padding:50px 40px;
-  border-top:5px solid var(--dan);position:relative;overflow:hidden;
-}
-.error-card::before{content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;border-radius:50%;background:rgba(239,68,68,.04);pointer-events:none;}
-
-.error-icon{width:80px;height:80px;border-radius:50%;background:rgba(239,68,68,.1);display:flex;align-items:center;justify-content:center;font-size:2rem;color:var(--dan);margin:0 auto 22px;animation:pulse 2.5s ease-in-out infinite;}
-@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.25);}50%{box-shadow:0 0 0 14px rgba(239,68,68,0);}}
-
-h1{font-size:1.35rem;font-weight:900;margin-bottom:12px;color:var(--text);}
-.error-msg{font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:28px;padding:14px 16px;background:rgba(239,68,68,.05);border:1px solid rgba(239,68,68,.12);border-radius:10px;text-align:left;}
-
-.btn-group{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
-.btn{display:inline-flex;align-items:center;gap:7px;padding:11px 22px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;text-decoration:none;border:none;transition:.2s;font-family:inherit;}
+body{font-family:"Segoe UI",system-ui,sans-serif;background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 50%,#0f172a 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;}
+.error-wrap{text-align:center;max-width:480px;width:100%;}
+.error-icon-wrap{width:100px;height:100px;border-radius:50%;background:rgba(220,38,38,.15);border:2px solid rgba(220,38,38,.25);display:flex;align-items:center;justify-content:center;margin:0 auto 24px;animation:pulse 2.5s infinite;}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.3);}50%{box-shadow:0 0 0 16px rgba(220,38,38,0);}}
+.error-icon{font-size:3rem;color:#f87171;}
+.error-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:24px;padding:40px 32px;backdrop-filter:blur(20px);}
+.error-code{font-size:10px;text-transform:uppercase;letter-spacing:2px;color:rgba(255,255,255,.3);margin-bottom:16px;font-family:monospace;}
+h1{color:#fff;font-size:1.6rem;font-weight:900;margin-bottom:12px;letter-spacing:-.4px;}
+.error-msg{color:rgba(255,255,255,.55);font-size:14px;line-height:1.7;margin-bottom:32px;padding:14px 18px;background:rgba(220,38,38,.06);border:1px solid rgba(220,38,38,.15);border-radius:12px;}
+.btn-group{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 24px;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;transition:.2s;text-decoration:none;border:none;}
 .btn:hover{transform:translateY(-2px);}
-.btn-home{background:linear-gradient(135deg,var(--pri),#134e4a);color:#fff;box-shadow:0 4px 14px rgba(15,118,110,.3);}
-.btn-home:hover{box-shadow:0 6px 20px rgba(15,118,110,.4);}
-.btn-back{background:var(--bg);color:var(--text);border:1.5px solid var(--border);}
-.btn-back:hover{border-color:var(--pri);color:var(--pri);}
-
-.error-meta{margin-top:24px;font-size:12px;color:var(--muted);font-family:monospace;opacity:.6;}
+.btn-dark{background:rgba(255,255,255,.08);color:#fff;border:1.5px solid rgba(255,255,255,.12);}
+.btn-dark:hover{background:rgba(255,255,255,.14);}
+.btn-acc{background:linear-gradient(135deg,#4f7ef7,#6366f1);color:#fff;box-shadow:0 4px 16px rgba(79,126,247,.3);}
+.timestamp{margin-top:24px;font-size:11px;color:rgba(255,255,255,.2);font-family:monospace;letter-spacing:.5px;}
 </style>
 </head>
 <body>
-
-<div class="error-card">
-  <div class="error-icon">
-    <i class="fas fa-circle-exclamation"></i>
+<div class="error-wrap">
+  <div class="error-icon-wrap"><i class="fas fa-exclamation-circle error-icon"></i></div>
+  <div class="error-card">
+    <div class="error-code">RKU Portal · System Error</div>
+    <h1>Oops! Something went wrong</h1>
+    <div class="error-msg"><%= typeof message !== "undefined" ? message : "The server encountered an internal error. Please try again or contact support." %></div>
+    <div class="btn-group">
+      <button onclick="window.history.back()" class="btn btn-dark"><i class="fas fa-arrow-left"></i> Go Back</button>
+      <a href="/login" class="btn btn-acc"><i class="fas fa-sign-in-alt"></i> Back to Login</a>
+    </div>
+    <div class="timestamp">Error logged at: <%= new Date().toLocaleTimeString() %></div>
   </div>
-  <h1>Something Went Wrong</h1>
-  <div class="error-msg">
-    <i class="fas fa-info-circle" style="color:var(--dan);margin-right:6px;"></i>
-    <%= typeof message !== 'undefined' ? message : "The server encountered an internal error and was unable to complete your request." %>
-  </div>
-  <div class="btn-group">
-    <button onclick="window.history.back()" class="btn btn-back">
-      <i class="fas fa-arrow-left"></i> Go Back
-    </button>
-    <a href="/login" class="btn btn-home">
-      <i class="fas fa-house"></i> Back to Login
-    </a>
-  </div>
-  <div class="error-meta">Error logged: <%= new Date().toLocaleString() %></div>
 </div>
-
 </body>
 </html>

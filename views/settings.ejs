@@ -4,295 +4,190 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Account Settings — RKU</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<script>(function(){var t=localStorage.getItem('rku-theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<script>(function(){var t=localStorage.getItem("rku-theme")||"light";document.documentElement.setAttribute("data-theme",t);})();</script>
 <style>
 :root{
-  --pri:#0f766e;--pri2:#134e4a;
-  --acc:#f59e0b;
-  --suc:#10b981;--dan:#ef4444;--war:#f59e0b;
-  --bg:#f0fdf9;--card:#fff;--border:#ccfbf1;
-  --text:#0d1f1c;--muted:#5a7a76;
-  --input-bg:#f0fdf9;--input-bd:#99f6e4;
-  --shadow:0 4px 24px rgba(15,118,110,.09);
-  --radius:16px;--radius-sm:10px;
+  --bg:#f1f5fb;--card:#fff;--border:#e4eaf3;--text:#0f172a;
+  --muted:#64748b;--input-bg:#f8fafc;--input-bd:#cbd5e1;
+  --acc:#4f7ef7;--acc2:#6366f1;--suc:#059669;--dan:#dc2626;
+  --shadow:0 4px 24px rgba(0,0,0,.08);--r:16px;--rs:10px;
+  --tog-off:#d1d5db;--tog-on:#4f7ef7;
 }
 [data-theme="dark"]{
-  --bg:#051714;--card:#071f1c;--border:#0d3330;
-  --text:#b2e8e2;--muted:#4a6e6a;
-  --input-bg:#051714;--input-bd:#0d3330;
-  --shadow:0 4px 28px rgba(0,0,0,.45);
-  --pri:#0d9488;--pri2:#0f766e;
-  --acc:#fbbf24;
-  --suc:#34d399;--dan:#f87171;--war:#fbbf24;
+  --bg:#060b17;--card:#0c1426;--border:#162236;--text:#dde6f4;
+  --muted:#6b7f97;--input-bg:#09111f;--input-bd:#1e3050;
+  --acc:#6390f5;--suc:#34d399;--dan:#f87171;
+  --shadow:0 4px 24px rgba(0,0,0,.4);--tog-off:#162236;--tog-on:#6390f5;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-html,body{transition:background .25s,color .25s;}
-body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px 16px 50px;}
-.page{max-width:620px;margin:0 auto;}
-
-.topnav{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:10px;}
-.back-link{display:inline-flex;align-items:center;gap:8px;background:var(--card);border:1.5px solid var(--border);color:var(--text);text-decoration:none;padding:9px 15px;border-radius:var(--radius-sm);font-size:13px;font-weight:700;box-shadow:var(--shadow);transition:.2s;}
-.back-link:hover{border-color:var(--pri);color:var(--pri);}
-.page-title{font-size:1.2rem;font-weight:900;letter-spacing:-.3px;}
-
-.msg{display:flex;align-items:center;gap:10px;padding:13px 16px;border-radius:var(--radius-sm);font-size:13.5px;font-weight:500;margin-bottom:18px;}
-.msg.ok{background:rgba(16,185,129,.08);color:#047857;border:1px solid rgba(16,185,129,.2);border-left:4px solid var(--suc);}
-.msg.err{background:rgba(239,68,68,.07);color:#b91c1c;border:1px solid rgba(239,68,68,.18);border-left:4px solid var(--dan);}
-[data-theme="dark"] .msg.ok{background:rgba(16,185,129,.1);color:var(--suc);}
-[data-theme="dark"] .msg.err{background:rgba(239,68,68,.1);color:var(--dan);}
-
-.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:16px;overflow:hidden;}
-.card-hdr{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:13px;}
+html,body{transition:background .2s,color .2s;}
+body{font-family:"Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px 16px;}
+.page{max-width:600px;margin:20px auto;}
+.back-link{display:inline-flex;align-items:center;gap:7px;color:var(--muted);text-decoration:none;font-size:13px;font-weight:600;padding:6px 0;margin-bottom:20px;transition:.15s;}
+.back-link:hover{color:var(--acc);}
+.card{background:var(--card);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:16px;overflow:hidden;}
+.card-hdr{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;background:var(--input-bg);}
 .card-icon{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
-.ic-teal{background:rgba(15,118,110,.12);color:var(--pri);}
-.ic-amber{background:rgba(245,158,11,.12);color:var(--acc);}
-.ic-green{background:rgba(16,185,129,.12);color:var(--suc);}
-.card-hdr-text h3{font-size:.95rem;font-weight:800;margin:0;}
-.card-hdr-text p{font-size:12px;color:var(--muted);margin-top:3px;}
-.card-body{padding:22px;}
-
-.fg{margin-bottom:17px;}
-.fg label{display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px;}
-.fc{width:100%;padding:11px 14px;border-radius:var(--radius-sm);border:1.5px solid var(--input-bd);font-size:14px;font-family:inherit;background:var(--input-bg);color:var(--text);outline:none;transition:.2s;}
-.fc:focus{border-color:var(--pri);background:var(--card);box-shadow:0 0 0 3px rgba(15,118,110,.12);}
+.ic-blue{background:rgba(79,126,247,.1);color:var(--acc);}
+.ic-purple{background:rgba(124,58,237,.1);color:#7c3aed;}
+.ic-green{background:rgba(5,150,105,.1);color:var(--suc);}
+.card-hdr-text h3{margin:0;font-size:.95rem;font-weight:800;}
+.card-hdr-text p{margin:2px 0 0;font-size:12px;color:var(--muted);}
+.card-body{padding:22px 24px;}
+.msg{display:flex;align-items:center;gap:9px;padding:13px 16px;border-radius:var(--rs);font-size:13px;font-weight:500;margin-bottom:16px;animation:slideDown .3s ease;}
+@keyframes slideDown{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:none;}}
+.msg.ok{background:rgba(5,150,105,.08);color:var(--suc);border:1px solid rgba(5,150,105,.2);}
+.msg.err{background:rgba(220,38,38,.06);color:var(--dan);border:1px solid rgba(220,38,38,.18);}
+.fg{margin-bottom:16px;}
+.fg label{display:block;font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.45px;margin-bottom:6px;}
+.fc{width:100%;padding:11px 14px;border-radius:var(--rs);border:1.5px solid var(--input-bd);font-size:14px;font-family:inherit;background:var(--input-bg);color:var(--text);outline:none;transition:.2s;}
+.fc:focus{border-color:var(--acc);background:var(--card);box-shadow:0 0 0 3px rgba(79,126,247,.1);}
 .fc[readonly]{opacity:.55;cursor:not-allowed;}
 .divider{border:none;border-top:1px solid var(--border);margin:20px 0;}
-
-.btn-save{width:100%;padding:13px;border:none;border-radius:var(--radius-sm);font-size:15px;font-weight:800;cursor:pointer;transition:.2s;background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff;display:flex;align-items:center;justify-content:center;gap:9px;letter-spacing:-.2px;font-family:inherit;}
-.btn-save:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(15,118,110,.35);}
-.btn-save:active{transform:scale(.98);}
-
-.theme-row{display:flex;align-items:center;justify-content:space-between;padding:14px 12px;border-radius:var(--radius-sm);cursor:pointer;transition:.18s;border:1.5px solid transparent;margin-bottom:8px;}
-.theme-row:hover{background:rgba(15,118,110,.04);}
-[data-theme="light"] .theme-row[data-for="light"]{background:rgba(15,118,110,.07);border-color:rgba(15,118,110,.22);}
-[data-theme="dark"]  .theme-row[data-for="dark"] {background:rgba(15,118,110,.07);border-color:rgba(15,118,110,.22);}
-.theme-info{display:flex;align-items:center;gap:13px;}
-.theme-emoji{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
-.te-sun{background:#fef9c3;}
-.te-moon{background:#0d3330;}
+.btn-save{width:100%;padding:13px;border:none;border-radius:11px;font-size:15px;font-weight:700;cursor:pointer;transition:.2s;background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 16px rgba(79,126,247,.3);}
+.btn-save:hover{transform:translateY(-2px);box-shadow:0 6px 22px rgba(79,126,247,.4);}
+.theme-row{display:flex;align-items:center;justify-content:space-between;padding:14px 12px;border-radius:10px;cursor:pointer;transition:background .15s;margin-bottom:4px;}
+.theme-row:hover{background:rgba(79,126,247,.05);}
+.theme-info{display:flex;align-items:center;gap:14px;}
+.theme-emoji{width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.te-sun{background:#fef3c7;}
+.te-moon{background:#1e1b4b;}
 .t-label{font-weight:700;font-size:14px;}
 .t-desc{font-size:12px;color:var(--muted);margin-top:3px;}
-.active-tag{font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;}
-.at-light{background:#fef3c7;color:#92400e;}
-.at-dark{background:rgba(15,118,110,.15);color:var(--pri);}
+.active-tag{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;}
+.at-light{background:#fef9c3;color:#854d0e;}
+.at-dark{background:rgba(99,144,245,.15);color:var(--acc);}
 #lightTag{display:none;}
 #darkTag{display:none;}
 [data-theme="light"] #lightTag{display:inline-block;}
-[data-theme="dark"]  #darkTag {display:inline-block;}
-
-.tog-row{display:flex;align-items:center;gap:12px;padding-top:16px;border-top:1px solid var(--border);margin-top:14px;}
-.tog-row span{font-size:13px;font-weight:600;color:var(--muted);}
-.tog{width:52px;height:28px;border-radius:14px;border:none;cursor:pointer;background:#d1d5db;position:relative;transition:background .25s;outline:none;flex-shrink:0;}
-.tog::after{content:'';position:absolute;width:22px;height:22px;background:#fff;border-radius:50%;top:3px;left:3px;transition:transform .25s;box-shadow:0 1px 4px rgba(0,0,0,.25);}
-.tog.on{background:var(--pri);}
+[data-theme="dark"] #darkTag{display:inline-block;}
+[data-theme="light"] .theme-row[data-for="light"],[data-theme="dark"] .theme-row[data-for="dark"]{background:rgba(79,126,247,.07);outline:1.5px solid rgba(79,126,247,.2);border-radius:10px;}
+.tog-wrap{display:flex;align-items:center;gap:14px;padding-top:16px;border-top:1px solid var(--border);margin-top:14px;}
+.tog{width:50px;height:26px;border-radius:13px;border:none;cursor:pointer;background:var(--tog-off);position:relative;transition:background .25s;outline:none;flex-shrink:0;}
+.tog::after{content:"";position:absolute;width:20px;height:20px;background:#fff;border-radius:50%;top:3px;left:3px;transition:transform .25s;box-shadow:0 1px 4px rgba(0,0,0,.25);}
+.tog.on{background:var(--tog-on);}
 .tog.on::after{transform:translateX(24px);}
-#themeStatus{margin-left:auto;font-size:12px;color:var(--muted);}
-
-.info-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:700;background:rgba(15,118,110,.1);color:var(--pri);border:1px solid rgba(15,118,110,.2);}
-
-@media(max-width:480px){.card-body,.card-hdr{padding:16px;}}
+.at-card{display:flex;align-items:center;gap:14px;padding:14px 16px;border:2px solid var(--border);border-radius:12px;cursor:pointer;transition:.2s;margin-bottom:8px;}
+.at-card:hover{border-color:var(--acc);}
+.at-card.active{border-color:var(--acc);background:rgba(79,126,247,.05);}
+.at-icon{font-size:2rem;flex-shrink:0;}
+.at-info{flex:1;}
+.at-name{font-weight:700;font-size:.95rem;display:flex;align-items:center;gap:8px;}
+.at-desc{font-size:12px;color:var(--muted);margin-top:2px;}
+.at-active-tag{background:var(--acc);color:#fff;font-size:10px;padding:2px 7px;border-radius:20px;font-weight:700;}
+.at-stages{display:flex;flex-wrap:wrap;gap:7px;padding:4px 0 12px;}
+.at-stages.hidden-stages{display:none;}
+.at-stage-chip{display:flex;align-items:center;gap:7px;padding:6px 10px;border-radius:8px;border:1px solid transparent;font-size:11.5px;background:var(--bg);}
+.avatar-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(10px);background:#1e293b;color:#fff;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:600;opacity:0;transition:.3s;pointer-events:none;z-index:9999;white-space:nowrap;}
+@media(max-width:460px){.card-body,.card-hdr{padding:16px;}}
 </style>
 </head>
 <body>
 <div class="page">
-
   <%
-    var _activeR = (typeof activeRole !== 'undefined' ? activeRole : user.role) || 'student';
+    var _activeR = user.role || "student";
     var _backPath = {
-      'superadmin':'/super-admin-dashboard',
-      'master':'/master',
-      'lecturer':'/lecturer',
-      'leader':'/leader',
-      'student':'/student'
-    }[_activeR.toLowerCase()] || '/login';
+      "superadmin": "/super-admin-dashboard", "master": "/master",
+      "lecturer": "/lecturer", "leader": "/leader", "student": "/student"
+    }[_activeR.toLowerCase()] || "/login";
   %>
+  <a href="<%= _backPath %>" class="back-link"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
 
-  <div class="topnav">
-    <a href="<%= _backPath %>" class="back-link">
-      <i class="fas fa-arrow-left"></i> Back to Dashboard
-    </a>
-    <span class="page-title">Account Settings</span>
+  <% if (typeof message !== "undefined" && message) { %>
+  <div class="msg <%= messageType === "success" ? "ok" : "err" %>">
+    <i class="fas fa-<%= messageType === "success" ? "check-circle" : "exclamation-circle" %>"></i> <%= message %>
   </div>
-
-  <% if (typeof message !== 'undefined' && message) { %>
-    <div class="msg <%= messageType === 'success' ? 'ok' : 'err' %>">
-      <i class="fas fa-<%= messageType === 'success' ? 'circle-check' : 'circle-exclamation' %>"></i>
-      <%= message %>
-    </div>
   <% } %>
 
-  <!-- Profile Card -->
   <div class="card">
     <div class="card-hdr">
-      <div class="card-icon ic-teal"><i class="fas fa-user-circle"></i></div>
-      <div class="card-hdr-text">
-        <h3>Profile Information</h3>
-        <p>Update your name, phone and password</p>
-      </div>
+      <div class="card-icon ic-blue"><i class="fas fa-user-circle"></i></div>
+      <div class="card-hdr-text"><h3>Profile Settings</h3><p>Update your name, phone and password</p></div>
     </div>
     <div class="card-body">
       <form action="/update-settings" method="POST">
-        <div class="fg">
-          <label>Full Name</label>
-          <input type="text" name="name" class="fc" value="<%= user.name %>" required>
-        </div>
-        <div class="fg">
-          <label>Email Address</label>
-          <input type="email" class="fc" value="<%= user.email %>" readonly>
-        </div>
-        <div class="fg">
-          <label>WhatsApp / Phone</label>
-          <input type="text" name="phone" class="fc" value="<%= user.phone || '' %>" placeholder="e.g. 919876543210">
-        </div>
-        <div class="fg">
-          <label>Active Role</label>
-          <input type="text" class="fc" value="<%= typeof activeRole !== 'undefined' ? activeRole : user.role %>" readonly>
-        </div>
+        <div class="fg"><label>Full Name</label><input type="text" name="name" class="fc" value="<%= user.name %>" required></div>
+        <div class="fg"><label>Email Address</label><input type="email" class="fc" value="<%= user.email %>" readonly></div>
+        <div class="fg"><label>WhatsApp / Phone</label><input type="text" name="phone" class="fc" value="<%= user.phone || "" %>" placeholder="e.g. 919876543210"></div>
+        <div class="fg"><label>Active Role</label><input type="text" class="fc" value="<%= user.role %>" readonly></div>
         <% var _allRoles = (user.roles && user.roles.length > 0) ? user.roles : [user.role]; %>
         <% if (_allRoles.length > 1) { %>
         <div class="fg">
           <label>All Your Roles</label>
-          <div style="display:flex;flex-wrap:wrap;gap:7px;padding:10px 12px;background:var(--input-bg);border:1.5px solid var(--input-bd);border-radius:var(--radius-sm);">
-            <% _allRoles.forEach(function(r){ %>
-              <span class="info-chip"><%= r %></span>
-            <% }); %>
+          <div style="display:flex;flex-wrap:wrap;gap:7px;padding:10px 12px;background:var(--input-bg);border:1.5px solid var(--input-bd);border-radius:10px;">
+            <% _allRoles.forEach(function(r){ %><span style="padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;background:rgba(79,126,247,.1);color:var(--acc);"><%= r %></span><% }); %>
           </div>
-          <small style="color:var(--muted);font-size:11px;margin-top:6px;display:block;">Use the role switcher in your dashboard sidebar to switch roles.</small>
+          <small style="color:var(--muted);font-size:11px;margin-top:5px;display:block;">Use the role switcher in your dashboard sidebar to switch roles.</small>
         </div>
         <% } %>
-        <% if (user.section) { %>
-        <div class="fg">
-          <label>Division / Section</label>
-          <input type="text" class="fc" value="<%= user.section %>" readonly>
-        </div>
-        <% } %>
+        <% if (user.section) { %><div class="fg"><label>Division / Section</label><input type="text" class="fc" value="<%= user.section %>" readonly></div><% } %>
         <hr class="divider">
-        <div style="font-size:.8rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:16px;display:flex;align-items:center;gap:7px;">
-          <i class="fas fa-lock"></i> Change Password
-        </div>
+        <div style="font-size:.82rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;display:flex;align-items:center;gap:8px;"><i class="fas fa-lock"></i> Change Password</div>
         <% if (user.googleId && !user.password) { %>
-          <div class="msg ok" style="margin-bottom:14px;">
-            <i class="fas fa-circle-info"></i> You signed in with Google — password change is not available.
-          </div>
+        <div class="msg ok" style="margin-bottom:14px;"><i class="fas fa-info-circle"></i> You signed in with Google — password change is not available.</div>
         <% } else { %>
-          <div class="fg">
-            <label>Current Password</label>
-            <input type="password" name="currentPassword" class="fc" placeholder="Required to save changes">
-          </div>
-          <div class="fg">
-            <label>New Password <span style="font-weight:400;text-transform:none;">(leave blank to keep current)</span></label>
-            <input type="password" name="newPassword" class="fc" placeholder="Min. 6 characters">
-          </div>
+        <div class="fg"><label>Current Password</label><input type="password" name="currentPassword" class="fc" placeholder="Required to authorize changes"></div>
+        <div class="fg"><label>New Password <span style="font-weight:400;text-transform:none;">(leave blank to keep current)</span></label><input type="password" name="newPassword" class="fc" placeholder="Min. 6 characters"></div>
         <% } %>
-        <button type="submit" class="btn-save">
-          <i class="fas fa-floppy-disk"></i> Save Changes
-        </button>
+        <button type="submit" class="btn-save"><i class="fas fa-save"></i> Save Changes</button>
       </form>
     </div>
   </div>
 
-  <!-- Appearance Card -->
   <div class="card">
     <div class="card-hdr">
-      <div class="card-icon ic-amber"><i class="fas fa-palette"></i></div>
-      <div class="card-hdr-text">
-        <h3>Appearance</h3>
-        <p>Choose your preferred interface theme</p>
-      </div>
+      <div class="card-icon ic-purple"><i class="fas fa-palette"></i></div>
+      <div class="card-hdr-text"><h3>Appearance</h3><p>Choose your preferred theme</p></div>
     </div>
     <div class="card-body">
       <div class="theme-row" data-for="light" onclick="setTheme('light')">
-        <div class="theme-info">
-          <div class="theme-emoji te-sun">☀️</div>
-          <div>
-            <div class="t-label">Light Mode</div>
-            <div class="t-desc">Clean white background — ideal for daytime</div>
-          </div>
-        </div>
+        <div class="theme-info"><div class="theme-emoji te-sun">☀️</div><div><div class="t-label">Light Mode</div><div class="t-desc">Clean white background — default</div></div></div>
         <span class="active-tag at-light" id="lightTag">Active</span>
       </div>
-
       <div class="theme-row" data-for="dark" onclick="setTheme('dark')">
-        <div class="theme-info">
-          <div class="theme-emoji te-moon">🌙</div>
-          <div>
-            <div class="t-label">Dark Mode</div>
-            <div class="t-desc">Deep teal-dark — reduces eye strain at night</div>
-          </div>
-        </div>
+        <div class="theme-info"><div class="theme-emoji te-moon">🌙</div><div><div class="t-label">Dark Mode</div><div class="t-desc">Warm deep-blue — easy on the eyes</div></div></div>
         <span class="active-tag at-dark" id="darkTag">Active</span>
       </div>
-
-      <div class="tog-row">
-        <span>☀️ Light</span>
+      <div class="tog-wrap">
+        <span style="font-size:13px;font-weight:600;color:var(--muted);">☀️ Light</span>
         <button class="tog" id="themeToggle" type="button" aria-label="Toggle dark mode"></button>
-        <span>🌙 Dark</span>
-        <span id="themeStatus"></span>
+        <span style="font-size:13px;font-weight:600;color:var(--muted);">🌙 Dark</span>
+        <span id="themeStatus" style="margin-left:auto;font-size:12px;color:var(--muted);"></span>
       </div>
     </div>
   </div>
 
-  <!-- Account Info -->
   <div class="card">
     <div class="card-hdr">
-      <div class="card-icon ic-green"><i class="fas fa-shield-halved"></i></div>
-      <div class="card-hdr-text">
-        <h3>Account Information</h3>
-        <p>Read-only account details</p>
-      </div>
+      <div class="card-icon ic-green"><i class="fas fa-gamepad"></i></div>
+      <div class="card-hdr-text"><h3>Your Character</h3><p>Shown on your attendance dashboard</p></div>
     </div>
     <div class="card-body">
-      <div style="display:grid;gap:12px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
-          <span style="font-size:13px;color:var(--muted);font-weight:600;">Email</span>
-          <span style="font-size:13.5px;font-weight:700;"><%= user.email %></span>
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
-          <span style="font-size:13px;color:var(--muted);font-weight:600;">Role</span>
-          <span class="info-chip"><%= user.role %></span>
-        </div>
-        <% if (user.rollNo) { %>
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
-          <span style="font-size:13px;color:var(--muted);font-weight:600;">Roll No</span>
-          <span style="font-size:13.5px;font-weight:700;font-family:monospace;color:var(--pri);"><%= user.rollNo %></span>
-        </div>
-        <% } %>
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;">
-          <span style="font-size:13px;color:var(--muted);font-weight:600;">Account Status</span>
-          <span style="font-size:12px;font-weight:700;padding:4px 11px;border-radius:20px;<%= user.isApproved ? 'background:rgba(16,185,129,.1);color:#047857;' : 'background:rgba(245,158,11,.1);color:#b45309;' %>">
-            <%= user.isApproved ? '✓ Approved' : '⏳ Pending' %>
-          </span>
-        </div>
-      </div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Choose a character theme that grows as your attendance improves. Your selection is saved on this device.</p>
+      <div id="avatarPickerInner"></div>
     </div>
   </div>
+</div>
 
-</div><!-- /page -->
+<div class="avatar-toast" id="avatarToast"></div>
 
 <script>
-function setTheme(t){
-  document.documentElement.setAttribute('data-theme',t);
-  localStorage.setItem('rku-theme',t);
-  syncThemeUI();
-}
-function syncThemeUI(){
-  var isDark=document.documentElement.getAttribute('data-theme')==='dark';
-  var tog=document.getElementById('themeToggle');
-  var st=document.getElementById('themeStatus');
-  if(tog) tog.classList.toggle('on',isDark);
-  if(st) st.textContent = isDark?'Dark mode active':'Light mode active';
-}
-document.addEventListener('DOMContentLoaded',function(){
-  var tog=document.getElementById('themeToggle');
-  if(tog) tog.addEventListener('click',function(){
-    var cur=document.documentElement.getAttribute('data-theme')||'light';
-    setTheme(cur==='dark'?'light':'dark');
-  });
-  syncThemeUI();
-});
-if(document.readyState==='interactive'||document.readyState==='complete') syncThemeUI();
+function setTheme(theme){document.documentElement.setAttribute("data-theme",theme);localStorage.setItem("rku-theme",theme);syncThemeUI();}
+function toggleTheme(){var current=document.documentElement.getAttribute("data-theme")||"light";setTheme(current==="dark"?"light":"dark");}
+function syncThemeUI(){var isDark=document.documentElement.getAttribute("data-theme")==="dark";var tog=document.getElementById("themeToggle");var st=document.getElementById("themeStatus");if(tog)tog.classList.toggle("on",isDark);if(st)st.textContent=isDark?"Dark mode active":"Light mode active";}
+document.addEventListener("DOMContentLoaded",function(){var tog=document.getElementById("themeToggle");if(tog)tog.addEventListener("click",toggleTheme);syncThemeUI();});
+if(document.readyState==="interactive"||document.readyState==="complete"){syncThemeUI();}
+</script>
+<script>
+(function(){
+  var THEMES={warrior:{label:"Warrior",icon:"⚔️",desc:"A legendary warrior who rises with your attendance.",stages:[{min:0,label:"Fallen Warrior",emoji:"😔",color:"#94a3b8"},{min:30,label:"Struggling Apprentice",emoji:"🚶",color:"#f59e0b"},{min:50,label:"Rising Soldier",emoji:"🛡️",color:"#3b82f6"},{min:65,label:"Brave Fighter",emoji:"⚡",color:"#8b5cf6"},{min:75,label:"Valiant Knight",emoji:"🌟",color:"#f59e0b"},{min:90,label:"Legendary Champion",emoji:"🏆",color:"#10b981"}]},bloom:{label:"Bloom",icon:"🌸",desc:"A magical garden spirit that blossoms with every class you attend.",stages:[{min:0,label:"Withered Seed",emoji:"🌱",color:"#94a3b8"},{min:30,label:"Sprouting Bud",emoji:"🌿",color:"#84cc16"},{min:50,label:"Growing Vine",emoji:"🍃",color:"#22c55e"},{min:65,label:"Blooming Flower",emoji:"🌺",color:"#ec4899"},{min:75,label:"Radiant Garden",emoji:"🌸",color:"#a855f7"},{min:90,label:"Enchanted Goddess",emoji:"🦋",color:"#f0abfc"}]}};
+  var savedTheme=localStorage.getItem("rku-avatar-theme")||"warrior";
+  function renderPicker(){var html="";Object.keys(THEMES).forEach(function(key){var t=THEMES[key];var active=savedTheme===key;html+="<div class=\"at-card"+(active?" active":"")+"\" onclick=\"selectAvatarTheme('"+key+"')\">"+"<div class=\"at-icon\">"+t.icon+"</div>"+"<div class=\"at-info\">"+"<div class=\"at-name\">"+t.label+(active?" <span class=\"at-active-tag\">Active</span>":"")+"</div>"+"<div class=\"at-desc\">"+t.desc+"</div></div></div>";html+="<div class=\"at-stages"+(active?"":" hidden-stages")+"\" id=\"stages-"+key+"\">";t.stages.forEach(function(s){html+="<div class=\"at-stage-chip\" style=\"border-color:"+s.color+"33;background:"+s.color+"11;\"><span style=\"font-size:15px;\">"+s.emoji+"</span><div><div style=\"font-size:11px;font-weight:700;color:var(--text);">"+s.label+"</div><div style=\"font-size:10px;color:var(--muted);">from "+s.min+"%</div></div></div>";});html+="</div>";});var el=document.getElementById("avatarPickerInner");if(el)el.innerHTML=html;}
+  window.selectAvatarTheme=function(key){savedTheme=key;localStorage.setItem("rku-avatar-theme",key);renderPicker();var toast=document.getElementById("avatarToast");if(toast){toast.textContent=(THEMES[key]?THEMES[key].icon+" "+THEMES[key].label:key)+" character selected!";toast.style.opacity="1";toast.style.transform="translateX(-50%) translateY(0)";setTimeout(function(){toast.style.opacity="0";toast.style.transform="translateX(-50%) translateY(10px)";},2500);}};
+  document.addEventListener("DOMContentLoaded",renderPicker);
+  if(document.readyState==="interactive"||document.readyState==="complete")renderPicker();
+})();
 </script>
 </body>
 </html>

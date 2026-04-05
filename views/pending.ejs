@@ -3,89 +3,46 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Approval Pending — RKU Attendance</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<script>(function(){var t=localStorage.getItem('rku-theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
+<title>Approval Pending — RKU Portal</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <style>
-:root{
-  --bg:#f0fdf9;--card:#fff;--border:#ccfbf1;
-  --text:#0d1f1c;--muted:#5a7a76;
-  --pri:#0f766e;--war:#f59e0b;
-  --shadow:0 8px 40px rgba(15,118,110,.12);
-}
-[data-theme="dark"]{
-  --bg:#051714;--card:#071f1c;--border:#0d3330;
-  --text:#b2e8e2;--muted:#4a6e6a;
-  --pri:#0d9488;--war:#fbbf24;
-  --shadow:0 8px 40px rgba(0,0,0,.5);
-}
 *{box-sizing:border-box;margin:0;padding:0;}
-html,body{transition:background .25s,color .25s;}
-body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
-
-.pending-card{
-  background:var(--card);border:1px solid var(--border);border-radius:20px;
-  box-shadow:var(--shadow);max-width:460px;width:100%;
-  text-align:center;padding:48px 38px;
-  border-top:5px solid var(--war);position:relative;overflow:hidden;
-}
-.pending-card::before{content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;border-radius:50%;background:rgba(245,158,11,.04);pointer-events:none;}
-
-.pending-icon{width:80px;height:80px;border-radius:50%;background:rgba(245,158,11,.1);display:flex;align-items:center;justify-content:center;font-size:2rem;color:var(--war);margin:0 auto 22px;animation:spin-wait 3s ease-in-out infinite;}
-@keyframes spin-wait{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(245,158,11,.25);}50%{transform:scale(1.06);box-shadow:0 0 0 14px rgba(245,158,11,0);}}
-
-h2{font-size:1.35rem;font-weight:900;margin-bottom:10px;}
-.sub{font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:20px;}
-
-.email-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(15,118,110,.08);border:1px solid rgba(15,118,110,.18);color:var(--pri);padding:8px 16px;border-radius:20px;font-weight:700;font-size:13.5px;margin-bottom:20px;}
-
-.info-box{background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-left:4px solid var(--war);border-radius:10px;padding:16px;text-align:left;margin-bottom:22px;}
-.info-box strong{font-size:13px;color:var(--text);display:block;margin-bottom:8px;}
-.info-box ul{margin:0;padding-left:18px;color:var(--muted);font-size:13px;line-height:2;}
-
-.hint{font-size:12.5px;color:var(--muted);margin-bottom:24px;}
-
-.progress-bar{height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:24px;position:relative;}
-.progress-fill{height:100%;border-radius:3px;width:40%;background:linear-gradient(90deg,var(--war),rgba(245,158,11,.3));animation:progress 2s ease-in-out infinite alternate;}
-@keyframes progress{from{width:20%;}to{width:75%;}}
-
-.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 26px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;text-decoration:none;border:none;transition:.2s;background:linear-gradient(135deg,var(--pri),#134e4a);color:#fff;box-shadow:0 4px 14px rgba(15,118,110,.25);font-family:inherit;}
-.btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(15,118,110,.35);}
-
-@media(max-width:440px){.pending-card{padding:36px 24px;}}
+body{font-family:"Segoe UI",system-ui,sans-serif;background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 50%,#0f172a 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;}
+.wrap{text-align:center;max-width:460px;width:100%;}
+.icon-wrap{width:100px;height:100px;border-radius:50%;background:rgba(245,158,11,.15);border:2px solid rgba(245,158,11,.25);display:flex;align-items:center;justify-content:center;margin:0 auto 24px;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,.3);}50%{box-shadow:0 0 0 16px rgba(245,158,11,0);}}
+.icon-wrap i{font-size:3rem;color:#fbbf24;}
+.card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:24px;padding:40px 32px;backdrop-filter:blur(20px);}
+.badge-tag{font-size:10px;text-transform:uppercase;letter-spacing:2px;color:rgba(255,255,255,.3);margin-bottom:16px;display:block;}
+h2{color:#fff;font-size:1.5rem;font-weight:900;margin-bottom:12px;letter-spacing:-.4px;}
+p{color:rgba(255,255,255,.55);font-size:13.5px;line-height:1.7;}
+.email-badge{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);padding:8px 18px;border-radius:20px;display:inline-block;margin:16px 0;color:#fff;font-size:13px;font-weight:600;}
+.status-box{background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.18);border-left:4px solid #f59e0b;padding:16px 18px;border-radius:12px;margin:20px 0;text-align:left;}
+.status-box strong{display:block;color:#fbbf24;font-size:12.5px;margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px;}
+.status-box ul{padding-left:16px;color:rgba(255,255,255,.5);font-size:13px;line-height:1.9;}
+.btn-logout{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#4f7ef7,#6366f1);color:#fff;padding:12px 28px;text-decoration:none;border-radius:12px;font-weight:700;font-size:14px;transition:.2s;margin-top:8px;box-shadow:0 4px 16px rgba(79,126,247,.3);}
+.btn-logout:hover{transform:translateY(-2px);box-shadow:0 6px 22px rgba(79,126,247,.4);}
 </style>
 </head>
 <body>
-
-<div class="pending-card">
-  <div class="pending-icon">
-    <i class="fas fa-user-clock"></i>
+<div class="wrap">
+  <div class="icon-wrap"><i class="fas fa-user-clock"></i></div>
+  <div class="card">
+    <span class="badge-tag">RKU Attendance Portal</span>
+    <h2>Access Pending</h2>
+    <p>Your registration has been received! A SuperAdmin must manually verify your identity before you can access the portal.</p>
+    <div class="email-badge"><i class="fas fa-envelope" style="margin-right:6px;opacity:.6;"></i><%= user.email %></div>
+    <div class="status-box">
+      <strong><i class="fas fa-list-check" style="margin-right:6px;"></i> Next Steps</strong>
+      <ul>
+        <li>Notify your Department Head</li>
+        <li>Verification usually takes 2–4 hours</li>
+        <li>Once approved, you gain full dashboard access</li>
+      </ul>
+    </div>
+    <p style="font-size:12px;margin-bottom:20px;color:rgba(255,255,255,.3);">If urgent, contact the IT Helpdesk.</p>
+    <a href="/logout" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Return to Login</a>
   </div>
-  <h2>Access Pending Approval</h2>
-  <p class="sub">Your registration has been received! A SuperAdmin must verify your identity before granting access.</p>
-
-  <div class="email-badge">
-    <i class="fas fa-envelope"></i> <%= user.email %>
-  </div>
-
-  <div class="progress-bar"><div class="progress-fill"></div></div>
-
-  <div class="info-box">
-    <strong><i class="fas fa-list-check" style="color:var(--war);margin-right:6px;"></i> Next Steps</strong>
-    <ul>
-      <li>Notify your Department Head or Class Teacher.</li>
-      <li>Verification typically takes 2–4 hours.</li>
-      <li>Once approved, you'll gain full dashboard access.</li>
-    </ul>
-  </div>
-
-  <p class="hint"><i class="fas fa-headset" style="color:var(--pri);"></i> If this is urgent, contact the IT Helpdesk.</p>
-
-  <a href="/logout" class="btn">
-    <i class="fas fa-arrow-left"></i> Return to Login
-  </a>
 </div>
-
 </body>
 </html>
